@@ -51,7 +51,7 @@ Um prêmio é contável quando:
 - é do tipo pedido em `fonte` e o código do item está em `filtroItens`, quando houver;
 - pertence ao aluno;
 - cai dentro da instância de período avaliada (seção 4);
-- e, sendo prêmio de participação, **já é definitivo** — aprovado e com a janela de 15
+- e, sendo prêmio de participação, **já é definitivo**: aprovado e com a janela de 15
   dias encerrada, por decurso ou por confirmação de contestação.
 
 Conquista nunca conta outra conquista. O grafo não tem ciclo, e é por isso que o
@@ -94,7 +94,7 @@ Unicidade garantida por índice: `(aluno, item, tipoDePeriodo, referenciaDoPerio
 | `gatilho` | Quando |
 |---|---|
 | `porFato` | Assim que um fato se torna contável: medalha concedida, ou prêmio de participação virando definitivo |
-| `fechamentoDePeriodo` | No fechamento da instância do período, porque o alvo só existe completo — não se sabe se foram "todas as matérias" antes do período terminar |
+| `fechamentoDePeriodo` | No fechamento da instância do período, porque o alvo só existe completo: não se sabe se foram "todas as matérias" antes do período terminar |
 
 Conquista de fechamento é **reavaliada** sempre que um fato daquele período se torna
 contável depois do fechamento, até o congelamento do ranking do semestre (30 dias após o
@@ -107,7 +107,7 @@ usuário.
 ## 6. Evidências e recálculo
 
 Toda conquista concedida guarda as **evidências**: os prêmios que a compuseram. Serve
-para duas coisas — responder ao aluno por que ele ganhou aquilo, e tornar o recálculo
+para duas coisas: responder ao aluno por que ele ganhou aquilo, e tornar o recálculo
 barato.
 
 Quando a instituição anula uma medalha, o worker reavalia apenas as conquistas que têm
@@ -121,7 +121,7 @@ definitivo e, depois de definitivo, não pode mais ser contestado.
 
 O catálogo pode declarar `regra: { "forma": "customizada", "implementacao": "<nome>" }`,
 e o avaliador delega a uma classe registrada. Nenhuma conquista da fase 1 usa isso. O
-escape existe para não travar o catálogo numa regra que as duas formas não alcancem —
+escape existe para não travar o catálogo numa regra que as duas formas não alcancem,
 não para ser o caminho padrão.
 
 ## 8. Plano de teste

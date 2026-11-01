@@ -66,7 +66,7 @@ para `-EX`.
 |---|---|
 | **RA** | Identidade interna do aluno e credencial de login. É dado pessoal: nunca aparece para outros alunos e não é buscável |
 | **E-mail institucional** | Vem da base abastecida pela faculdade. O aluno não escolhe e não edita; só a instituição corrige, pela área web |
-| **Arroba** | Identificador público e único. Formato `@primeiroNomeUltimoNome-SUFIXO`. Sufixos: a sigla do curso atual para o aluno (`@guilhermeGimenes-CC`), `-EX` para o ex-aluno, `-PROF` para professor — inclusive quando a conta acumula professor e instituição — e `-UNIMAX` para a conta só de instituição. O cadastro sugere a partir do nome; em colisão, a sugestão inclui o nome do meio quando houver e, se ainda colidir, acrescenta número sequencial. O usuário edita apenas a parte antes do hífen, no cadastro e depois no perfil. O sufixo muda sozinho quando o aluno troca de curso ou é marcado como ex-aluno, e o arroba antigo fica reservado permanentemente ao dono, sem reuso por terceiros. Unicidade sem diferenciar maiúsculas; exibição como o usuário escreveu |
+| **Arroba** | Identificador público e único. Formato `@primeiroNomeUltimoNome-SUFIXO`. Sufixos: a sigla do curso atual para o aluno (`@guilhermeGimenes-CC`), `-EX` para o ex-aluno, `-PROF` para professor (inclusive quando a conta acumula professor e instituição) e `-UNIMAX` para a conta só de instituição. O cadastro sugere a partir do nome; em colisão, a sugestão inclui o nome do meio quando houver e, se ainda colidir, acrescenta número sequencial. O usuário edita apenas a parte antes do hífen, no cadastro e depois no perfil. O sufixo muda sozinho quando o aluno troca de curso ou é marcado como ex-aluno, e o arroba antigo fica reservado permanentemente ao dono, sem reuso por terceiros. Unicidade sem diferenciar maiúsculas; exibição como o usuário escreveu |
 | **Nome de exibição** | Texto livre, editável, não precisa ser único |
 | **Foto de perfil** | Opcional, de aluno e de professor; segue as mesmas regras de assinatura e de derivadas da foto de post. Sem foto, o avatar são as iniciais |
 
@@ -90,7 +90,7 @@ O cadastro exige e-mail e RA **na mesma linha** da base, mais o nome de exibiç�
 escolha do arroba. Um RA aceita uma conta só: a segunda tentativa cai em recuperação
 de senha. Login do aluno por RA ou por e-mail; do professor e da instituição, por
 e-mail. Senha própria, com recuperação por e-mail. Verificação de e-mail no cadastro
-fica para a fase 2 — a base já traz o e-mail correto, e por isso a recuperação funciona
+fica para a fase 2: a base já traz o e-mail correto, e por isso a recuperação funciona
 desde a fase 1.
 
 Professores são cadastrados a cada semestre, por matéria e turma, como já acontece no
@@ -124,7 +124,7 @@ sem ela as conquistas de alvo dinâmico (todas as matérias) não existem.
 
 Atenção a dois sentidos da palavra semestre: o **semestre letivo** (2026/2) corta
 ranking e conquistas; o **semestre do aluno** (1º ao 8º) é informação de perfil, vem do
-seed e não entra em pontuação nem em conquista — serve para exibição e para o filtro da
+seed e não entra em pontuação nem em conquista: serve para exibição e para o filtro da
 Busca.
 
 Datas e horas são guardadas em UTC; as fronteiras de bimestre, semestre e ano são
@@ -147,7 +147,7 @@ glifo do medalhão é taça para troféu e fita para medalha. Nos dados, os trê
 distintos e nunca se misturam.
 
 Medalha é, por definição, concessão humana do professor. Tudo que for automático é
-conquista — inclusive presença, quando a integração com a chamada chegar.
+conquista, inclusive presença, quando a integração com a chamada chegar.
 
 Não existe medalha discricionária: nada de "participação em aula" ou "ajuda a colegas",
 porque não há fato registrado por trás e é o que mais infla pontuação. Apresentação de
@@ -301,7 +301,7 @@ daquela medalha.
 ### 4.9 Conquistas
 
 Automáticas, calculadas pelo sistema. Contam medalhas e prêmios de participação
-definitivos, e **nunca contam outra conquista** — o grafo não tem ciclo e o recálculo é
+definitivos, e **nunca contam outra conquista**: o grafo não tem ciclo e o recálculo é
 simples. Se um dia houver troféu de formatura, ele é formulado em medalhas e prêmios.
 
 A contagem **nunca atravessa o período** da conquista. "Três notas 10 no bimestre" só
@@ -390,7 +390,7 @@ São quatro visões, combinando escopo e período:
 ### 6.2 Feed
 
 Mostra sempre os posts de quem o aluno segue, mais recomendações aleatórias de outros
-alunos. Aluno novo — e qualquer membro da banca — vê recomendações desde o primeiro
+alunos. Aluno novo (e qualquer membro da banca) vê recomendações desde o primeiro
 acesso, e nunca um feed vazio.
 
 ### 6.3 Seguir
@@ -451,7 +451,7 @@ Mural (aviso não lido) e Troféus (prêmio novo).
 ### 9.2 Fotos
 
 A foto é enviada direto para o bucket pelo aplicativo e lida pela CDN. A chave é
-aleatória e a leitura é **pública para quem tem o link** — decisão consciente, em troca
+aleatória e a leitura é **pública para quem tem o link**: decisão consciente, em troca
 de cache e custo, documentada no TCC e coberta pelo termo de uso.
 
 ---
