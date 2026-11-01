@@ -320,7 +320,8 @@ Períodos possíveis: bimestre, semestre, ano, curso. Cada item declara o gatilh
 | `fechamentoDePeriodo` | No fechamento do período, porque o alvo só existe completo (ex.: "todas as matérias do bimestre") |
 
 Conquista de período é **repetível uma vez por instância do período**: a mesma conquista
-dispara em cada bimestre que fechar o critério.
+dispara em cada bimestre que fechar o critério. No período `curso`, a instância é o
+próprio aluno: a contagem é a vida dele no Maxx e não reinicia na troca de curso.
 
 A conquista pontua no semestre **do período a que se refere**, mesmo quando calculada
 depois. O prêmio de participação conta no semestre **do evento**, não no da aprovação.
