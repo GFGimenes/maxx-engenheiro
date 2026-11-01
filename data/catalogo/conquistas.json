@@ -21,8 +21,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "C02",
@@ -42,8 +42,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "nota-prova",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "C03",
@@ -63,8 +63,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "presenca-total",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "C04",
@@ -84,8 +84,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "nota-prova",
+      "ordemNaFamilia": 4
     },
     {
       "codigo": "C05",
@@ -105,8 +105,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "participacao",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "C06",
@@ -147,8 +147,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "C08",
@@ -168,8 +168,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "nota-prova",
+      "ordemNaFamilia": 3
     },
     {
       "codigo": "C09",
@@ -189,8 +189,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "participacao",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "C10",
@@ -210,8 +210,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "presenca-total",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "C11",
@@ -231,8 +231,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "media-final",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "C12",
@@ -252,8 +252,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 3
     },
     {
       "codigo": "C13",
@@ -273,8 +273,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "participacao",
+      "ordemNaFamilia": 3
     },
     {
       "codigo": "C14",
@@ -294,8 +294,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "nota-prova",
+      "ordemNaFamilia": 5
     },
     {
       "codigo": "C15",
@@ -315,8 +315,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "presenca-total",
+      "ordemNaFamilia": 3
     },
     {
       "codigo": "C16",
@@ -336,8 +336,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 4
     },
     {
       "codigo": "C17",
@@ -357,8 +357,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "participacao",
+      "ordemNaFamilia": 4
     },
     {
       "codigo": "C18",
@@ -378,8 +378,8 @@
       },
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 5
     }
   ]
 }

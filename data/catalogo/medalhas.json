@@ -18,8 +18,8 @@
       "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "nota-prova",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "M02",
@@ -52,8 +52,8 @@
       "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "presenca-materia",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "M04",
@@ -171,8 +171,8 @@
       "chaveDeDeduplicacao": ["aluno", "item", "materia", "semestre"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "media-final",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "M11",
@@ -188,8 +188,8 @@
       "chaveDeDeduplicacao": ["aluno", "item", "materia", "semestre"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "presenca-materia",
+      "ordemNaFamilia": 2
     }
   ]
 }

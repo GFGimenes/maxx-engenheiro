@@ -86,8 +86,8 @@
       "chaveDeDeduplicacao": ["aluno", "item", "dataDoEvento", "materia"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "apresentacao",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "P05",
@@ -154,8 +154,8 @@
       "chaveDeDeduplicacao": ["aluno", "evento"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "apresentacao",
+      "ordemNaFamilia": 2
     },
     {
       "codigo": "P09",
@@ -222,8 +222,8 @@
       "chaveDeDeduplicacao": ["aluno", "evento"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "apresentacao",
+      "ordemNaFamilia": 3
     },
     {
       "codigo": "P13",
@@ -239,8 +239,8 @@
       "chaveDeDeduplicacao": ["aluno", "evento"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "competicao",
+      "ordemNaFamilia": 1
     },
     {
       "codigo": "P14",
@@ -273,8 +273,8 @@
       "chaveDeDeduplicacao": ["aluno", "evento"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "apresentacao",
+      "ordemNaFamilia": 4
     },
     {
       "codigo": "P16",
@@ -290,8 +290,8 @@
       "chaveDeDeduplicacao": ["aluno", "evento"],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
-      "familia": null,
-      "ordemNaFamilia": null
+      "familia": "competicao",
+      "ordemNaFamilia": 2
     }
   ]
 }
