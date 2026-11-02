@@ -181,7 +181,7 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Reivindicação como post com foto, pública com marca de pendente, sem pontuar.
 - Fila de comprovações para o professor da turma e para a instituição, ordenada por mais
   antigo, com marca após sete dias, resolvendo a corrida de quem aprova primeiro.
-- Reprovação com motivo e reenvio de foto.
+- Reprovação com motivo; nova tentativa é outro post de reivindicação, com outra foto.
 - Contestação com motivo, uma por prêmio, estado de averiguação sem pontuar.
 - Decisão da instituição: confirmar encerra a janela, revogar mantém no histórico.
 - Trabalho na fila que torna o prêmio definitivo após quinze dias.

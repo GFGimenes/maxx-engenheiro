@@ -54,6 +54,8 @@ Decisão que não está nesses arquivos não foi tomada. Pergunte, não assuma.
 apps/api/            Maxx.Domain, Maxx.Application, Maxx.Infrastructure, Maxx.Api
 apps/mobile/         Expo, Expo Router
 packages/api-client/ openapi.json e src/schema.d.ts gerados (npm run gerar), src/index.ts manual
+e2e/                 Playwright contra o build web servido pelo Caddy
+infra/               Caddy (Dockerfile com o build web e Caddyfile)
 data/catalogo/       os 46 itens e as famílias de trilha
 design/              tokens, identidade visual, telas, logos
 docs/                produto, decisões, regras de conquista, plano mestre, fluxos
