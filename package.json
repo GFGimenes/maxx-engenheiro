@@ -3,14 +3,15 @@
   "private": true,
   "workspaces": [
     "apps/mobile",
+    "e2e",
     "packages/*"
   ],
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
-    "format": "prettier --write apps/mobile packages",
-    "format:check": "prettier --check apps/mobile packages"
+    "format": "prettier --write apps/mobile e2e packages",
+    "format:check": "prettier --check apps/mobile e2e packages"
   },
   "devDependencies": {
     "prettier": "^3.9.10"

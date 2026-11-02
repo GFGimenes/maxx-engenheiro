@@ -15,7 +15,10 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
 
   if (Platform.OS !== "web" || width < FRAME_MIN_WINDOW_WIDTH) {
     return (
-      <View style={[styles.fill, { backgroundColor: colors.bg }]}>
+      <View
+        testID="app-fundo"
+        style={[styles.fill, { backgroundColor: colors.bg }]}
+      >
         {children}
       </View>
     );
