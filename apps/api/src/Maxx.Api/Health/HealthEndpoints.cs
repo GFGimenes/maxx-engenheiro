@@ -14,7 +14,8 @@ internal static class HealthEndpoints
 
         routes.MapGet("/ready", GetReadyAsync)
             .WithName("GetReady")
-            .WithTags("Health");
+            .WithTags("Health")
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         return routes;
     }

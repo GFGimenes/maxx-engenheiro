@@ -1,0 +1,17 @@
+{
+  "name": "maxx",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "format": "prettier --write packages",
+    "format:check": "prettier --check packages"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10"
+  }
+}

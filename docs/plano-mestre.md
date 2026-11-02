@@ -240,6 +240,11 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Ensaio da apresentação com a banca entrando por rede móvel e o notebook roteado pelo
   celular.
 - Purga de ensaio testada, para a purga real do dia seguinte ser rotina.
+- Avaliar a troca do Node 22 (em manutenção até abril de 2027) pelo Node 24 LTS no
+  `.nvmrc`, no `engines` e na CI.
+- Revisar os três achados moderados do `npm audit` no `minimatch`, que chega pelo
+  `openapi-typescript` via `@redocly/openapi-core`. Registrados no passo 1: só ferramenta
+  de geração, fora do app, abaixo do corte alto ou crítico do job de segurança.
 
 ---
 

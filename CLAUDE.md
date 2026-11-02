@@ -53,11 +53,14 @@ Decisão que não está nesses arquivos não foi tomada. Pergunte, não assuma.
 ```
 apps/api/            Maxx.Domain, Maxx.Application, Maxx.Infrastructure, Maxx.Api
 apps/mobile/         Expo, Expo Router
-packages/api-client/ gerado do OpenAPI, nunca editado à mão
+packages/api-client/ openapi.json e src/schema.d.ts gerados (npm run gerar), src/index.ts manual
 data/catalogo/       os 46 itens e as famílias de trilha
 design/              tokens, identidade visual, telas, logos
 docs/                produto, decisões, regras de conquista, plano mestre, fluxos
 ```
+
+No `packages/api-client`, `openapi.json` e `src/schema.d.ts` são gerados e **nunca editados
+à mão**; `src/index.ts`, a ligação com o `openapi-fetch`, é o único arquivo manual do pacote.
 
 ## Camadas e dependências
 
