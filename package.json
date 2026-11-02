@@ -2,14 +2,15 @@
   "name": "maxx",
   "private": true,
   "workspaces": [
+    "apps/mobile",
     "packages/*"
   ],
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
-    "format": "prettier --write packages",
-    "format:check": "prettier --check packages"
+    "format": "prettier --write apps/mobile packages",
+    "format:check": "prettier --check apps/mobile packages"
   },
   "devDependencies": {
     "prettier": "^3.9.10"
