@@ -133,6 +133,8 @@ Ponta a ponta vazio, mas vivo: a web abre, bate na API e recebe 200.
   tier e raridade, selo de pílula do post, faixa de prêmio, trilha com cadeado, avatar de
   iniciais, estado vazio, estado de erro amigável.
 - Grade de 4 px, margem lateral de 16, respiro de 24 antes da navegação.
+- Ícones e splash reais do app, no lugar dos PNGs padrão do template Expo que ficaram em
+  `apps/mobile/assets` desde o passo 1.
 
 ### Passo 5. Login, cadastro, termos e entrada da demonstração
 

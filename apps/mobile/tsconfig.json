@@ -5,5 +5,5 @@
     "noUncheckedIndexedAccess": true,
     "types": ["jest"]
   },
-  "include": ["src", "expo-env.d.ts", ".expo/types/**/*.ts"]
+  "include": ["src"]
 }
