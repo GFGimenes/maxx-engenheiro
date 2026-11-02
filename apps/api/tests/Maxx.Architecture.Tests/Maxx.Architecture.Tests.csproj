@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Maxx.Domain\Maxx.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Maxx.Application\Maxx.Application.csproj" />
+    <ProjectReference Include="..\..\src\Maxx.Infrastructure\Maxx.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Maxx.Api\Maxx.Api.csproj" />
+  </ItemGroup>
+
+</Project>

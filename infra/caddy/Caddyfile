@@ -1,0 +1,28 @@
+# Origem única (ADR 0001): o build web em / e a API em /api, no mesmo host.
+# Local, o endereço é :80 em HTTP. HTTPS, HSTS e CSP entram no passo 13.
+{$MAXX_SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# A API mapeia tudo sob /api: o prefixo segue como veio, sem corte.
+	handle /api/* {
+		reverse_proxy {
+			# Descobre as réplicas pelo DNS do compose e reconsulta a cada 5 s:
+			# réplica parada some da lista, réplica nova entra.
+			dynamic a api 8080 {
+				refresh 5s
+			}
+			lb_policy round_robin
+			# Se uma réplica falhar, tenta outra antes de devolver erro.
+			lb_try_duration 5s
+			fail_duration 30s
+		}
+	}
+
+	# Todo o resto é o build web. Rota sem arquivo (como /post/:id) cai no index.html,
+	# e o Expo Router resolve no navegador.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

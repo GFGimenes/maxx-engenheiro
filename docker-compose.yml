@@ -1,0 +1,70 @@
+# Maxx: Postgres, migração, duas réplicas de API e Caddy.
+# Uso local: cp .env.example .env && docker compose up --build
+
+name: maxx
+
+x-api-image: &api-image
+  image: maxx-api:local
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+
+# `Gss Encryption Mode=Disable` é proposital, não remover: o Maxx não usa Kerberos, e sem
+# isto o Npgsql tenta negociar criptografia GSS a cada conexão e registra no log
+# "Cannot load library libgssapi_krb5.so.2", que a imagem aspnet não traz.
+x-api-env: &api-env
+  ConnectionStrings__Maxx: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?defina no .env};Username=${POSTGRES_USER:?defina no .env};Password=${POSTGRES_PASSWORD:?defina no .env};Gss Encryption Mode=Disable"
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?defina no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?defina no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina no .env}
+    volumes:
+      # A partir do 18, a imagem guarda os dados em subpasta por versão deste caminho.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Roda uma vez, com advisory lock, antes de qualquer réplica subir.
+  # Nunca no startup da aplicação.
+  migrator:
+    <<: *api-image
+    command: ["migrate"]
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # Duas réplicas sem estado: resiliência de deploy, não capacidade.
+  api:
+    <<: *api-image
+    environment:
+      <<: *api-env
+      ASPNETCORE_ENVIRONMENT: Production
+    deploy:
+      replicas: 2
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  caddy:
+    build:
+      context: .
+      dockerfile: infra/caddy/Dockerfile
+    ports:
+      - "${MAXX_HTTP_PORT:-80}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
