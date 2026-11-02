@@ -108,6 +108,9 @@ Ponta a ponta vazio, mas vivo: a web abre, bate na API e recebe 200.
 - Validação do catálogo na CI: faixas de tier, códigos únicos, famílias coerentes,
   referências de `filtroItens` existentes.
 - Testes de integração com Postgres real.
+- Primeiros testes de domínio em `Maxx.Domain.Tests`, e com eles a remoção do
+  `--ignore-exit-code 8` do `.csproj`, posto no passo 1 só porque o projeto nasceu sem
+  teste.
 
 ### Passo 3. Autenticação e autorização
 
