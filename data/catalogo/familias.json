@@ -1,0 +1,55 @@
+{
+  "versao": 1,
+  "tipo": "familia",
+  "observacao": "Família é a trilha do design: liga os itens obtidos e mostra o próximo em círculo tracejado com cadeado. A escalada é por dificuldade, e os pontos sempre sobem de um passo para o outro. Um item pertence a no máximo uma família. Item sem família não tem trilha. Família não é regra: não concede nada, não pontua e não entra em contagem de conquista.",
+  "itens": [
+    {
+      "codigo": "nota-prova",
+      "nome": "Nota 10 em prova",
+      "descricao": "De uma prova nota 10 até fazer isso em todas as matérias e em todos os bimestres do ano.",
+      "passos": 5
+    },
+    {
+      "codigo": "media-final",
+      "nome": "Média final 10",
+      "descricao": "De fechar uma matéria com média 10 até fechar o semestre inteiro assim.",
+      "passos": 2
+    },
+    {
+      "codigo": "presenca-materia",
+      "nome": "Presença na matéria",
+      "descricao": "De um bimestre sem faltar até o semestre inteiro sem faltar na matéria.",
+      "passos": 2
+    },
+    {
+      "codigo": "presenca-total",
+      "nome": "Presença em tudo",
+      "descricao": "De um bimestre sem faltar em nenhuma matéria até o ano letivo inteiro.",
+      "passos": 3
+    },
+    {
+      "codigo": "volume-medalhas",
+      "nome": "Colecionador de medalhas",
+      "descricao": "De cinco medalhas num bimestre até cem medalhas no curso.",
+      "passos": 5
+    },
+    {
+      "codigo": "participacao",
+      "nome": "Vida acadêmica",
+      "descricao": "De três prêmios de participação num semestre até trinta ao longo do curso.",
+      "passos": 4
+    },
+    {
+      "codigo": "apresentacao",
+      "nome": "Apresentar trabalho",
+      "descricao": "Da apresentação em sala até a publicação em anais, passando pelos eventos da faculdade e de fora.",
+      "passos": 4
+    },
+    {
+      "codigo": "competicao",
+      "nome": "Competição",
+      "descricao": "De representar a UniMax até ficar entre os premiados.",
+      "passos": 2
+    }
+  ]
+}
