@@ -1,0 +1,22 @@
+{
+  "name": "@maxx/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cliente TypeScript gerado do OpenAPI da API do Maxx.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "gerar": "npm run gerar:openapi && npm run gerar:tipos",
+    "gerar:openapi": "dotnet build ../../apps/api/src/Maxx.Api -p:OpenApiGenerateDocuments=true -nologo -v q",
+    "gerar:tipos": "openapi-typescript openapi.json -o src/schema.d.ts",
+    "verificar": "npm run gerar && git diff --exit-code -- .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3"
+  }
+}

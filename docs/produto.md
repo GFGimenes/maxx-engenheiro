@@ -246,8 +246,9 @@ matéria, e o aprovador natural é o professor daquela matéria.
 ```
 reivindicado ──aprovado──> válido ──contestado──> em averiguação ──confirma──> definitivo
      │                       │                          │
-     └──reprovado──> reenvio │                          └──revoga──> revogado
-                             └──15 dias sem contestação──> definitivo
+     │                       │                          └──revoga──> revogado
+     │                       └──15 dias sem contestação──> definitivo
+     └──reprovado──> post comum (nova tentativa é outro post de reivindicação)
 ```
 
 | Estado | Pontua | Visível para |
@@ -265,7 +266,10 @@ Regras do ciclo:
 - Aprovam o professor de qualquer turma do aluno no semestre vigente ou a instituição.
   A comprovação cai na fila de todos eles, com turma e aluno visíveis. **Vale quem chega
   primeiro**; não há conflito de alçada.
-- Reprovada, o aluno pode reenviar outra foto, quantas vezes precisar.
+- Reprovada, a reivindicação se encerra: o post perde o vínculo com o prêmio e permanece
+  no feed como post comum. Para tentar de novo, o aluno publica **outro post**, com outra
+  foto, e reivindica de novo, quantas vezes precisar. Cada reivindicação tem um post e
+  uma foto só; a foto de um post reprovado não é trocada.
 - Aprovado, o prêmio pontua na hora.
 - Da aprovação correm **15 dias de janela de contestação**. Contestam o professor da
   turma (inclusive quem aprovou) ou a instituição, sempre com motivo. **Uma contestação

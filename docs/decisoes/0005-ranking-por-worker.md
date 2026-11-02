@@ -1,6 +1,6 @@
 # ADR 0005 · Ranking e raridade em tabela, escritos pelo worker com coalescência
 
-Status: aceito · 01/11/2026
+Status: aceito · 01/11/2026 · revisado em 02/11/2026 (eventos que enfileiram o recálculo)
 
 ## Contexto
 
@@ -27,6 +27,21 @@ Uma tabela cobre as quatro visões, com pontos, posição e o instante do desemp
 worker a reescreve quando um trabalho de recálculo é enfileirado, coalescendo disparos em
 no máximo uma execução a cada dez segundos por visão. A raridade dos itens é recalculada
 no mesmo worker, pelo mesmo gatilho.
+
+O recálculo é enfileirado, na mesma transação da escrita, por **todo evento que muda a
+pontuação** de algum aluno, não só pela medalha:
+
+- concessão de medalha;
+- aprovação de comprovação de prêmio de participação, e concessão direta pela
+  instituição;
+- contestação aberta (o prêmio entra em averiguação e para de pontuar);
+- decisão da instituição sobre a contestação, confirmando ou revogando;
+- anulação de medalha;
+- conquista concedida ou removida pelo worker.
+
+A coalescência é o que torna isso barato: uma rajada de eventos no mesmo intervalo vira
+uma execução só por visão. O diagrama abaixo mostra a medalha, o caso da banca; os
+outros eventos seguem o mesmo caminho, e os diagramas de `docs/fluxos/` mostram cada um.
 
 ```mermaid
 sequenceDiagram

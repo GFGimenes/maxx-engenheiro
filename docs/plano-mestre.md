@@ -108,6 +108,9 @@ Ponta a ponta vazio, mas vivo: a web abre, bate na API e recebe 200.
 - Validação do catálogo na CI: faixas de tier, códigos únicos, famílias coerentes,
   referências de `filtroItens` existentes.
 - Testes de integração com Postgres real.
+- Primeiros testes de domínio em `Maxx.Domain.Tests`, e com eles a remoção do
+  `--ignore-exit-code 8` do `.csproj`, posto no passo 1 só porque o projeto nasceu sem
+  teste.
 
 ### Passo 3. Autenticação e autorização
 
@@ -130,6 +133,8 @@ Ponta a ponta vazio, mas vivo: a web abre, bate na API e recebe 200.
   tier e raridade, selo de pílula do post, faixa de prêmio, trilha com cadeado, avatar de
   iniciais, estado vazio, estado de erro amigável.
 - Grade de 4 px, margem lateral de 16, respiro de 24 antes da navegação.
+- Ícones e splash reais do app, no lugar dos PNGs padrão do template Expo que ficaram em
+  `apps/mobile/assets` desde o passo 1.
 
 ### Passo 5. Login, cadastro, termos e entrada da demonstração
 
@@ -176,7 +181,7 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Reivindicação como post com foto, pública com marca de pendente, sem pontuar.
 - Fila de comprovações para o professor da turma e para a instituição, ordenada por mais
   antigo, com marca após sete dias, resolvendo a corrida de quem aprova primeiro.
-- Reprovação com motivo e reenvio de foto.
+- Reprovação com motivo; nova tentativa é outro post de reivindicação, com outra foto.
 - Contestação com motivo, uma por prêmio, estado de averiguação sem pontuar.
 - Decisão da instituição: confirmar encerra a janela, revogar mantém no histórico.
 - Trabalho na fila que torna o prêmio definitivo após quinze dias.
@@ -237,6 +242,11 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Ensaio da apresentação com a banca entrando por rede móvel e o notebook roteado pelo
   celular.
 - Purga de ensaio testada, para a purga real do dia seguinte ser rotina.
+- Avaliar a troca do Node 22 (em manutenção até abril de 2027) pelo Node 24 LTS no
+  `.nvmrc`, no `engines` e na CI.
+- Revisar os três achados moderados do `npm audit` no `minimatch`, que chega pelo
+  `openapi-typescript` via `@redocly/openapi-core`. Registrados no passo 1: só ferramenta
+  de geração, fora do app, abaixo do corte alto ou crítico do job de segurança.
 
 ---
 

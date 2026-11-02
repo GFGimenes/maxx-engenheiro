@@ -1,0 +1,145 @@
+name: CI
+
+# Push em qualquer branch: os checks do commit aparecem também no PR, sem rodar duas vezes.
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - run: dotnet restore Maxx.sln
+      - name: Formatação
+        run: dotnet format Maxx.sln --verify-no-changes --no-restore
+      - name: Build (aviso vira erro)
+        run: dotnet build Maxx.sln --no-restore -c Release
+      - name: Testes (domínio, arquitetura e integração com Postgres real)
+        run: dotnet test --solution Maxx.sln --no-build -c Release
+
+  mobile:
+    name: mobile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Formatação
+        run: npx prettier --check apps/mobile
+      - run: npm run lint -w @maxx/mobile
+      - run: npm run typecheck -w @maxx/mobile
+      - run: npm test -w @maxx/mobile
+
+  api-client:
+    name: api-client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Formatação
+        run: npx prettier --check packages
+      - name: Cliente gerado igual ao OpenAPI da API
+        run: npm run verificar -w @maxx/api-client
+      - run: npm run typecheck -w @maxx/api-client
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Formatação e tipos
+        run: |
+          npx prettier --check e2e
+          npm run typecheck -w @maxx/e2e
+      - name: Sobe o compose (Postgres, migração, duas réplicas de API, Caddy)
+        run: |
+          cp .env.example .env
+          docker compose up --build -d
+          for i in $(seq 1 60); do
+            curl -sf http://localhost/api/ready && exit 0
+            sleep 2
+          done
+          echo "A API não ficou pronta a tempo."
+          exit 1
+      - run: npx -w @maxx/e2e playwright install --with-deps chromium
+      - run: npm test -w @maxx/e2e
+      - name: Logs do compose
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
+
+  seguranca:
+    name: segurança
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Histórico completo: segredo apagado num commit antigo continua vazado.
+          fetch-depth: 0
+      - name: Segredos no histórico (gitleaks)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks git --redact --verbose .
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Pacotes NuGet vulneráveis (alto ou crítico)
+        run: |
+          dotnet restore Maxx.sln
+          dotnet list Maxx.sln package --vulnerable --include-transitive --format json > nuget-vulneraveis.json
+          # O comando sai com 0 mesmo achando vulnerabilidade: quem decide é o filtro.
+          graves=$(jq '[.projects[]?.frameworks[]? | (.topLevelPackages // []) + (.transitivePackages // []) | .[] | .vulnerabilities // [] | .[] | select(.severity == "High" or .severity == "Critical")] | length' nuget-vulneraveis.json)
+          jq -r '.projects[]?.frameworks[]? | (.topLevelPackages // []) + (.transitivePackages // []) | .[] | select(.vulnerabilities) | "\(.id) \(.resolvedVersion): \([.vulnerabilities[].severity] | join(", "))"' nuget-vulneraveis.json | sort -u
+          echo "Achados altos ou críticos: $graves"
+          test "$graves" -eq 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Pacotes npm vulneráveis (alto ou crítico)
+        run: npm audit --audit-level=high
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Imagens da API e do Caddy com o build web
+        run: |
+          cp .env.example .env
+          docker compose build

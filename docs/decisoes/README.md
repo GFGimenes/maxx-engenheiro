@@ -31,7 +31,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Migrations | Contêiner separado com advisory lock, antes de subir as réplicas. Nunca no startup da aplicação |
 | Backup | `pg_dump` noturno para o bucket, mais dump manual obrigatório antes de cada migration, com restauração testada uma vez |
 | Banca | Sem plano B local: a VPS é o único ambiente. Se o wifi do campus falhar, a banca entra pela rede móvel e o notebook é roteado pelo celular |
-| CI | GitHub Actions, um job por pasta: api, mobile, api-client, e2e, segurança |
+| CI | GitHub Actions, seis jobs: api, mobile, api-client, e2e, segurança e build (imagens da API e do Caddy com o build web) |
 
 ## Dados
 
