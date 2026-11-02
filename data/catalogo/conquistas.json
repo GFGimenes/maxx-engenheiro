@@ -1,0 +1,385 @@
+{
+  "versao": 1,
+  "tipo": "conquista",
+  "observacao": "Conquista é automática: o sistema calcula. Conta medalhas e prêmios de participação definitivos e nunca conta outra conquista. Não é revogável, só recalculada. A contagem nunca atravessa o período. Repetível uma vez por instância do período. Pontua no semestre do período a que se refere, mesmo quando calculada depois. Especificação do avaliador em docs/regras-conquista.md. Os campos familia e ordemNaFamilia são preenchidos na etapa E0.2c.",
+  "itens": [
+    {
+      "codigo": "C01",
+      "nome": "Cinco no bimestre",
+      "descricao": "Receber cinco medalhas, de qualquer tipo, no mesmo bimestre.",
+      "tipo": "conquista",
+      "tier": "bronze",
+      "pontos": 25,
+      "periodo": "bimestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 5
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 1
+    },
+    {
+      "codigo": "C02",
+      "nome": "Três notas 10 no bimestre",
+      "descricao": "Receber três medalhas de nota 10 em prova no mesmo bimestre.",
+      "tipo": "conquista",
+      "tier": "prata",
+      "pontos": 40,
+      "periodo": "bimestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": ["M01"],
+        "agruparPor": null,
+        "alvo": 3
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "nota-prova",
+      "ordemNaFamilia": 2
+    },
+    {
+      "codigo": "C03",
+      "nome": "Presença total no bimestre",
+      "descricao": "Ter presença integral em todas as matérias do bimestre.",
+      "tipo": "conquista",
+      "tier": "prata",
+      "pontos": 55,
+      "periodo": "bimestre",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M03"],
+        "agruparPor": "materia",
+        "alvo": "todasAsMatriculasDoPeriodo"
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "presenca-total",
+      "ordemNaFamilia": 1
+    },
+    {
+      "codigo": "C04",
+      "nome": "Nota 10 em tudo no bimestre",
+      "descricao": "Tirar 10 em prova em todas as matérias do bimestre.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 105,
+      "periodo": "bimestre",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M01"],
+        "agruparPor": "materia",
+        "alvo": "todasAsMatriculasDoPeriodo"
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "nota-prova",
+      "ordemNaFamilia": 4
+    },
+    {
+      "codigo": "C05",
+      "nome": "Presença nos eventos",
+      "descricao": "Ganhar três prêmios de participação no mesmo semestre.",
+      "tipo": "conquista",
+      "tier": "prata",
+      "pontos": 50,
+      "periodo": "semestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "premioParticipacao",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 3
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "participacao",
+      "ordemNaFamilia": 1
+    },
+    {
+      "codigo": "C06",
+      "nome": "Repertório variado",
+      "descricao": "Ganhar prêmios de participação em três tipos diferentes de evento no mesmo semestre.",
+      "tipo": "conquista",
+      "tier": "prata",
+      "pontos": 50,
+      "periodo": "semestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "premioParticipacao",
+        "filtroItens": null,
+        "agruparPor": "tipoDeEvento",
+        "alvo": 3
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": null,
+      "ordemNaFamilia": null
+    },
+    {
+      "codigo": "C07",
+      "nome": "Dez medalhas no semestre",
+      "descricao": "Receber dez medalhas, de qualquer tipo, no mesmo semestre.",
+      "tipo": "conquista",
+      "tier": "prata",
+      "pontos": 60,
+      "periodo": "semestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 10
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 2
+    },
+    {
+      "codigo": "C08",
+      "nome": "Cinco notas 10 no semestre",
+      "descricao": "Receber cinco medalhas de nota 10 em prova no mesmo semestre.",
+      "tipo": "conquista",
+      "tier": "ouro",
+      "pontos": 75,
+      "periodo": "semestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": ["M01"],
+        "agruparPor": null,
+        "alvo": 5
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "nota-prova",
+      "ordemNaFamilia": 3
+    },
+    {
+      "codigo": "C09",
+      "nome": "Seis prêmios no semestre",
+      "descricao": "Ganhar seis prêmios de participação no mesmo semestre.",
+      "tipo": "conquista",
+      "tier": "ouro",
+      "pontos": 80,
+      "periodo": "semestre",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "premioParticipacao",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 6
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "participacao",
+      "ordemNaFamilia": 2
+    },
+    {
+      "codigo": "C10",
+      "nome": "Presença total no semestre",
+      "descricao": "Ter presença integral em todas as matérias do semestre.",
+      "tipo": "conquista",
+      "tier": "ouro",
+      "pontos": 90,
+      "periodo": "semestre",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M11"],
+        "agruparPor": "materia",
+        "alvo": "todasAsMatriculasDoPeriodo"
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "presenca-total",
+      "ordemNaFamilia": 2
+    },
+    {
+      "codigo": "C11",
+      "nome": "Semestre perfeito",
+      "descricao": "Fechar todas as matérias do semestre com média final 10.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 140,
+      "periodo": "semestre",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M10"],
+        "agruparPor": "materia",
+        "alvo": "todasAsMatriculasDoPeriodo"
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "media-final",
+      "ordemNaFamilia": 2
+    },
+    {
+      "codigo": "C12",
+      "nome": "Vinte medalhas no ano",
+      "descricao": "Receber vinte medalhas, de qualquer tipo, no mesmo ano letivo.",
+      "tipo": "conquista",
+      "tier": "ouro",
+      "pontos": 85,
+      "periodo": "ano",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 20
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 3
+    },
+    {
+      "codigo": "C13",
+      "nome": "Doze prêmios no ano",
+      "descricao": "Ganhar doze prêmios de participação no mesmo ano letivo.",
+      "tipo": "conquista",
+      "tier": "ouro",
+      "pontos": 95,
+      "periodo": "ano",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "premioParticipacao",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 12
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "participacao",
+      "ordemNaFamilia": 3
+    },
+    {
+      "codigo": "C14",
+      "nome": "Nota 10 nos quatro bimestres",
+      "descricao": "Tirar 10 em prova em cada um dos quatro bimestres do ano letivo.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 110,
+      "periodo": "ano",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M01"],
+        "agruparPor": "bimestre",
+        "alvo": 4
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "nota-prova",
+      "ordemNaFamilia": 5
+    },
+    {
+      "codigo": "C15",
+      "nome": "Ano inteiro presente",
+      "descricao": "Ter presença integral em todas as matérias dos dois semestres do ano letivo.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 120,
+      "periodo": "ano",
+      "gatilho": "fechamentoDePeriodo",
+      "regra": {
+        "forma": "contagemDistinta",
+        "fonte": "medalha",
+        "filtroItens": ["M11"],
+        "agruparPor": "materia",
+        "alvo": "todasAsMatriculasDoPeriodo"
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "presenca-total",
+      "ordemNaFamilia": 3
+    },
+    {
+      "codigo": "C16",
+      "nome": "Cinquenta medalhas no curso",
+      "descricao": "Acumular cinquenta medalhas ao longo do curso.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 115,
+      "periodo": "curso",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 50
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 4
+    },
+    {
+      "codigo": "C17",
+      "nome": "Trinta prêmios no curso",
+      "descricao": "Acumular trinta prêmios de participação ao longo do curso.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 125,
+      "periodo": "curso",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "premioParticipacao",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 30
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "participacao",
+      "ordemNaFamilia": 4
+    },
+    {
+      "codigo": "C18",
+      "nome": "Cem medalhas no curso",
+      "descricao": "Acumular cem medalhas ao longo do curso.",
+      "tipo": "conquista",
+      "tier": "diamante",
+      "pontos": 150,
+      "periodo": "curso",
+      "gatilho": "porFato",
+      "regra": {
+        "forma": "contagem",
+        "fonte": "medalha",
+        "filtroItens": null,
+        "agruparPor": null,
+        "alvo": 100
+      },
+      "restricaoCurso": null,
+      "vigencia": { "inicio": null, "fim": null },
+      "familia": "volume-medalhas",
+      "ordemNaFamilia": 5
+    }
+  ]
+}
