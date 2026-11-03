@@ -225,7 +225,7 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Anular medalha; corrigir e-mail de aluno; marcar ex-aluno.
 - Purgar dados de demonstração por lote, em uma transação.
 - Seed de demonstração completo: 150 alunos, 120 ativos distribuídos por semestres e 30
-  ex-alunos, três cursos, turmas, matérias, professores, posts com foto, prêmios
+  ex-alunos, quatro cursos, turmas, matérias, professores, posts com foto, prêmios
   distribuídos de modo que as quatro raridades apareçam, avisos, eventos passados e
   futuros, duas comprovações pendentes e uma contestação aberta.
 

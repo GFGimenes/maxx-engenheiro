@@ -1,7 +1,7 @@
 {
   "versao": 1,
   "tipo": "conquista",
-  "observacao": "Conquista é automática: o sistema calcula. Conta medalhas e prêmios de participação definitivos e nunca conta outra conquista. Não é revogável, só recalculada. A contagem nunca atravessa o período. Repetível uma vez por instância do período. Pontua no semestre do período a que se refere, mesmo quando calculada depois. Especificação do avaliador em docs/regras-conquista.md. Os campos familia e ordemNaFamilia são preenchidos na etapa E0.2c.",
+  "observacao": "Conquista é automática: o sistema calcula. Conta medalhas e prêmios de participação definitivos e nunca conta outra conquista. Não é revogável, só recalculada. A contagem nunca atravessa o período. Repetível uma vez por instância do período. Pontua no semestre do período a que se refere, mesmo quando calculada depois. Especificação do avaliador em docs/regras-conquista.md.",
   "itens": [
     {
       "codigo": "C01",

@@ -1,0 +1,369 @@
+{
+  "observacao": "Mundo de demonstração do seed demo. Cursos e matérias são da UniMax; pessoas, RAs e e-mails são fictícios. Cresce por passo até o seed completo do passo 12. O seed só acrescenta o que falta: nunca apaga, e falha se uma linha que já existe divergir deste arquivo. Cada matéria lista os semestres letivos em que tem turma; professor e aluno listam as matérias, e entram em todas as turmas delas.",
+  "instituicao": [
+    {
+      "email": "coordenacao@unieduk.com.br",
+      "nomeCompleto": "Coordenação UniMax"
+    }
+  ],
+  "cursos": [
+    {
+      "sigla": "CC",
+      "nome": "Ciência da Computação",
+      "duracaoEmSemestres": 8,
+      "materias": [
+        {
+          "nome": "Algoritmos e Programação",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Estruturas de Dados",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Banco de Dados",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Engenharia de Software",
+          "turmas": ["2026/2"]
+        }
+      ],
+      "professores": [
+        {
+          "email": "renata.albuquerque@prof.unieduk.com.br",
+          "nomeCompleto": "Renata Albuquerque",
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        }
+      ],
+      "alunos": [
+        {
+          "ra": "20260101",
+          "email": "ana.souza@al.unieduk.com.br",
+          "nomeCompleto": "Ana Beatriz Souza",
+          "semestre": 1,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        },
+        {
+          "ra": "20260102",
+          "email": "lucas.ferreira@al.unieduk.com.br",
+          "nomeCompleto": "Lucas Ferreira",
+          "semestre": 3,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        },
+        {
+          "ra": "20260103",
+          "email": "mariana.costa@al.unieduk.com.br",
+          "nomeCompleto": "Mariana Costa",
+          "semestre": 4,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        },
+        {
+          "ra": "20260104",
+          "email": "pedro.lima@al.unieduk.com.br",
+          "nomeCompleto": "Pedro Henrique Lima",
+          "semestre": 6,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        },
+        {
+          "ra": "20260105",
+          "email": "juliana.rocha@al.unieduk.com.br",
+          "nomeCompleto": "Juliana Rocha",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software"
+          ]
+        }
+      ]
+    },
+    {
+      "sigla": "ADM",
+      "nome": "Administração",
+      "duracaoEmSemestres": 8,
+      "materias": [
+        {
+          "nome": "Teoria Geral da Administração",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Contabilidade Gerencial",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Marketing",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Gestão de Pessoas",
+          "turmas": ["2026/2"]
+        }
+      ],
+      "professores": [
+        {
+          "email": "marcos.teixeira@prof.unieduk.com.br",
+          "nomeCompleto": "Marcos Teixeira",
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        }
+      ],
+      "alunos": [
+        {
+          "ra": "20260201",
+          "email": "gabriel.martins@al.unieduk.com.br",
+          "nomeCompleto": "Gabriel Martins",
+          "semestre": 2,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        },
+        {
+          "ra": "20260202",
+          "email": "larissa.oliveira@al.unieduk.com.br",
+          "nomeCompleto": "Larissa Oliveira",
+          "semestre": 3,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        },
+        {
+          "ra": "20260203",
+          "email": "rafael.gomes@al.unieduk.com.br",
+          "nomeCompleto": "Rafael Gomes",
+          "semestre": 5,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        },
+        {
+          "ra": "20260204",
+          "email": "camila.ribeiro@al.unieduk.com.br",
+          "nomeCompleto": "Camila Ribeiro",
+          "semestre": 7,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        },
+        {
+          "ra": "20260205",
+          "email": "thiago.almeida@al.unieduk.com.br",
+          "nomeCompleto": "Thiago Almeida",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas"
+          ]
+        }
+      ]
+    },
+    {
+      "sigla": "MED",
+      "nome": "Medicina",
+      "duracaoEmSemestres": 12,
+      "materias": [
+        {
+          "nome": "Anatomia",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Fisiologia",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Bioquímica",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Histologia",
+          "turmas": ["2026/2"]
+        }
+      ],
+      "professores": [
+        {
+          "email": "helena.duarte@prof.unieduk.com.br",
+          "nomeCompleto": "Helena Duarte",
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        }
+      ],
+      "alunos": [
+        {
+          "ra": "20260301",
+          "email": "beatriz.carvalho@al.unieduk.com.br",
+          "nomeCompleto": "Beatriz Carvalho",
+          "semestre": 1,
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        },
+        {
+          "ra": "20260302",
+          "email": "felipe.araujo@al.unieduk.com.br",
+          "nomeCompleto": "Felipe Araújo",
+          "semestre": 4,
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        },
+        {
+          "ra": "20260303",
+          "email": "isabela.moreira@al.unieduk.com.br",
+          "nomeCompleto": "Isabela Moreira",
+          "semestre": 6,
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        },
+        {
+          "ra": "20260304",
+          "email": "gustavo.pereira@al.unieduk.com.br",
+          "nomeCompleto": "Gustavo Pereira",
+          "semestre": 9,
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        },
+        {
+          "ra": "20260305",
+          "email": "leticia.barbosa@al.unieduk.com.br",
+          "nomeCompleto": "Letícia Barbosa",
+          "semestre": 12,
+          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        }
+      ]
+    },
+    {
+      "sigla": "IA",
+      "nome": "Inteligência Artificial e Ciência de Dados",
+      "duracaoEmSemestres": 8,
+      "materias": [
+        {
+          "nome": "Desvendando a Lógica Digital",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Código Criativo para IA",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Matemática Inteligente: Da Lógica aos Dados",
+          "turmas": ["2026/2"]
+        },
+        {
+          "nome": "Despertando a Inteligência Artificial",
+          "turmas": ["2026/2"]
+        }
+      ],
+      "professores": [
+        {
+          "email": "claudio.fonseca@prof.unieduk.com.br",
+          "nomeCompleto": "Cláudio Fonseca",
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        }
+      ],
+      "alunos": [
+        {
+          "ra": "20260401",
+          "email": "vinicius.nogueira@al.unieduk.com.br",
+          "nomeCompleto": "Vinícius Nogueira",
+          "semestre": 1,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        },
+        {
+          "ra": "20260402",
+          "email": "sofia.mendes@al.unieduk.com.br",
+          "nomeCompleto": "Sofia Mendes",
+          "semestre": 2,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        },
+        {
+          "ra": "20260403",
+          "email": "bruno.cardoso@al.unieduk.com.br",
+          "nomeCompleto": "Bruno Cardoso",
+          "semestre": 4,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        },
+        {
+          "ra": "20260404",
+          "email": "amanda.vieira@al.unieduk.com.br",
+          "nomeCompleto": "Amanda Vieira",
+          "semestre": 5,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        },
+        {
+          "ra": "20260405",
+          "email": "diego.santana@al.unieduk.com.br",
+          "nomeCompleto": "Diego Santana",
+          "semestre": 7,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial"
+          ]
+        }
+      ]
+    }
+  ]
+}
