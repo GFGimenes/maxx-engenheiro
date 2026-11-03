@@ -1,4 +1,5 @@
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -17,6 +18,7 @@ public static class DependencyInjection
                 npgsql => npgsql.MigrationsHistoryTable(MaxxDbContext.MigrationsHistoryTable))));
 
         services.AddScoped<DatabaseMigrator>();
+        services.AddScoped<DatabaseSeeder>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

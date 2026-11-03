@@ -38,4 +38,17 @@ public sealed class Bimestre
     public DateOnly Fim { get; private set; }
 
     public bool Contem(DateOnly data) => data >= Inicio && data <= Fim;
+
+    // Só pelo AnoLetivo, que valida o ano corrigido inteiro antes de copiar as datas.
+    internal bool Redatar(DateOnly inicio, DateOnly fim)
+    {
+        if (inicio == Inicio && fim == Fim)
+        {
+            return false;
+        }
+
+        Inicio = inicio;
+        Fim = fim;
+        return true;
+    }
 }

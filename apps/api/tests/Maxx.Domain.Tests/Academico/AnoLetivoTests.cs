@@ -85,6 +85,43 @@ public class AnoLetivoTests
     }
 
     [Fact]
+    public void Atualizar_datas_copia_as_datas_e_mantem_os_ids()
+    {
+        var ano = Ano();
+        var idsAntes = ano.Bimestres.Select(bimestre => bimestre.Id).ToList();
+        var corrigido = new AnoLetivo(
+            2026,
+            Primeiro(),
+            new SemestreLetivo(
+                2026, 2, new Bimestre(3, Data(8, 3), Data(9, 26)), new Bimestre(4, Data(9, 28), Data(12, 12))));
+
+        Assert.True(ano.AtualizarDatas(corrigido));
+
+        Assert.Equal(idsAntes, ano.Bimestres.Select(bimestre => bimestre.Id));
+        Assert.Equal(Data(8, 3), ano.Semestres[1].Inicio);
+        Assert.Equal(Data(12, 12), ano.Fim);
+    }
+
+    [Fact]
+    public void Atualizar_com_as_mesmas_datas_nao_muda_nada()
+    {
+        Assert.False(Ano().AtualizarDatas(Ano()));
+    }
+
+    [Fact]
+    public void Atualizar_com_datas_de_outro_ano_e_recusado()
+    {
+        var de2027 = new AnoLetivo(
+            2027,
+            new SemestreLetivo(
+                2027, 1, new Bimestre(1, Data(1, 26), Data(4, 3)), new Bimestre(2, Data(4, 6), Data(6, 27))),
+            new SemestreLetivo(
+                2027, 2, new Bimestre(3, Data(7, 27), Data(9, 26)), new Bimestre(4, Data(9, 28), Data(12, 5))));
+
+        Assert.Throws<DomainException>(() => Ano().AtualizarDatas(de2027));
+    }
+
+    [Fact]
     public void Semestres_que_se_sobrepoem_sao_recusados()
     {
         var segundoCedo = new SemestreLetivo(

@@ -1,0 +1,277 @@
+using System.Text.Json.Nodes;
+using Maxx.Domain.Academico;
+using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Seed;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using static Maxx.Api.IntegrationTests.BancoDeTeste;
+
+namespace Maxx.Api.IntegrationTests;
+
+// `seed base` contra o Postgres real. Os testes que mudam arquivo trabalham numa cópia
+// de data/, nunca no repositório.
+public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>, IDisposable
+{
+    private readonly string _dados = CopiarDados();
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    public void Dispose() => Directory.Delete(_dados, recursive: true);
+
+    [Fact]
+    public async Task Banco_vazio_recebe_os_46_itens_as_8_familias_e_o_calendario_de_2026()
+    {
+        await using var factory = await MigradoAsync(postgres);
+
+        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(new ResultadoDoSeed(46, 0, 0, 8, 0, 1, 0), resultado);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        Assert.Equal(46, await db.Set<ItemCatalogoRow>().CountAsync(item => item.Versao == 1, Ct));
+
+        var ano = await db.Set<AnoLetivo>()
+            .Include(ano => ano.Semestres).ThenInclude(semestre => semestre.Bimestres)
+            .SingleAsync(Ct);
+        Assert.Equal(
+            [
+                (1, new DateOnly(2026, 1, 26), new DateOnly(2026, 4, 3)),
+                (2, new DateOnly(2026, 4, 6), new DateOnly(2026, 6, 27)),
+                (3, new DateOnly(2026, 7, 27), new DateOnly(2026, 9, 26)),
+                (4, new DateOnly(2026, 9, 28), new DateOnly(2026, 12, 5)),
+            ],
+            ano.Bimestres.Select(bimestre => (bimestre.Numero, bimestre.Inicio, bimestre.Fim)));
+    }
+
+    [Fact]
+    public async Task Rodar_de_novo_sem_mudar_os_arquivos_nao_muda_nada()
+    {
+        await using var factory = await MigradoAsync(postgres);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var antes = await FotografiaAsync(factory);
+
+        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(new ResultadoDoSeed(0, 0, 46, 0, 0, 0, 0), resultado);
+        Assert.Equal(antes, await FotografiaAsync(factory));
+    }
+
+    [Fact]
+    public async Task Mudar_os_pontos_de_um_item_sobe_a_versao_so_dele()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
+        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(new ResultadoDoSeed(0, 1, 45, 0, 0, 0, 0), resultado);
+        var versoes = await VersoesAsync(factory);
+        Assert.Equal((2, 20), versoes["M02"]);
+        Assert.All(versoes.Where(par => par.Key != "M02"), par => Assert.Equal(1, par.Value.Versao));
+    }
+
+    [Fact]
+    public async Task Versao_nova_e_estavel_ao_rodar_de_novo()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(2, (await VersoesAsync(factory))["M02"].Versao);
+    }
+
+    [Fact]
+    public async Task Mudar_a_regra_de_uma_conquista_sobe_a_versao()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        AlterarItem("conquistas.json", "C02", item => item["regra"]!["alvo"] = 4);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(2, (await VersoesAsync(factory))["C02"].Versao);
+    }
+
+    [Fact]
+    public async Task Item_que_sumiu_do_arquivo_faz_o_seed_falhar_sem_gravar_nada()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        // Na mesma rodada, uma mudança válida em outro item: também não pode entrar.
+        AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
+        RemoverItem("premios-participacao.json", "P05");
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+
+        Assert.Contains("P05", falha.Message, StringComparison.Ordinal);
+        Assert.Contains("vigencia.fim", falha.Message, StringComparison.Ordinal);
+        var versoes = await VersoesAsync(factory);
+        Assert.Equal((1, 25), versoes["M02"]);
+        Assert.Contains("P05", versoes.Keys);
+    }
+
+    [Fact]
+    public async Task Catalogo_invalido_nao_grava_nada()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+
+        AlterarItem("medalhas.json", "M01", item => item["pontos"] = 31);
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+
+        Assert.Contains("M01", falha.Message, StringComparison.Ordinal);
+        Assert.Equal(new Fotografia(0, 0, 0, ""), await FotografiaAsync(factory));
+    }
+
+    [Fact]
+    public async Task Corrigir_uma_data_no_arquivo_atualiza_o_bimestre_com_o_mesmo_id()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var idAntes = await IdDoBimestreAsync(factory, 4);
+
+        AlterarCalendario(ano => ano["semestres"]![1]!["bimestres"]![1]!["fim"] = "2026-12-12");
+        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+
+        Assert.Equal(1, resultado.AnosAtualizados);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var bimestre = await db.Set<Bimestre>().SingleAsync(bimestre => bimestre.Numero == 4, Ct);
+        Assert.Equal(idAntes, bimestre.Id);
+        Assert.Equal(new DateOnly(2026, 12, 12), bimestre.Fim);
+    }
+
+    [Fact]
+    public async Task Calendario_invalido_nao_grava_nada()
+    {
+        await using var factory = await MigradoAsync(postgres, _dados);
+
+        // Bimestre 2 começando antes de o 1 terminar.
+        AlterarCalendario(ano => ano["semestres"]![0]!["bimestres"]![1]!["inicio"] = "2026-03-01");
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+
+        Assert.Contains("2026.json", falha.Message, StringComparison.Ordinal);
+        Assert.Equal(new Fotografia(0, 0, 0, ""), await FotografiaAsync(factory));
+    }
+
+    [Fact]
+    public async Task Dois_seeds_em_paralelo_gravam_cada_item_uma_vez()
+    {
+        await using var factory = await MigradoAsync(postgres);
+
+        var resultados = await Task.WhenAll(factory.SeedAsync(PerfilDeSeed.Base, Ct), factory.SeedAsync(PerfilDeSeed.Base, Ct));
+
+        // Um grava; o outro espera o lock e encontra tudo pronto.
+        Assert.Equal([0, 46], resultados.Select(resultado => resultado.ItensNovos).Order());
+        Assert.Equal(46, (await FotografiaAsync(factory)).Itens);
+    }
+
+    [Fact]
+    public async Task Seed_espera_o_lock_de_outro_seed()
+    {
+        await using var factory = await MigradoAsync(postgres);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dataSource = scope.ServiceProvider.GetRequiredService<NpgsqlDataSource>();
+
+        await using var outro = await dataSource.OpenConnectionAsync(Ct);
+        await ExecutarAsync(outro, $"SELECT pg_advisory_lock({DatabaseSeeder.AdvisoryLockKey})");
+
+        var seed = factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var terminou = await Task.WhenAny(seed, Task.Delay(TimeSpan.FromSeconds(2), Ct));
+        Assert.NotSame(seed, terminou);
+        Assert.Equal(0, (await FotografiaAsync(factory)).Itens);
+
+        await ExecutarAsync(outro, $"SELECT pg_advisory_unlock({DatabaseSeeder.AdvisoryLockKey})");
+        await seed.WaitAsync(TimeSpan.FromSeconds(30), Ct);
+
+        Assert.Equal(46, (await FotografiaAsync(factory)).Itens);
+    }
+
+    [Fact]
+    public async Task Perfil_demo_ainda_nao_existe()
+    {
+        await using var factory = await MigradoAsync(postgres);
+
+        await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Demo, Ct));
+    }
+
+    // O que importa comparar entre duas rodadas: contagens, versões e datas.
+    private sealed record Fotografia(int Itens, int Familias, int Anos, string Conteudo);
+
+    private static async Task<Fotografia> FotografiaAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var itens = (await db.Set<ItemCatalogoRow>().AsNoTracking().OrderBy(item => item.Codigo).ToListAsync(Ct))
+            .Select(item => $"{item.Codigo}:{item.Versao}:{item.Pontos}:{item.Nome}:{item.Regra}")
+            .ToList();
+        var bimestres = (await db.Set<Bimestre>().AsNoTracking().OrderBy(bimestre => bimestre.Numero).ToListAsync(Ct))
+            .Select(bimestre => $"{bimestre.Id}:{bimestre.Inicio}:{bimestre.Fim}");
+
+        return new(
+            itens.Count,
+            await db.Set<FamiliaRow>().CountAsync(Ct),
+            await db.Set<AnoLetivo>().CountAsync(Ct),
+            string.Join("|", itens.Concat(bimestres)));
+    }
+
+    private static async Task<Dictionary<string, (int Versao, int Pontos)>> VersoesAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        return await db.Set<ItemCatalogoRow>().AsNoTracking()
+            .ToDictionaryAsync(item => item.Codigo, item => (item.Versao, item.Pontos), Ct);
+    }
+
+    private static async Task<Guid> IdDoBimestreAsync(MaxxApiFactory factory, int numero)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        return await db.Set<Bimestre>().Where(bimestre => bimestre.Numero == numero).Select(bimestre => bimestre.Id).SingleAsync(Ct);
+    }
+
+    private static async Task ExecutarAsync(NpgsqlConnection conexao, string sql)
+    {
+        await using var command = new NpgsqlCommand(sql, conexao);
+        await command.ExecuteNonQueryAsync(Ct);
+    }
+
+    private void AlterarItem(string arquivo, string codigo, Action<JsonObject> alteracao) =>
+        AlterarJson(Path.Combine(_dados, "catalogo", arquivo), raiz =>
+            alteracao(raiz["itens"]!.AsArray().Single(item => (string?)item!["codigo"] == codigo)!.AsObject()));
+
+    private void RemoverItem(string arquivo, string codigo) =>
+        AlterarJson(Path.Combine(_dados, "catalogo", arquivo), raiz =>
+        {
+            var itens = raiz["itens"]!.AsArray();
+            itens.Remove(itens.Single(item => (string?)item!["codigo"] == codigo));
+        });
+
+    private void AlterarCalendario(Action<JsonNode> alteracao) =>
+        AlterarJson(Path.Combine(_dados, "calendario", "2026.json"), alteracao);
+
+    private static void AlterarJson(string caminho, Action<JsonNode> alteracao)
+    {
+        var raiz = JsonNode.Parse(File.ReadAllText(caminho))!;
+        alteracao(raiz);
+        File.WriteAllText(caminho, raiz.ToJsonString());
+    }
+
+    private static string CopiarDados()
+    {
+        var destino = Path.Combine(Path.GetTempPath(), $"maxx-dados-{Guid.NewGuid():N}");
+        foreach (var arquivo in Directory.GetFiles(Repositorio.DiretorioDeDados, "*.json", SearchOption.AllDirectories))
+        {
+            var copia = Path.Combine(destino, Path.GetRelativePath(Repositorio.DiretorioDeDados, arquivo));
+            Directory.CreateDirectory(Path.GetDirectoryName(copia)!);
+            File.Copy(arquivo, copia);
+        }
+
+        return destino;
+    }
+}

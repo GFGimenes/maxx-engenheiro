@@ -43,6 +43,19 @@ services:
         condition: service_healthy
     restart: "no"
 
+  # Catálogo e calendário, depois da migração e antes das réplicas. Idempotente: roda a
+  # cada subida sem mudar nada se os arquivos de data/ não mudaram. O `seed demo` é à mão:
+  # docker compose run --rm seeder seed demo
+  seeder:
+    <<: *api-image
+    command: ["seed", "base"]
+    environment:
+      <<: *api-env
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
   # Duas réplicas sem estado: resiliência de deploy, não capacidade.
   api:
     <<: *api-image
@@ -52,7 +65,7 @@ services:
     deploy:
       replicas: 2
     depends_on:
-      migrator:
+      seeder:
         condition: service_completed_successfully
     restart: unless-stopped
 

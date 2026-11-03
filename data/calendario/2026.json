@@ -1,0 +1,20 @@
+{
+  "ano": 2026,
+  "observacao": "Datas aproximadas, declaradas pelo autor do projeto: a UniMax não publica o calendário acadêmico em página aberta. Podem ser corrigidas editando este arquivo e rodando de novo o seed base, sem mudar código; os ids de semestre e bimestre ficam, e só as datas mudam. Recesso em julho e de dezembro a janeiro. Os bimestres são numerados de 1 a 4 no ano: o semestre 1 tem o 1 e o 2, o semestre 2 tem o 3 e o 4. Datas inclusivas, interpretadas em America/Sao_Paulo.",
+  "semestres": [
+    {
+      "numero": 1,
+      "bimestres": [
+        { "numero": 1, "inicio": "2026-01-26", "fim": "2026-04-03" },
+        { "numero": 2, "inicio": "2026-04-06", "fim": "2026-06-27" }
+      ]
+    },
+    {
+      "numero": 2,
+      "bimestres": [
+        { "numero": 3, "inicio": "2026-07-27", "fim": "2026-09-26" },
+        { "numero": 4, "inicio": "2026-09-28", "fim": "2026-12-05" }
+      ]
+    }
+  ]
+}

@@ -45,4 +45,25 @@ public sealed class AnoLetivo
     public DateOnly Inicio => _semestres.Min(semestre => semestre.Inicio);
 
     public DateOnly Fim => _semestres.Max(semestre => semestre.Fim);
+
+    // Corrige as datas a partir de um ano já construído, e portanto já validado inteiro.
+    // Os ids ficam: turmas e prêmios apontam para estes semestres e bimestres. Devolve se
+    // alguma data mudou.
+    public bool AtualizarDatas(AnoLetivo corrigido)
+    {
+        ArgumentNullException.ThrowIfNull(corrigido);
+
+        if (corrigido.Ano != Ano)
+        {
+            throw new DomainException($"O ano letivo {Ano} não pode receber as datas de {corrigido.Ano}.");
+        }
+
+        var mudou = false;
+        foreach (var (atual, novo) in Bimestres.Zip(corrigido.Bimestres))
+        {
+            mudou |= atual.Redatar(novo.Inicio, novo.Fim);
+        }
+
+        return mudou;
+    }
 }

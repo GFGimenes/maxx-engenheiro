@@ -11,9 +11,9 @@ internal static class BancoDeTeste
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    public static async Task<MaxxApiFactory> MigradoAsync(PostgresFixture postgres)
+    public static async Task<MaxxApiFactory> MigradoAsync(PostgresFixture postgres, string? diretorioDeDados = null)
     {
-        var factory = new MaxxApiFactory(await postgres.CreateDatabaseAsync());
+        var factory = new MaxxApiFactory(await postgres.CreateDatabaseAsync(), diretorioDeDados: diretorioDeDados);
         await factory.MigrateAsync(Ct);
         return factory;
     }
@@ -82,7 +82,9 @@ internal static class Repositorio
 {
     public static string Raiz { get; } = Encontrar();
 
-    public static string DiretorioDoCatalogo => Path.Combine(Raiz, "data", "catalogo");
+    public static string DiretorioDeDados => Path.Combine(Raiz, "data");
+
+    public static string DiretorioDoCatalogo => Path.Combine(DiretorioDeDados, "catalogo");
 
     private static string Encontrar()
     {

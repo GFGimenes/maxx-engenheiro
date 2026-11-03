@@ -10,8 +10,8 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "format": "prettier --write apps/mobile e2e packages data/catalogo",
-    "format:check": "prettier --check apps/mobile e2e packages data/catalogo"
+    "format": "prettier --write apps/mobile e2e packages data",
+    "format:check": "prettier --check apps/mobile e2e packages data"
   },
   "devDependencies": {
     "prettier": "^3.9.10"

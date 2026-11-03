@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json.Nodes;
 using Maxx.Domain.Catalogo;
 using Maxx.Infrastructure.Persistence;
 
@@ -67,4 +69,45 @@ public static class CatalogoRowMapper
     }
 
     private static string[] Chave(IReadOnlyList<CampoDeDeduplicacao> chave) => [.. chave.Select(NomeJson.De)];
+
+    // Todo campo da linha menos a chave e a versão. Por reflexão, para uma coluna nova
+    // entrar na comparação sem ninguém lembrar de acrescentá-la aqui.
+    private static readonly PropertyInfo[] _conteudo = [.. typeof(ItemCatalogoRow).GetProperties()
+        .Where(propriedade => propriedade.Name is not (nameof(ItemCatalogoRow.Codigo) or nameof(ItemCatalogoRow.Versao)))];
+
+    public static bool MesmoConteudo(ItemCatalogoRow atual, ItemCatalogoRow novo)
+    {
+        ArgumentNullException.ThrowIfNull(atual);
+        ArgumentNullException.ThrowIfNull(novo);
+
+        return _conteudo.All(propriedade => (propriedade.GetValue(atual), propriedade.GetValue(novo)) switch
+        {
+            (null, null) => true,
+            (string[] a, string[] b) => a.SequenceEqual(b),
+
+            // O jsonb volta do Postgres normalizado (ordem de chave, espaços): compara a árvore.
+            (string a, string b) when propriedade.Name == nameof(ItemCatalogoRow.Regra) =>
+                JsonNode.DeepEquals(JsonNode.Parse(a), JsonNode.Parse(b)),
+            (var a, var b) => Equals(a, b),
+        });
+    }
+
+    public static void CopiarConteudo(ItemCatalogoRow origem, ItemCatalogoRow destino)
+    {
+        ArgumentNullException.ThrowIfNull(origem);
+        ArgumentNullException.ThrowIfNull(destino);
+
+        foreach (var propriedade in _conteudo)
+        {
+            propriedade.SetValue(destino, propriedade.GetValue(origem));
+        }
+    }
+
+    public static bool MesmoConteudo(FamiliaRow atual, FamiliaRow nova)
+    {
+        ArgumentNullException.ThrowIfNull(atual);
+        ArgumentNullException.ThrowIfNull(nova);
+
+        return (atual.Nome, atual.Descricao, atual.Passos) == (nova.Nome, nova.Descricao, nova.Passos);
+    }
 }

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Contexto: raiz do repositório (global.json e Directory.*.props ficam lá).
-# A mesma imagem serve a API e o contêiner de migração (`migrate`).
+# A mesma imagem serve a API, o contêiner de migração (`migrate`) e o de seed (`seed`).
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
@@ -20,6 +20,8 @@ RUN dotnet publish apps/api/src/Maxx.Api/Maxx.Api.csproj -c Release -o /app --no
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
+# Catálogo e calendário para o `seed` (Seed:DiretorioDeDados = "data", relativo a /app).
+COPY data/ data/
 # Usuário sem privilégio que a imagem oficial já traz.
 USER $APP_UID
 EXPOSE 8080
