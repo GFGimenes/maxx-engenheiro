@@ -37,7 +37,7 @@ public static partial class CatalogoReader
             (ArquivoDeConquistas, TipoDeItem.Conquista),
         })
         {
-            var conteudo = LerArquivo<ItemJson>(diretorio, arquivo, Camel(tipo.ToString()), erros);
+            var conteudo = LerArquivo<ItemJson>(diretorio, arquivo, NomeJson.De(tipo), erros);
             foreach (var item in conteudo)
             {
                 if (MapearItem(item, tipo, arquivo, erros) is { } mapeado)
@@ -192,7 +192,7 @@ public static partial class CatalogoReader
             case { ValueKind: JsonValueKind.Number } numero when numero.TryGetInt32(out var fixo):
                 return AlvoDeConquista.De(fixo);
             case { ValueKind: JsonValueKind.String } texto
-                when texto.GetString() == Camel(nameof(AlvoDeConquista.TodasAsMatriculasDoPeriodo)):
+                when texto.GetString() == NomeJson.De(nameof(AlvoDeConquista.TodasAsMatriculasDoPeriodo)):
                 return AlvoDeConquista.TodasAsMatriculasDoPeriodo;
             default:
                 campos.Erro($"regra.alvo {alvo} não é inteiro nem \"todasAsMatriculasDoPeriodo\".");
@@ -213,8 +213,6 @@ public static partial class CatalogoReader
 
         return campos.Falhou ? null : familia;
     }
-
-    private static string Camel(string nome) => JsonNamingPolicy.CamelCase.ConvertName(nome);
 
     // Junta os erros de um item sem parar no primeiro.
     private sealed class Campos(string referencia, List<ErroDeCatalogo> erros)
@@ -258,12 +256,9 @@ public static partial class CatalogoReader
                 return default;
             }
 
-            foreach (var candidato in System.Enum.GetValues<T>())
+            if (NomeJson.TentarLer<T>(valor, out var lido))
             {
-                if (Camel(candidato.ToString()) == valor)
-                {
-                    return candidato;
-                }
+                return lido;
             }
 
             Erro($"{campo} \"{valor}\" desconhecido.");

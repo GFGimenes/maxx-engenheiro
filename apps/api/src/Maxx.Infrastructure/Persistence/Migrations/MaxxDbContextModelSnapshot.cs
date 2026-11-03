@@ -307,6 +307,157 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("vinculo_professor", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Persistence.FamiliaRow", b =>
+                {
+                    b.Property<string>("Codigo")
+                        .HasColumnType("text")
+                        .HasColumnName("codigo");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<int>("Passos")
+                        .HasColumnType("integer")
+                        .HasColumnName("passos");
+
+                    b.HasKey("Codigo")
+                        .HasName("pk_familia");
+
+                    b.ToTable("familia", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_familia_passos", "passos >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>
+                {
+                    b.Property<string>("Codigo")
+                        .HasColumnType("text")
+                        .HasColumnName("codigo");
+
+                    b.Property<string>("Base")
+                        .HasColumnType("text")
+                        .HasColumnName("base");
+
+                    b.PrimitiveCollection<string[]>("ChaveDeDeduplicacao")
+                        .HasColumnType("text[]")
+                        .HasColumnName("chave_de_deduplicacao");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("descricao");
+
+                    b.Property<bool?>("ExigeFoto")
+                        .HasColumnType("boolean")
+                        .HasColumnName("exige_foto");
+
+                    b.Property<string>("FamiliaCodigo")
+                        .HasColumnType("text")
+                        .HasColumnName("familia_codigo");
+
+                    b.Property<string>("FormaDoEvento")
+                        .HasColumnType("text")
+                        .HasColumnName("forma_do_evento");
+
+                    b.Property<string>("Gatilho")
+                        .HasColumnType("text")
+                        .HasColumnName("gatilho");
+
+                    b.Property<int?>("LimitePorPeriodo")
+                        .HasColumnType("integer")
+                        .HasColumnName("limite_por_periodo");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<int?>("OrdemNaFamilia")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordem_na_familia");
+
+                    b.Property<string>("Periodo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("periodo");
+
+                    b.Property<int>("Pontos")
+                        .HasColumnType("integer")
+                        .HasColumnName("pontos");
+
+                    b.Property<string>("Regra")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("regra");
+
+                    b.Property<bool?>("Repetivel")
+                        .HasColumnType("boolean")
+                        .HasColumnName("repetivel");
+
+                    b.Property<string>("RestricaoCurso")
+                        .HasColumnType("text")
+                        .HasColumnName("restricao_curso");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
+                    b.Property<string>("TipoDeEvento")
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_evento");
+
+                    b.Property<int>("Versao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("versao");
+
+                    b.Property<DateOnly?>("VigenciaFim")
+                        .HasColumnType("date")
+                        .HasColumnName("vigencia_fim");
+
+                    b.Property<DateOnly?>("VigenciaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("vigencia_inicio");
+
+                    b.HasKey("Codigo")
+                        .HasName("pk_item_catalogo");
+
+                    b.HasIndex("FamiliaCodigo", "OrdemNaFamilia")
+                        .IsUnique()
+                        .HasDatabaseName("ix_item_catalogo_familia_codigo_ordem_na_familia");
+
+                    b.ToTable("item_catalogo", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_item_catalogo_campos_por_tipo", "(tipo = 'medalha' AND base IS NOT NULL AND repetivel IS NOT NULL AND limite_por_periodo IS NOT NULL AND chave_de_deduplicacao IS NOT NULL AND tipo_de_evento IS NULL AND forma_do_evento IS NULL AND exige_foto IS NULL AND gatilho IS NULL AND regra IS NULL) OR (tipo = 'premioParticipacao' AND tipo_de_evento IS NOT NULL AND forma_do_evento IS NOT NULL AND exige_foto IS NOT NULL AND chave_de_deduplicacao IS NOT NULL AND base IS NULL AND repetivel IS NULL AND limite_por_periodo IS NULL AND gatilho IS NULL AND regra IS NULL) OR (tipo = 'conquista' AND gatilho IS NOT NULL AND regra IS NOT NULL AND base IS NULL AND repetivel IS NULL AND limite_por_periodo IS NULL AND tipo_de_evento IS NULL AND forma_do_evento IS NULL AND exige_foto IS NULL AND chave_de_deduplicacao IS NULL)");
+
+                            t.HasCheckConstraint("ck_item_catalogo_familia", "(familia_codigo IS NULL) = (ordem_na_familia IS NULL)");
+
+                            t.HasCheckConstraint("ck_item_catalogo_pontos_na_faixa", "(tier = 'bronze' AND pontos BETWEEN 1 AND 30) OR (tier = 'prata' AND pontos BETWEEN 31 AND 70) OR (tier = 'ouro' AND pontos BETWEEN 71 AND 100) OR (tier = 'diamante' AND pontos BETWEEN 101 AND 150)");
+
+                            t.HasCheckConstraint("ck_item_catalogo_tier", "tier IN ('bronze', 'prata', 'ouro', 'diamante')");
+
+                            t.HasCheckConstraint("ck_item_catalogo_tipo", "tipo IN ('medalha', 'premioParticipacao', 'conquista')");
+
+                            t.HasCheckConstraint("ck_item_catalogo_versao", "versao >= 1");
+
+                            t.HasCheckConstraint("ck_item_catalogo_vigencia", "vigencia_inicio IS NULL OR vigencia_fim IS NULL OR vigencia_fim >= vigencia_inicio");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Academico.Bimestre", b =>
                 {
                     b.HasOne("Maxx.Domain.Academico.SemestreLetivo", null)
@@ -397,6 +548,15 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_vinculo_professor_turma_turma_id");
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>
+                {
+                    b.HasOne("Maxx.Infrastructure.Persistence.FamiliaRow", null)
+                        .WithMany()
+                        .HasForeignKey("FamiliaCodigo")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_item_catalogo_familia_familia_codigo");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Academico.AnoLetivo", b =>

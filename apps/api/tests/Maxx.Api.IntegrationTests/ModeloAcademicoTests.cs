@@ -3,6 +3,7 @@ using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using static Maxx.Api.IntegrationTests.BancoDeTeste;
 
 namespace Maxx.Api.IntegrationTests;
 
@@ -232,69 +233,7 @@ public sealed class ModeloAcademicoTests(PostgresFixture postgres) : IClassFixtu
         AssertCheck(falha, "ck_cadastro_elegivel_aluno");
     }
 
-    private async Task<MaxxApiFactory> BancoMigradoAsync()
-    {
-        var factory = new MaxxApiFactory(await postgres.CreateDatabaseAsync());
-        await factory.MigrateAsync(Ct);
-        return factory;
-    }
-
-    private static async Task SalvarAsync(MaxxApiFactory factory, params object[] entidades)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
-        db.AddRange(entidades);
-        await db.SaveChangesAsync(Ct);
-    }
-
-    // Grava só a entidade nova, num banco que já tem o que ela cita.
-    private static async Task AdicionarAsync(MaxxApiFactory factory, object entidade)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
-        AnexarComoNova(db, entidade);
-        await db.SaveChangesAsync(Ct);
-    }
-
-    // O que a entidade nova cita (a matéria da turma, por exemplo) já está no banco:
-    // entra como inalterado, para a gravação, ou a falha, vir só da entidade nova.
-    private static void AnexarComoNova(MaxxDbContext db, object entidade)
-    {
-        db.Attach(entidade);
-        db.Entry(entidade).State = EntityState.Added;
-    }
-
-    private static async Task<PostgresException> FalhaAoSalvarAsync(MaxxApiFactory factory, object entidade)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
-
-        AnexarComoNova(db, entidade);
-
-        var falha = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync(Ct));
-        return Assert.IsType<PostgresException>(falha.InnerException);
-    }
-
-    private static async Task<PostgresException> FalhaNoSqlAsync(MaxxApiFactory factory, string sql)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-        var dataSource = scope.ServiceProvider.GetRequiredService<NpgsqlDataSource>();
-        await using var command = dataSource.CreateCommand(sql);
-
-        return await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Ct));
-    }
-
-    private static void AssertUnicidade(PostgresException falha, string indice)
-    {
-        Assert.Equal(PostgresErrorCodes.UniqueViolation, falha.SqlState);
-        Assert.Equal(indice, falha.ConstraintName);
-    }
-
-    private static void AssertCheck(PostgresException falha, string constraint)
-    {
-        Assert.Equal(PostgresErrorCodes.CheckViolation, falha.SqlState);
-        Assert.Equal(constraint, falha.ConstraintName);
-    }
+    private Task<MaxxApiFactory> BancoMigradoAsync() => BancoDeTeste.MigradoAsync(postgres);
 
     // Um mundo mínimo: um curso, o ano de 2026, uma turma, um aluno matriculado e um
     // professor (que também é instituição) vinculado.

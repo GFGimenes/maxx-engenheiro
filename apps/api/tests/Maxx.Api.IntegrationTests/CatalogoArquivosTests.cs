@@ -8,7 +8,7 @@ namespace Maxx.Api.IntegrationTests;
 // seeder lê, e falha mostrando o código do item. Sem banco.
 public sealed class CatalogoArquivosTests : IDisposable
 {
-    private static readonly string _diretorioReal = Path.Combine(RaizDoRepositorio(), "data", "catalogo");
+    private static readonly string _diretorioReal = Repositorio.DiretorioDoCatalogo;
 
     private readonly string _copia = Path.Combine(Path.GetTempPath(), $"maxx-catalogo-{Guid.NewGuid():N}");
 
@@ -130,14 +130,4 @@ public sealed class CatalogoArquivosTests : IDisposable
             erro => erro.Referencia == referencia && erro.Mensagem.Contains(trecho, StringComparison.Ordinal));
     }
 
-    private static string RaizDoRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !File.Exists(Path.Combine(diretorio.FullName, "Maxx.sln")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        return diretorio?.FullName ?? throw new InvalidOperationException("Raiz do repositório não encontrada.");
-    }
 }
