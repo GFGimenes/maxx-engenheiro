@@ -4,6 +4,13 @@ namespace Maxx.Domain.Academico;
 // liga a uma linha daqui, uma para uma. O papel vem daqui, nunca do domínio do e-mail.
 public sealed class CadastroElegivel
 {
+    // Para o EF Core materializar do banco.
+    private CadastroElegivel()
+    {
+        Email = null!;
+        NomeCompleto = null!;
+    }
+
     private CadastroElegivel(
         Papeis papeis, string? ra, string email, string nomeCompleto, Guid? cursoId, int? semestre)
     {

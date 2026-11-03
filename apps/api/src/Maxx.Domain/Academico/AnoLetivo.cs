@@ -4,6 +4,9 @@ public sealed class AnoLetivo
 {
     private readonly List<SemestreLetivo> _semestres;
 
+    // Para o EF Core materializar do banco.
+    private AnoLetivo() => _semestres = [];
+
     public AnoLetivo(int ano, SemestreLetivo primeiro, SemestreLetivo segundo)
     {
         ArgumentNullException.ThrowIfNull(primeiro);
@@ -34,11 +37,12 @@ public sealed class AnoLetivo
 
     public int Ano { get; private set; }
 
-    public IReadOnlyList<SemestreLetivo> Semestres => _semestres;
+    // Ordenado na leitura: vindo do banco, a coleção não garante ordem.
+    public IReadOnlyList<SemestreLetivo> Semestres => [.. _semestres.OrderBy(semestre => semestre.Numero)];
 
-    public IEnumerable<Bimestre> Bimestres => _semestres.SelectMany(semestre => semestre.Bimestres);
+    public IEnumerable<Bimestre> Bimestres => Semestres.SelectMany(semestre => semestre.Bimestres);
 
-    public DateOnly Inicio => _semestres[0].Inicio;
+    public DateOnly Inicio => _semestres.Min(semestre => semestre.Inicio);
 
-    public DateOnly Fim => _semestres[^1].Fim;
+    public DateOnly Fim => _semestres.Max(semestre => semestre.Fim);
 }

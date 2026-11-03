@@ -3,6 +3,9 @@ namespace Maxx.Domain.Academico;
 // Matéria mais semestre letivo. Professores vinculados e alunos matriculados por turma.
 public sealed class Turma
 {
+    // Para o EF Core materializar do banco.
+    private Turma() => Materia = null!;
+
     public Turma(Materia materia, SemestreLetivo semestre)
     {
         ArgumentNullException.ThrowIfNull(materia);

@@ -2,6 +2,13 @@ namespace Maxx.Domain.Academico;
 
 public sealed class Curso
 {
+    // Para o EF Core materializar do banco.
+    private Curso()
+    {
+        Nome = null!;
+        Sigla = null!;
+    }
+
     public Curso(string nome, string sigla, int duracaoEmSemestres)
     {
         sigla = Texto.Obrigatorio(sigla, "A sigla do curso");

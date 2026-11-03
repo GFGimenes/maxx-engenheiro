@@ -2,6 +2,9 @@ namespace Maxx.Domain.Academico;
 
 public sealed class Materia
 {
+    // Para o EF Core materializar do banco.
+    private Materia() => Nome = null!;
+
     public Materia(Curso curso, string nome)
     {
         ArgumentNullException.ThrowIfNull(curso);

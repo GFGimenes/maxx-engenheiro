@@ -10,6 +10,9 @@ public sealed class SemestreLetivo
 
     private readonly List<Bimestre> _bimestres;
 
+    // Para o EF Core materializar do banco.
+    private SemestreLetivo() => _bimestres = [];
+
     public SemestreLetivo(int ano, int numero, Bimestre primeiro, Bimestre segundo)
     {
         ArgumentNullException.ThrowIfNull(primeiro);
@@ -53,11 +56,12 @@ public sealed class SemestreLetivo
 
     public string Codigo => $"{Ano}/{Numero}";
 
-    public IReadOnlyList<Bimestre> Bimestres => _bimestres;
+    // Ordenado na leitura: vindo do banco, a coleção não garante ordem.
+    public IReadOnlyList<Bimestre> Bimestres => [.. _bimestres.OrderBy(bimestre => bimestre.Numero)];
 
-    public DateOnly Inicio => _bimestres[0].Inicio;
+    public DateOnly Inicio => _bimestres.Min(bimestre => bimestre.Inicio);
 
-    public DateOnly Fim => _bimestres[^1].Fim;
+    public DateOnly Fim => _bimestres.Max(bimestre => bimestre.Fim);
 
     public bool Contem(DateOnly data) => data >= Inicio && data <= Fim;
 }

@@ -6,6 +6,11 @@ public sealed class Bimestre
 {
     public const int PorAno = SemestreLetivo.PorAno * SemestreLetivo.BimestresPorSemestre;
 
+    // Para o EF Core materializar do banco.
+    private Bimestre()
+    {
+    }
+
     public Bimestre(int numero, DateOnly inicio, DateOnly fim)
     {
         if (numero is < 1 or > PorAno)

@@ -3,6 +3,11 @@ namespace Maxx.Domain.Academico;
 // Vínculo aluno e turma. Única fonte de "quantas matérias o aluno tem no período".
 public sealed class Matricula
 {
+    // Para o EF Core materializar do banco.
+    private Matricula()
+    {
+    }
+
     public Matricula(CadastroElegivel aluno, Turma turma)
     {
         ArgumentNullException.ThrowIfNull(aluno);

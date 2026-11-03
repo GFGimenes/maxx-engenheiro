@@ -4,6 +4,11 @@ namespace Maxx.Domain.Academico;
 // no banco a cada mutação de prêmio.
 public sealed class VinculoProfessor
 {
+    // Para o EF Core materializar do banco.
+    private VinculoProfessor()
+    {
+    }
+
     public VinculoProfessor(CadastroElegivel professor, Turma turma)
     {
         ArgumentNullException.ThrowIfNull(professor);
