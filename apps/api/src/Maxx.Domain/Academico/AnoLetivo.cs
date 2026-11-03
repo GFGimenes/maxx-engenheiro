@@ -1,0 +1,44 @@
+namespace Maxx.Domain.Academico;
+
+public sealed class AnoLetivo
+{
+    private readonly List<SemestreLetivo> _semestres;
+
+    public AnoLetivo(int ano, SemestreLetivo primeiro, SemestreLetivo segundo)
+    {
+        ArgumentNullException.ThrowIfNull(primeiro);
+        ArgumentNullException.ThrowIfNull(segundo);
+
+        if (primeiro.Ano != ano || segundo.Ano != ano)
+        {
+            throw new DomainException(
+                $"O ano letivo {ano} recebeu os semestres {primeiro.Codigo} e {segundo.Codigo}.");
+        }
+
+        if (primeiro.Numero != 1 || segundo.Numero != 2)
+        {
+            throw new DomainException($"O ano letivo {ano} tem os semestres 1 e 2, nessa ordem.");
+        }
+
+        if (segundo.Inicio <= primeiro.Fim)
+        {
+            throw new DomainException($"O semestre {segundo.Codigo} começa antes de o {primeiro.Codigo} terminar.");
+        }
+
+        Id = Guid.CreateVersion7();
+        Ano = ano;
+        _semestres = [primeiro, segundo];
+    }
+
+    public Guid Id { get; private set; }
+
+    public int Ano { get; private set; }
+
+    public IReadOnlyList<SemestreLetivo> Semestres => _semestres;
+
+    public IEnumerable<Bimestre> Bimestres => _semestres.SelectMany(semestre => semestre.Bimestres);
+
+    public DateOnly Inicio => _semestres[0].Inicio;
+
+    public DateOnly Fim => _semestres[^1].Fim;
+}
