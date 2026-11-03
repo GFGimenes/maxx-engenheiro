@@ -18,7 +18,7 @@ public enum PerfilDeSeed
     Demo,
 }
 
-public sealed record ResultadoDoSeed(
+public sealed record ResultadoDoSeedBase(
     int ItensNovos,
     int ItensAtualizados,
     int ItensInalterados,
@@ -26,3 +26,12 @@ public sealed record ResultadoDoSeed(
     int FamiliasAtualizadas,
     int AnosNovos,
     int AnosAtualizados);
+
+// Demo só acrescenta: o que já existe e bate com o arquivo fica como está.
+public sealed record ResultadoDoSeedDemo(
+    int CursosNovos,
+    int MateriasNovas,
+    int TurmasNovas,
+    int CadastrosNovos,
+    int MatriculasNovas,
+    int VinculosNovos);

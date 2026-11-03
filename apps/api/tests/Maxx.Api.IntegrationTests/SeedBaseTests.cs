@@ -13,20 +13,22 @@ namespace Maxx.Api.IntegrationTests;
 // de data/, nunca no repositório.
 public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>, IDisposable
 {
-    private readonly string _dados = CopiarDados();
+    private readonly CopiaDeDados _copia = new();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    public void Dispose() => Directory.Delete(_dados, recursive: true);
+    private string Dados => _copia.Diretorio;
+
+    public void Dispose() => _copia.Dispose();
 
     [Fact]
     public async Task Banco_vazio_recebe_os_46_itens_as_8_familias_e_o_calendario_de_2026()
     {
         await using var factory = await MigradoAsync(postgres);
 
-        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeed(46, 0, 0, 8, 0, 1, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(46, 0, 0, 8, 0, 1, 0), resultado);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
@@ -49,25 +51,25 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     public async Task Rodar_de_novo_sem_mudar_os_arquivos_nao_muda_nada()
     {
         await using var factory = await MigradoAsync(postgres);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await factory.SeedBaseAsync(Ct);
         var antes = await FotografiaAsync(factory);
 
-        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeed(0, 0, 46, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await FotografiaAsync(factory));
     }
 
     [Fact]
     public async Task Mudar_os_pontos_de_um_item_sobe_a_versao_so_dele()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
 
         AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
-        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeed(0, 1, 45, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(0, 1, 45, 0, 0, 0, 0), resultado);
         var versoes = await VersoesAsync(factory);
         Assert.Equal((2, 20), versoes["M02"]);
         Assert.All(versoes.Where(par => par.Key != "M02"), par => Assert.Equal(1, par.Value.Versao));
@@ -76,12 +78,12 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Versao_nova_e_estavel_ao_rodar_de_novo()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
         AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await factory.SeedBaseAsync(Ct);
 
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await factory.SeedBaseAsync(Ct);
 
         Assert.Equal(2, (await VersoesAsync(factory))["M02"].Versao);
     }
@@ -89,11 +91,11 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Mudar_a_regra_de_uma_conquista_sobe_a_versao()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
 
         AlterarItem("conquistas.json", "C02", item => item["regra"]!["alvo"] = 4);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await factory.SeedBaseAsync(Ct);
 
         Assert.Equal(2, (await VersoesAsync(factory))["C02"].Versao);
     }
@@ -101,13 +103,13 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Item_que_sumiu_do_arquivo_faz_o_seed_falhar_sem_gravar_nada()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
 
         // Na mesma rodada, uma mudança válida em outro item: também não pode entrar.
         AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
         RemoverItem("premios-participacao.json", "P05");
-        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
 
         Assert.Contains("P05", falha.Message, StringComparison.Ordinal);
         Assert.Contains("vigencia.fim", falha.Message, StringComparison.Ordinal);
@@ -119,10 +121,10 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Catalogo_invalido_nao_grava_nada()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
+        await using var factory = await MigradoAsync(postgres, Dados);
 
         AlterarItem("medalhas.json", "M01", item => item["pontos"] = 31);
-        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
 
         Assert.Contains("M01", falha.Message, StringComparison.Ordinal);
         Assert.Equal(new Fotografia(0, 0, 0, ""), await FotografiaAsync(factory));
@@ -131,12 +133,12 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Corrigir_uma_data_no_arquivo_atualiza_o_bimestre_com_o_mesmo_id()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
-        await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
         var idAntes = await IdDoBimestreAsync(factory, 4);
 
         AlterarCalendario(ano => ano["semestres"]![1]!["bimestres"]![1]!["fim"] = "2026-12-12");
-        var resultado = await factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var resultado = await factory.SeedBaseAsync(Ct);
 
         Assert.Equal(1, resultado.AnosAtualizados);
         await using var scope = factory.Services.CreateAsyncScope();
@@ -149,11 +151,11 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     [Fact]
     public async Task Calendario_invalido_nao_grava_nada()
     {
-        await using var factory = await MigradoAsync(postgres, _dados);
+        await using var factory = await MigradoAsync(postgres, Dados);
 
         // Bimestre 2 começando antes de o 1 terminar.
         AlterarCalendario(ano => ano["semestres"]![0]!["bimestres"]![1]!["inicio"] = "2026-03-01");
-        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Base, Ct));
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
 
         Assert.Contains("2026.json", falha.Message, StringComparison.Ordinal);
         Assert.Equal(new Fotografia(0, 0, 0, ""), await FotografiaAsync(factory));
@@ -164,7 +166,7 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     {
         await using var factory = await MigradoAsync(postgres);
 
-        var resultados = await Task.WhenAll(factory.SeedAsync(PerfilDeSeed.Base, Ct), factory.SeedAsync(PerfilDeSeed.Base, Ct));
+        var resultados = await Task.WhenAll(factory.SeedBaseAsync(Ct), factory.SeedBaseAsync(Ct));
 
         // Um grava; o outro espera o lock e encontra tudo pronto.
         Assert.Equal([0, 46], resultados.Select(resultado => resultado.ItensNovos).Order());
@@ -181,7 +183,7 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
         await using var outro = await dataSource.OpenConnectionAsync(Ct);
         await ExecutarAsync(outro, $"SELECT pg_advisory_lock({DatabaseSeeder.AdvisoryLockKey})");
 
-        var seed = factory.SeedAsync(PerfilDeSeed.Base, Ct);
+        var seed = factory.SeedBaseAsync(Ct);
         var terminou = await Task.WhenAny(seed, Task.Delay(TimeSpan.FromSeconds(2), Ct));
         Assert.NotSame(seed, terminou);
         Assert.Equal(0, (await FotografiaAsync(factory)).Itens);
@@ -190,14 +192,6 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
         await seed.WaitAsync(TimeSpan.FromSeconds(30), Ct);
 
         Assert.Equal(46, (await FotografiaAsync(factory)).Itens);
-    }
-
-    [Fact]
-    public async Task Perfil_demo_ainda_nao_existe()
-    {
-        await using var factory = await MigradoAsync(postgres);
-
-        await Assert.ThrowsAsync<SeedException>(() => factory.SeedAsync(PerfilDeSeed.Demo, Ct));
     }
 
     // O que importa comparar entre duas rodadas: contagens, versões e datas.
@@ -242,36 +236,9 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
     }
 
     private void AlterarItem(string arquivo, string codigo, Action<JsonObject> alteracao) =>
-        AlterarJson(Path.Combine(_dados, "catalogo", arquivo), raiz =>
-            alteracao(raiz["itens"]!.AsArray().Single(item => (string?)item!["codigo"] == codigo)!.AsObject()));
+        _copia.AlterarItem(arquivo, codigo, alteracao);
 
-    private void RemoverItem(string arquivo, string codigo) =>
-        AlterarJson(Path.Combine(_dados, "catalogo", arquivo), raiz =>
-        {
-            var itens = raiz["itens"]!.AsArray();
-            itens.Remove(itens.Single(item => (string?)item!["codigo"] == codigo));
-        });
+    private void RemoverItem(string arquivo, string codigo) => _copia.RemoverItem(arquivo, codigo);
 
-    private void AlterarCalendario(Action<JsonNode> alteracao) =>
-        AlterarJson(Path.Combine(_dados, "calendario", "2026.json"), alteracao);
-
-    private static void AlterarJson(string caminho, Action<JsonNode> alteracao)
-    {
-        var raiz = JsonNode.Parse(File.ReadAllText(caminho))!;
-        alteracao(raiz);
-        File.WriteAllText(caminho, raiz.ToJsonString());
-    }
-
-    private static string CopiarDados()
-    {
-        var destino = Path.Combine(Path.GetTempPath(), $"maxx-dados-{Guid.NewGuid():N}");
-        foreach (var arquivo in Directory.GetFiles(Repositorio.DiretorioDeDados, "*.json", SearchOption.AllDirectories))
-        {
-            var copia = Path.Combine(destino, Path.GetRelativePath(Repositorio.DiretorioDeDados, arquivo));
-            Directory.CreateDirectory(Path.GetDirectoryName(copia)!);
-            File.Copy(arquivo, copia);
-        }
-
-        return destino;
-    }
+    private void AlterarCalendario(Action<JsonNode> alteracao) => _copia.Alterar("calendario/2026.json", alteracao);
 }

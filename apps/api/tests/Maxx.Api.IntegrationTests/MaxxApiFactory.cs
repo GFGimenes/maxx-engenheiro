@@ -27,9 +27,15 @@ public sealed class MaxxApiFactory(string connectionString, string environment =
     }
 
     // O mesmo caminho do subcomando seed, num escopo próprio.
-    public async Task<ResultadoDoSeed> SeedAsync(PerfilDeSeed perfil, CancellationToken cancellationToken)
+    public async Task<ResultadoDoSeedBase> SeedBaseAsync(CancellationToken cancellationToken)
     {
         await using var scope = Services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync(perfil, cancellationToken);
+        return await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedBaseAsync(cancellationToken);
+    }
+
+    public async Task<ResultadoDoSeedDemo> SeedDemoAsync(CancellationToken cancellationToken)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedDemoAsync(cancellationToken);
     }
 }

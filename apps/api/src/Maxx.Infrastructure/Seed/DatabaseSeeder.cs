@@ -17,13 +17,23 @@ public sealed partial class DatabaseSeeder(
 
     private string Dados => Path.GetFullPath(options.Value.DiretorioDeDados);
 
-    public async Task<ResultadoDoSeed> SeedAsync(PerfilDeSeed perfil, CancellationToken cancellationToken)
+    public async Task SeedAsync(PerfilDeSeed perfil, CancellationToken cancellationToken)
     {
-        if (perfil != PerfilDeSeed.Base)
+        switch (perfil)
         {
-            throw new SeedException($"Perfil {perfil} ainda não existe.");
+            case PerfilDeSeed.Base:
+                await SeedBaseAsync(cancellationToken);
+                break;
+            case PerfilDeSeed.Demo:
+                await SeedDemoAsync(cancellationToken);
+                break;
+            default:
+                throw new SeedException($"Perfil {perfil} não existe.");
         }
+    }
 
+    public async Task<ResultadoDoSeedBase> SeedBaseAsync(CancellationToken cancellationToken)
+    {
         // Tudo lido e validado antes de abrir a transação: arquivo inválido não toca no banco.
         var catalogo = CatalogoReader.Ler(Path.Combine(Dados, "catalogo"));
         if (!catalogo.Valido)
@@ -35,10 +45,7 @@ public sealed partial class DatabaseSeeder(
 
         var calendario = CalendarioReader.Ler(Path.Combine(Dados, "calendario"));
 
-        await using var transacao = await db.Database.BeginTransactionAsync(cancellationToken);
-
-        LogWaitingForLock(logger);
-        await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({AdvisoryLockKey})", cancellationToken);
+        await using var transacao = await AbrirComLockAsync(cancellationToken);
 
         var (familiasNovas, familiasAtualizadas) = await GravarFamiliasAsync(catalogo.Catalogo!, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
@@ -49,10 +56,20 @@ public sealed partial class DatabaseSeeder(
 
         await transacao.CommitAsync(cancellationToken);
 
-        var resultado = new ResultadoDoSeed(
+        var resultado = new ResultadoDoSeedBase(
             itensNovos, itensAtualizados, itensInalterados, familiasNovas, familiasAtualizadas, anosNovos, anosAtualizados);
-        LogDone(logger, perfil, resultado);
+        LogDone(logger, PerfilDeSeed.Base, resultado);
         return resultado;
+    }
+
+    // Base e demo usam a mesma chave: um espera o outro.
+    private async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> AbrirComLockAsync(
+        CancellationToken cancellationToken)
+    {
+        var transacao = await db.Database.BeginTransactionAsync(cancellationToken);
+        LogWaitingForLock(logger);
+        await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({AdvisoryLockKey})", cancellationToken);
+        return transacao;
     }
 
     private async Task<(int Novas, int Atualizadas)> GravarFamiliasAsync(
@@ -171,5 +188,5 @@ public sealed partial class DatabaseSeeder(
     private static partial void LogItemVersion(ILogger logger, string codigo, int versao);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Seed {Perfil} concluído: {Resultado}.")]
-    private static partial void LogDone(ILogger logger, PerfilDeSeed perfil, ResultadoDoSeed resultado);
+    private static partial void LogDone(ILogger logger, PerfilDeSeed perfil, object resultado);
 }
