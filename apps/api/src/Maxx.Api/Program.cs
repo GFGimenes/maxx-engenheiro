@@ -3,14 +3,19 @@ using System.Text.Json.Serialization;
 using Maxx.Api.Health;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Seed;
 
 // `Maxx.Api migrate` roda as migrations e sai. É o comando do contêiner de migração.
 var isMigrate = args is ["migrate", ..];
 
+// `Maxx.Api seed <base|demo>` grava os dados de data/ e sai. Idempotente.
+var isSeed = args is ["seed", ..];
+
 // A geração do OpenAPI no build sobe a aplicação sem servidor e sem banco.
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
-var builder = WebApplication.CreateBuilder(isMigrate ? args[1..] : args);
+var builder = WebApplication.CreateBuilder(
+    isMigrate ? args[1..] : isSeed ? args[Math.Min(2, args.Length)..] : args);
 
 var connectionString = builder.Configuration.GetConnectionString("Maxx")
     ?? (isOpenApiGeneration ? "Host=openapi-generation" : null)
@@ -30,6 +35,7 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document,
     return Task.CompletedTask;
 }));
 builder.Services.AddInfrastructure(connectionString);
+builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Section));
 
 var app = builder.Build();
 
@@ -37,7 +43,31 @@ if (isMigrate)
 {
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<DatabaseMigrator>().MigrateAsync(CancellationToken.None);
-    return;
+    return 0;
+}
+
+if (isSeed)
+{
+    if (args is not [_, var nomeDoPerfil, ..] || !Enum.TryParse<PerfilDeSeed>(nomeDoPerfil, ignoreCase: true, out var perfil)
+        || !Enum.IsDefined(perfil))
+    {
+        await Console.Error.WriteLineAsync("Uso: Maxx.Api seed <base|demo>");
+        return 2;
+    }
+
+    await using var scope = app.Services.CreateAsyncScope();
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync(perfil, CancellationToken.None);
+    }
+    catch (SeedException ex)
+    {
+        // Dado recusado é resposta esperada, não falha do programa: sem pilha no log.
+        await Console.Error.WriteLineAsync(ex.Message);
+        return 1;
+    }
+
+    return 0;
 }
 
 // Um formato só de erro: ProblemDetails (RFC 9457).
@@ -54,3 +84,4 @@ if (app.Environment.IsDevelopment())
 }
 
 await app.RunAsync();
+return 0;

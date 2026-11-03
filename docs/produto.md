@@ -501,7 +501,7 @@ desligada por padrão e não existe na configuração de produção; desligada, 
 demonstração respondem 404 e o botão não aparece no login.
 
 - O botão de demonstração aparece na tela de login quando a flag está ligada.
-- O registro é simples: foto opcional, nome e escolha de um dos três cursos de
+- O registro é simples: foto opcional, nome e escolha de um dos quatro cursos de
   demonstração, já populados.
 - Quem entra vira um aluno de demonstração, numa turma de demonstração daquele curso,
   com tudo que um aluno tem: posta, reivindica, curte, comenta, segue, pontua, aparece
@@ -513,7 +513,7 @@ demonstração respondem 404 e o botão não aparece no login.
 - Dados de demonstração têm marcação por flag e por lote, para purga manual depois da
   apresentação.
 - Na fase 1 existe só o mundo do seed: nenhuma conta real.
-- O seed traz os professores das três turmas de demonstração e a conta de instituição
+- O seed traz os professores dos quatro cursos de demonstração e a conta de instituição
   usada para conceder ao vivo durante a apresentação.
 
 ---
