@@ -1,7 +1,7 @@
 {
   "versao": 1,
   "tipo": "medalha",
-  "observacao": "Medalha é concessão humana do professor, sempre sobre fato registrado de nota ou presença, apenas em turmas do semestre vigente. Sempre Bronze, salvo as duas de fechamento de matéria, que são Prata. Não é contestável nem revogável; a instituição pode anular. Os campos familia e ordemNaFamilia são preenchidos na etapa E0.2c.",
+  "observacao": "Medalha é concessão humana do professor, sempre sobre fato registrado de nota ou presença, apenas em turmas do semestre vigente. Sempre Bronze, salvo as duas de fechamento de matéria, que são Prata. Não é contestável nem revogável; a instituição pode anular.",
   "regraDeRepeticao": "limitePorPeriodo é quantas vezes a medalha pode ser concedida ao mesmo aluno, na mesma matéria, pelo professor daquela turma, dentro do período de referência. Os limites seguem a estrutura real de avaliação: por bimestre, cada matéria tem prova e prova integrativa, mais presença ou trabalhos a critério do professor. Prova substitutiva e prova de recuperação não geram medalha de nota: são segunda chance, não mérito novo. Nos itens repetíveis, ocorrencia entra na chave de deduplicação e é o que o limite controla.",
   "itens": [
     {
@@ -15,7 +15,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 2,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": "nota-prova",
@@ -32,7 +38,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 2,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": null,
@@ -100,7 +112,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 3,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": null,
@@ -117,7 +135,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 2,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": null,
@@ -134,7 +158,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 2,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": null,
@@ -151,7 +181,13 @@
       "periodoDeReferencia": "bimestre",
       "repetivel": true,
       "limitePorPeriodo": 4,
-      "chaveDeDeduplicacao": ["aluno", "item", "materia", "bimestre", "ocorrencia"],
+      "chaveDeDeduplicacao": [
+        "aluno",
+        "item",
+        "materia",
+        "bimestre",
+        "ocorrencia"
+      ],
       "restricaoCurso": null,
       "vigencia": { "inicio": null, "fim": null },
       "familia": null,

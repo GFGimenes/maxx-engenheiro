@@ -1,7 +1,7 @@
 {
   "versao": 1,
   "tipo": "premioParticipacao",
-  "observacao": "Prêmio de participação é reivindicado pelo aluno com um post com foto e aprovado pelo professor de qualquer turma dele no semestre vigente ou pela instituição, valendo quem chega primeiro; a instituição também pode conceder já aprovado, sem comprovação. Conta no semestre do evento. Tem janela de contestação de 15 dias e é o único tipo revogável. Só entra em contagem de conquista depois de definitivo. Os campos familia e ordemNaFamilia são preenchidos na etapa E0.2c.",
+  "observacao": "Prêmio de participação é reivindicado pelo aluno com um post com foto e aprovado pelo professor de qualquer turma dele no semestre vigente ou pela instituição, valendo quem chega primeiro; a instituição também pode conceder já aprovado, sem comprovação. Conta no semestre do evento. Tem janela de contestação de 15 dias e é o único tipo revogável. Só entra em contagem de conquista depois de definitivo.",
   "regraDeDeduplicacao": "Um aluno tem um prêmio por evento. Quando o evento vem do seed, a chave é aluno + evento. Quando o evento é texto livre, a chave degrada para aluno + item + data do evento. P17 é a exceção: aluno + item + data do evento + matéria.",
   "itens": [
     {

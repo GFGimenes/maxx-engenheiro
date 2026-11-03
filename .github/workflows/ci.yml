@@ -26,6 +26,19 @@ jobs:
         run: dotnet format Maxx.sln --verify-no-changes --no-restore
       - name: Build (aviso vira erro)
         run: dotnet build Maxx.sln --no-restore -c Release
+      # O catálogo é dado da API, então a formatação dele é conferida aqui. Sem `npm ci`:
+      # só o Prettier, na versão travada no package-lock.json.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Formatação do catálogo
+        run: npx --yes "prettier@$(node -p "require('./package-lock.json').packages['node_modules/prettier'].version")" --check data/catalogo
+      # Passo próprio para a falha de catálogo ficar legível sem abrir o log dos testes.
+      # Os mesmos testes rodam de novo no passo seguinte; sem banco, levam segundos.
+      - name: Catálogo válido
+        run: >-
+          dotnet test --project apps/api/tests/Maxx.Api.IntegrationTests --no-build -c Release
+          --filter-class Maxx.Api.IntegrationTests.CatalogoArquivosTests
       - name: Testes (domínio, arquitetura e integração com Postgres real)
         run: dotnet test --solution Maxx.sln --no-build -c Release
 
