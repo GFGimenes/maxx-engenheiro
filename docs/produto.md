@@ -66,9 +66,28 @@ para `-EX`.
 |---|---|
 | **RA** | Identidade interna do aluno e credencial de login. É dado pessoal: nunca aparece para outros alunos e não é buscável |
 | **E-mail institucional** | Vem da base abastecida pela faculdade. O aluno não escolhe e não edita; só a instituição corrige, pela área web |
-| **Arroba** | Identificador público e único. Formato `@primeiroNomeUltimoNome-SUFIXO`. Sufixos: a sigla do curso atual para o aluno (`@guilhermeGimenes-CC`), `-EX` para o ex-aluno, `-PROF` para professor (inclusive quando a conta acumula professor e instituição) e `-UNIMAX` para a conta só de instituição. O cadastro sugere a partir do nome; em colisão, a sugestão inclui o nome do meio quando houver e, se ainda colidir, acrescenta número sequencial. O usuário edita apenas a parte antes do hífen, no cadastro e depois no perfil. O sufixo muda sozinho quando o aluno troca de curso ou é marcado como ex-aluno, e o arroba antigo fica reservado permanentemente ao dono, sem reuso por terceiros. Unicidade sem diferenciar maiúsculas; exibição como o usuário escreveu |
+| **Arroba** | Identificador público e único. Formato `@primeiroNomeUltimoNome-SUFIXO`. Sufixos: a sigla do curso atual para o aluno (`@guilhermeGimenes-CC`), `-EX` para o ex-aluno, `-PROF` para professor (inclusive quando a conta acumula professor e instituição) e `-UNIMAX` para a conta só de instituição. O cadastro sugere a partir do nome; em colisão, a sugestão inclui o nome do meio quando houver e, se ainda colidir, acrescenta número sequencial. O usuário edita apenas a parte antes do hífen, no cadastro e depois no perfil. O sufixo muda sozinho quando o aluno troca de curso ou é marcado como ex-aluno, e o arroba antigo fica reservado permanentemente ao dono, sem reuso por terceiros. Unicidade sem diferenciar maiúsculas; exibição como o usuário escreveu. Regras de formação na seção 2.3.1 |
 | **Nome de exibição** | Texto livre, editável, não precisa ser único |
 | **Foto de perfil** | Opcional, de aluno e de professor; segue as mesmas regras de assinatura e de derivadas da foto de post. Sem foto, o avatar são as iniciais |
+
+#### 2.3.1 Formação e unicidade do arroba
+
+- **A unicidade é do prefixo**, a parte antes do hífen, sem diferenciar maiúsculas. O
+  sufixo não conta: `@anaSouza-CC` e `@anaSouza-SI` não convivem. Por isso a troca
+  automática de sufixo (curso novo ou ex-aluno) nunca colide com ninguém.
+- Consequência aceita: quem tem duas contas (pós-graduando e docente) recebe prefixos
+  diferentes nelas, porque a segunda cai na regra de colisão.
+- **Formato do prefixo:** letras ASCII e dígitos, de 3 a 30 caracteres, começando por
+  letra. Sem acento, sem cedilha, sem ponto, sem hífen (o hífen separa o sufixo).
+- **Sugestão a partir do nome completo:** acentos e cedilha removidos (`João` vira
+  `joao`), partículas `da`, `de`, `do`, `das`, `dos` e `e` ignoradas, primeiro nome em
+  minúsculas e os seguintes com inicial maiúscula. `Maria da Silva` vira `mariaSilva`.
+- **Colisão na sugestão:** primeiro nome e último nome; se ocupado, primeiro nome, o
+  primeiro nome do meio e o último nome; se ainda ocupado, primeiro e último nome com
+  número sequencial a partir de 2 (`mariaSilva2`).
+- **Reserva permanente:** todo prefixo que o usuário já teve fica reservado a ele, sem
+  reuso por terceiros. Vale para a troca automática de sufixo e também para a edição
+  do prefixo no perfil. O dono pode voltar a um prefixo antigo seu.
 
 ### 2.4 Domínios de e-mail
 
@@ -95,6 +114,15 @@ desde a fase 1.
 
 Professores são cadastrados a cada semestre, por matéria e turma, como já acontece no
 app de chamada da UniMax. Contas de instituição vêm do seed.
+
+**Professor e instituição não se autocadastram.** O cadastro pelo app é só do aluno,
+porque RA e e-mail na mesma linha são a prova de identidade dele, e professor e
+instituição não têm RA obrigatório. A conta deles nasce do seed, já com arroba e sem
+senha, e o primeiro acesso é pela recuperação de senha: o link que chega ao e-mail
+institucional é o que prova a posse da conta. Sem isso, e sem verificação de e-mail na
+fase 1, quem soubesse o e-mail de um professor tomaria a conta dele.
+
+**Senha:** de 8 a 128 caracteres, sem regra de composição. Qualquer caractere vale.
 
 Na fase 1 tudo isso entra por seed. No uso real, por CSV. Não há integração com o
 sistema acadêmico.
@@ -515,6 +543,20 @@ demonstração respondem 404 e o botão não aparece no login.
 - Na fase 1 existe só o mundo do seed: nenhuma conta real.
 - O seed traz os professores dos quatro cursos de demonstração e a conta de instituição
   usada para conceder ao vivo durante a apresentação.
+
+Como isso se traduz no sistema:
+
+- **Lembrança sem senha:** o registro devolve uma chave aleatória do dispositivo, que o
+  app guarda localmente. O banco guarda só o hash dela. Entrar de novo é apresentar a
+  chave, que abre uma sessão comum, com o mesmo refresh rotativo de qualquer usuário.
+- **Cadastro do aluno de demonstração:** o registro cria uma linha no cadastro elegível
+  marcada como demonstração, com RA gerado (a matrícula aponta para o cadastro
+  elegível), e matricula o aluno nas turmas do curso escolhido no semestre vigente.
+- **Lote:** valor de configuração, gravado em cada usuário de demonstração criado
+  enquanto ele vale. É a chave da purga.
+- **Foto opcional:** chega com o upload, no passo 7. Até lá, o registro é nome e curso.
+- O registro de demonstração não pede aceite do termo de uso enquanto o aceite não
+  existir, no passo 5.
 
 ---
 

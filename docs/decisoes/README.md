@@ -51,7 +51,41 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Versionamento | API em `/v1`, mudanças só aditivas, porque o app instalado atrasa em relação à API |
 | Plataforma | .NET 10 LTS, com a geração de OpenAPI nativa do framework |
 | Idioma do código | Domínio em português (`Premio`, `Conquista`, `Turma`, `Contestacao`), técnico em inglês (`Repository`, `Handler`, `Options`) |
-| Limite de taxa | Em login, upload e registro de demonstração, com o limitador nativo do ASP.NET Core: por réplica, sem estado compartilhado |
+| Limite de taxa | Em login, upload e registro de demonstração, com o limitador nativo do ASP.NET Core: por réplica, sem estado compartilhado. Também em cadastro e recuperação de senha, que disparam consulta à base e e-mail. Números na seção Autenticação |
+| Validação de entrada | `AddValidation()` nativo do .NET 10 na borda; erro de validação e de domínio saem em ProblemDetails |
+
+## Autenticação
+
+Complementa o [ADR 0006](0006-autenticacao-propria.md) com os números e as escolhas que
+ele deixou abertas. Fechadas no plano do passo 3.
+
+| Decisão | Detalhe |
+|---|---|
+| Access token | JWT de 15 minutos, com `sub` e papéis; nunca a lista de turmas |
+| Assinatura | HS256, com uma chave em variável de ambiente compartilhada pelas duas réplicas. Assimétrica não traz ganho: só a própria API valida o token. Sem a chave, a API não sobe fora de desenvolvimento e teste |
+| Refresh | 30 dias, renovados a cada rotação, sem teto absoluto na fase 1. Guardado no banco só como hash SHA-256 |
+| Refresh na web e no nativo | Na web, cookie `HttpOnly`, `Secure`, `SameSite=Strict`, restrito ao caminho de autenticação; no nativo, no corpo da resposta, para o secure store. O cliente se identifica por cabeçalho |
+| Recuperação de senha | Token aleatório de 30 minutos, uso único, guardado só como hash. A resposta ao pedido é sempre a mesma, exista o e-mail ou não. Senha nova revoga todas as famílias de refresh do usuário |
+| Hash de senha | Argon2id com `Konscious.Security.Cryptography`, parâmetros do OWASP: 19 MiB de memória, 2 iterações, paralelismo 1. Login de usuário inexistente calcula um hash fictício, para o tempo de resposta não revelar quem tem conta |
+| Política de senha | De 8 a 128 caracteres, sem regra de composição, na linha do NIST SP 800-63B |
+| E-mail | SMTP genérico com MailKit; Mailpit no compose local. Provedor da VPS escolhido no passo 13 |
+| Envio de e-mail | Fora da requisição, num `BackgroundService` com fila em memória, até a fila do Postgres nascer no passo 6, quando migra para ela. Perder um e-mail num restart é aceito: o usuário pede de novo |
+| Contas de professor e instituição | Criadas pelo seed, sem senha; primeiro acesso pela recuperação de senha. Ver `produto.md` 2.5 |
+| Escopo de turma | Verificado no banco a cada mutação, contra `vinculo_professor`, só nas turmas do semestre letivo vigente, com a data interpretada em `America/Sao_Paulo`. Fora de semestre vigente, o professor não tem escopo |
+| Demonstração | Chave aleatória do dispositivo guardada só como hash; lote por configuração; cadastro elegível marcado como demonstração. Ver `produto.md` 11 |
+
+Limites de taxa, por réplica:
+
+| Rota | Limite |
+|---|---|
+| Login | 5 por minuto por identificador informado e 30 por minuto por IP |
+| Cadastro | 3 a cada 15 minutos por RA |
+| Recuperação de senha | 3 a cada 15 minutos por e-mail |
+| Registro de demonstração | 60 por hora por IP. Alto de propósito: a banca inteira entra pelo mesmo celular roteado |
+| Upload | Policy declarada no passo 3; aplicada e testada no passo 7, quando o endpoint nasce |
+
+O IP vem do `X-Forwarded-For` posto pelo Caddy, aceito só dele. Estourado o limite, a
+resposta é 429 em ProblemDetails, com `Retry-After`.
 
 ## Cliente
 
