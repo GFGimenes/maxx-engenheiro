@@ -26,18 +26,38 @@ internal static class SessaoHttp
             return SessaoResponse.De(sessao, refreshNoCorpo: true);
         }
 
-        httpContext.Response.Cookies.Append(CookieDoRefresh, sessao.Refresh, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = CaminhoDoCookie,
-            Expires = sessao.RefreshExpiraEm,
-            IsEssential = true,
-        });
+        httpContext.Response.Cookies.Append(CookieDoRefresh, sessao.Refresh, OpcoesDoCookie(sessao.RefreshExpiraEm));
 
         return SessaoResponse.De(sessao, refreshNoCorpo: false);
     }
+
+    // Na web o refresh vem só do cookie, e o cookie só é lido com o cabeçalho do cliente:
+    // um formulário de outro site não consegue mandar cabeçalho próprio, e o SameSite
+    // Strict já não manda o cookie. No nativo vem só do corpo.
+    public static string? LerRefresh(HttpRequest request, string? doCorpo)
+    {
+        var refresh = EhWeb(request) ? request.Cookies[CookieDoRefresh] : doCorpo;
+        return string.IsNullOrWhiteSpace(refresh) ? null : refresh;
+    }
+
+    // Sessão recusada ou encerrada: na web o navegador esquece o cookie.
+    public static void Apagar(HttpContext httpContext)
+    {
+        if (EhWeb(httpContext.Request))
+        {
+            httpContext.Response.Cookies.Delete(CookieDoRefresh, OpcoesDoCookie(expira: null));
+        }
+    }
+
+    private static CookieOptions OpcoesDoCookie(DateTimeOffset? expira) => new()
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Strict,
+        Path = CaminhoDoCookie,
+        Expires = expira,
+        IsEssential = true,
+    };
 }
 
 public sealed record SessaoResponse(

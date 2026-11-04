@@ -72,8 +72,29 @@ public enum Unicidade
     Prefixo,
 }
 
+// Gravação recusada porque a linha mudou desde a leitura (xmin): outro pedido chegou
+// antes. Quem chama decide se relê e tenta de novo.
+public sealed class ConflitoDeConcorrenciaException : Exception
+{
+    public ConflitoDeConcorrenciaException()
+    {
+    }
+
+    public ConflitoDeConcorrenciaException(string message) : base(message)
+    {
+    }
+
+    public ConflitoDeConcorrenciaException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+}
+
 public interface IUnitOfWork
 {
-    // Lança ConflitoDeUnicidadeException quando o banco recusa por unicidade.
+    // Lança ConflitoDeUnicidadeException quando o banco recusa por unicidade e
+    // ConflitoDeConcorrenciaException quando a linha mudou desde a leitura.
     Task SalvarAsync(CancellationToken cancellationToken);
+
+    // Esquece o que o escopo leu e alterou, para reler do banco.
+    void Descartar();
 }

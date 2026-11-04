@@ -15,4 +15,12 @@ public static class CodigosDeRecusa
     public const string SenhaForaDaPolitica = "senha-fora-da-politica";
 
     public const string NomeDeExibicaoInvalido = "nome-de-exibicao-invalido";
+
+    // Usuário inexistente, conta ainda sem senha, senha errada, professor por RA: a mesma
+    // resposta, para não dizer quem tem conta (ADR 0006).
+    public const string CredenciaisInvalidas = "credenciais-invalidas";
+
+    // Refresh ausente, desconhecido, expirado, de família revogada ou reusado: em todos os
+    // casos o cliente volta ao login.
+    public const string SessaoInvalida = "sessao-invalida";
 }

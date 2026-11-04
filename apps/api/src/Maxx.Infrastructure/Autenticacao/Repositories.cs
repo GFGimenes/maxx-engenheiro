@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Maxx.Application.Autenticacao;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
@@ -41,9 +42,30 @@ internal sealed class UsuarioRepository(MaxxDbContext db) : IUsuarioRepository
     }
 
     public void Adicionar(Usuario usuario) => db.Add(usuario);
+
+    public Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<Usuario>().SingleOrDefaultAsync(usuario => usuario.Id == id, cancellationToken);
+
+    // e-mail em citext: a comparação no banco não diferencia maiúsculas.
+    public Task<Usuario?> BuscarPorEmailAsync(string email, CancellationToken cancellationToken) =>
+        PorCadastro(cadastro => cadastro.Email == email).SingleOrDefaultAsync(cancellationToken);
+
+    public Task<Usuario?> BuscarAlunoPorRaAsync(string ra, CancellationToken cancellationToken) =>
+        PorCadastro(cadastro => cadastro.Papeis == Papeis.Aluno && cadastro.Ra == ra).SingleOrDefaultAsync(cancellationToken);
+
+    private IQueryable<Usuario> PorCadastro(Expression<Func<CadastroElegivel, bool>> filtro) =>
+        db.Set<CadastroElegivel>()
+            .Where(filtro)
+            .Join(db.Set<Usuario>(), cadastro => cadastro.Id, usuario => usuario.CadastroElegivelId, (_, usuario) => usuario);
 }
 
 internal sealed class FamiliaDeSessaoRepository(MaxxDbContext db) : IFamiliaDeSessaoRepository
 {
     public void Adicionar(FamiliaDeSessao familia) => db.Add(familia);
+
+    public Task<FamiliaDeSessao?> BuscarPorRefreshAsync(string hashDoRefresh, CancellationToken cancellationToken) =>
+        db.Set<FamiliaDeSessao>()
+            .Include(familia => familia.Tokens.Where(token => token.Hash == hashDoRefresh))
+            .Where(familia => familia.Tokens.Any(token => token.Hash == hashDoRefresh))
+            .SingleOrDefaultAsync(cancellationToken);
 }

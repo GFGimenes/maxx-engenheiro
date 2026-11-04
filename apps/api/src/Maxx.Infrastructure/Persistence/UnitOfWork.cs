@@ -28,5 +28,11 @@ internal sealed class UnitOfWork(MaxxDbContext db) : IUnitOfWork
             throw new ConflitoDeUnicidadeException(
                 _porIndice.GetValueOrDefault(postgres.ConstraintName ?? string.Empty, Unicidade.Outra), falha);
         }
+        catch (DbUpdateConcurrencyException falha)
+        {
+            throw new ConflitoDeConcorrenciaException("A linha mudou desde a leitura.", falha);
+        }
     }
+
+    public void Descartar() => db.ChangeTracker.Clear();
 }

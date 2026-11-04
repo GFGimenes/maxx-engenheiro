@@ -102,7 +102,7 @@ api.MapHealthEndpoints();
 // Contrato versionado: só mudanças aditivas.
 var v1 = api.MapGroup("/v1");
 v1.MapEuEndpoints();
-v1.MapGroup("/auth").MapCadastroEndpoints();
+v1.MapGroup("/auth").MapCadastroEndpoints().MapLoginEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
