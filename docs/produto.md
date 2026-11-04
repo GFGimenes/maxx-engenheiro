@@ -82,12 +82,19 @@ para `-EX`.
 - **Sugestão a partir do nome completo:** acentos e cedilha removidos (`João` vira
   `joao`), partículas `da`, `de`, `do`, `das`, `dos` e `e` ignoradas, primeiro nome em
   minúsculas e os seguintes com inicial maiúscula. `Maria da Silva` vira `mariaSilva`.
+- Hífen e apóstrofo dentro de um nome são descartados, sem separar palavras:
+  `D'Ávila` vira `Davila`, `Ana-Maria` vira `anamaria`.
 - **Colisão na sugestão:** primeiro nome e último nome; se ocupado, primeiro nome, o
   primeiro nome do meio e o último nome; se ainda ocupado, primeiro e último nome com
   número sequencial a partir de 2 (`mariaSilva2`).
+- **Nome curto ou longo:** sugestão com menos de 3 caracteres já sai numerada (`Li` vira
+  `li2`). Sugestão com mais de 30 é cortada em 30, e o número, quando houver, entra
+  dentro do limite.
 - **Reserva permanente:** todo prefixo que o usuário já teve fica reservado a ele, sem
   reuso por terceiros. Vale para a troca automática de sufixo e também para a edição
   do prefixo no perfil. O dono pode voltar a um prefixo antigo seu.
+- **Nome de exibição:** de 1 a 60 caracteres, contando um emoji como um. Para professor e
+  instituição, que vêm do seed, nasce como o nome completo do cadastro elegível.
 
 ### 2.4 Domínios de e-mail
 
