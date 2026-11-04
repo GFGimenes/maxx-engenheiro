@@ -54,10 +54,64 @@
           }
         }
       }
+    },
+    "/api/v1/eu": {
+      "get": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "GetEu",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EuResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "EuResponse": {
+        "required": [
+          "id",
+          "papeis"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "papeis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -105,11 +159,22 @@
           }
         }
       }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Access token de 15 minutos.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
     }
   },
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Autenticacao"
     }
   ]
 }

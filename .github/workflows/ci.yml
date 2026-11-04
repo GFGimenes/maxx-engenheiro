@@ -94,6 +94,8 @@ jobs:
       - name: Sobe o compose (Postgres, migração, duas réplicas de API, Caddy)
         run: |
           cp .env.example .env
+          # Chave descartável, uma por execução: o .env.example vem sem chave de propósito.
+          sed -i "s|^MAXX_JWT_CHAVE=.*|MAXX_JWT_CHAVE=$(openssl rand -base64 48)|" .env
           docker compose up --build -d
           for i in $(seq 1 60); do
             curl -sf http://localhost/api/ready && exit 0
@@ -155,4 +157,6 @@ jobs:
       - name: Imagens da API e do Caddy com o build web
         run: |
           cp .env.example .env
+          # Chave descartável, uma por execução: o .env.example vem sem chave de propósito.
+          sed -i "s|^MAXX_JWT_CHAVE=.*|MAXX_JWT_CHAVE=$(openssl rand -base64 48)|" .env
           docker compose build

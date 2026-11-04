@@ -1,6 +1,9 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Maxx.Api.Autenticacao;
+using Maxx.Api.Erros;
 using Maxx.Api.Health;
+using Maxx.Api.OpenApi;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
@@ -28,14 +31,25 @@ builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
-{
-    document.Info.Title = "Maxx API";
-    document.Info.Version = "v1";
-    return Task.CompletedTask;
-}));
+builder.Services.AddOpenApi(options => options
+    .AddDocumentTransformer((document, _, _) =>
+    {
+        document.Info.Title = "Maxx API";
+        document.Info.Version = "v1";
+        return Task.CompletedTask;
+    })
+    .AddBearerSecurity());
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Section));
+
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Validação de entrada na borda; a recusa sai em ProblemDetails como o resto.
+builder.Services.AddValidation();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+
+builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
+builder.Services.AddProxyConfiavel(builder.Configuration);
 
 var app = builder.Build();
 
@@ -70,13 +84,23 @@ if (isSeed)
     return 0;
 }
 
+// Primeiro de tudo: o IP e o esquema reais vêm do Caddy, e só dele.
+app.UseForwardedHeaders();
+
 // Um formato só de erro: ProblemDetails (RFC 9457).
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Origem única (ADR 0001): toda rota da API vive sob /api, e o Caddy não corta o prefixo.
 var api = app.MapGroup("/api");
 api.MapHealthEndpoints();
+
+// Contrato versionado: só mudanças aditivas.
+var v1 = api.MapGroup("/v1");
+v1.MapEuEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

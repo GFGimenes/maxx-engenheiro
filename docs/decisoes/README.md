@@ -53,6 +53,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Idioma do código | Domínio em português (`Premio`, `Conquista`, `Turma`, `Contestacao`), técnico em inglês (`Repository`, `Handler`, `Options`) |
 | Limite de taxa | Em login, upload e registro de demonstração, com o limitador nativo do ASP.NET Core: por réplica, sem estado compartilhado. Também em cadastro e recuperação de senha, que disparam consulta à base e e-mail. Números na seção Autenticação |
 | Validação de entrada | `AddValidation()` nativo do .NET 10 na borda; erro de validação e de domínio saem em ProblemDetails |
+| Formato de erro | ProblemDetails (RFC 9457) com a extensão `codigo`, estável e em kebab-case (`requisicao-invalida`, por exemplo), que o cliente traduz em mensagem amigável. A mensagem interna de uma regra de domínio violada vai para o log, nunca para a resposta |
 
 ## Autenticação
 
@@ -68,6 +69,9 @@ ele deixou abertas. Fechadas no plano do passo 3.
 | Recuperação de senha | Token aleatório de 30 minutos, uso único, guardado só como hash. A resposta ao pedido é sempre a mesma, exista o e-mail ou não. Senha nova revoga todas as famílias de refresh do usuário e invalida os outros pedidos de recuperação pendentes dele |
 | Hash de senha | Argon2id com `Konscious.Security.Cryptography`, parâmetros do OWASP: 19 MiB de memória, 2 iterações, paralelismo 1. Login de usuário inexistente calcula um hash fictício, para o tempo de resposta não revelar quem tem conta |
 | Política de senha | De 8 a 128 caracteres, sem regra de composição, na linha do NIST SP 800-63B |
+| Normalização da senha | NFC antes do hash, no cadastro e no login: o "ç" composto de um teclado e o decomposto de outro são a mesma senha |
+| Tolerância de relógio | 30 segundos na validação do access token; as réplicas estão no mesmo host |
+| Chave em desenvolvimento | Sem `Jwt__Chave` em Development, a API gera uma chave por processo, que some no restart. Nenhuma chave versionada, nem a de desenvolvimento |
 | E-mail | SMTP genérico com MailKit; Mailpit no compose local. Provedor da VPS escolhido no passo 13 |
 | Envio de e-mail | Fora da requisição, num `BackgroundService` com fila em memória, até a fila do Postgres nascer no passo 6, quando migra para ela. Perder um e-mail num restart é aceito: o usuário pede de novo |
 | Contas de professor e instituição | Criadas pelo seed, sem senha; primeiro acesso pela recuperação de senha. Ver `produto.md` 2.5 |

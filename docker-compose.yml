@@ -62,6 +62,10 @@ services:
     environment:
       <<: *api-env
       ASPNETCORE_ENVIRONMENT: Production
+      # HS256, a mesma nas duas réplicas. Sem ela a API não sobe.
+      Jwt__Chave: ${MAXX_JWT_CHAVE:?defina no .env}
+      # X-Forwarded-For só vale vindo da rede interna, onde está o Caddy.
+      Proxy__RedesConfiaveis__0: 172.30.0.0/24
     deploy:
       replicas: 2
     depends_on:
@@ -78,6 +82,14 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+# Sub-rede fixa: é a que a API conhece como confiável para os cabeçalhos do proxy.
+# Só a porta do Caddy é publicada; a API não é alcançável de fora dela.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   postgres-data:

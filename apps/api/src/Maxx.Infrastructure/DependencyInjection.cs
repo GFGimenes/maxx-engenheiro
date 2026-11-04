@@ -1,3 +1,5 @@
+using Maxx.Application.Autenticacao;
+using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,9 @@ public static class DependencyInjection
 
         services.AddScoped<DatabaseMigrator>();
         services.AddScoped<DatabaseSeeder>();
+
+        services.AddSingleton<ISenhaHasher, Argon2idSenhaHasher>();
+        services.AddSingleton<ITokenGenerator, TokenGenerator>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()
