@@ -26,11 +26,12 @@ sequenceDiagram
 
   App->>API: confirma (T + senha nova)
   API->>DB: busca o token pelo hash de T
-  alt T inexistente, expirado ou ja usado
+  alt T inexistente, expirado, ja usado ou invalidado
     API-->>App: recusado
   else T valido
     API->>API: hash da senha nova com Argon2id
     API->>DB: grava a senha, marca T como usado, revoga todas as familias de refresh
+    API->>DB: invalida os outros pedidos pendentes do usuario
     API-->>App: senha redefinida, entrar de novo
   end
 ```
@@ -46,6 +47,7 @@ sequenceDiagram
 | Limite de taxa por e-mail | `decisoes/README.md` (Autenticação) |
 | Envio fora da requisição, em segundo plano até a fila do passo 6 | `decisoes/README.md` (Autenticação) |
 | Senha nova revoga todas as famílias de refresh | `decisoes/README.md` (Autenticação) |
+| Concluir um pedido invalida os outros pendentes do mesmo usuário: um link antigo não redefine a senha de novo | `decisoes/README.md` (Autenticação) |
 | Argon2id; senha e token nunca em log | ADR 0006; `CLAUDE.md` (Segurança) |
 
 Os códigos HTTP além do 202 ficam para o fechamento do passo 3, junto com os do

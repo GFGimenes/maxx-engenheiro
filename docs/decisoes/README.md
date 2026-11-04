@@ -65,7 +65,7 @@ ele deixou abertas. Fechadas no plano do passo 3.
 | Assinatura | HS256, com uma chave em variável de ambiente compartilhada pelas duas réplicas. Assimétrica não traz ganho: só a própria API valida o token. Sem a chave, a API não sobe fora de desenvolvimento e teste |
 | Refresh | 30 dias, renovados a cada rotação, sem teto absoluto na fase 1. Guardado no banco só como hash SHA-256 |
 | Refresh na web e no nativo | Na web, cookie `HttpOnly`, `Secure`, `SameSite=Strict`, restrito ao caminho de autenticação; no nativo, no corpo da resposta, para o secure store. O cliente se identifica por cabeçalho |
-| Recuperação de senha | Token aleatório de 30 minutos, uso único, guardado só como hash. A resposta ao pedido é sempre a mesma, exista o e-mail ou não. Senha nova revoga todas as famílias de refresh do usuário |
+| Recuperação de senha | Token aleatório de 30 minutos, uso único, guardado só como hash. A resposta ao pedido é sempre a mesma, exista o e-mail ou não. Senha nova revoga todas as famílias de refresh do usuário e invalida os outros pedidos de recuperação pendentes dele |
 | Hash de senha | Argon2id com `Konscious.Security.Cryptography`, parâmetros do OWASP: 19 MiB de memória, 2 iterações, paralelismo 1. Login de usuário inexistente calcula um hash fictício, para o tempo de resposta não revelar quem tem conta |
 | Política de senha | De 8 a 128 caracteres, sem regra de composição, na linha do NIST SP 800-63B |
 | E-mail | SMTP genérico com MailKit; Mailpit no compose local. Provedor da VPS escolhido no passo 13 |
