@@ -44,4 +44,34 @@ internal sealed partial class DomainExceptionHandler(
 public static class Erro
 {
     public const string CampoCodigo = "codigo";
+
+    // Toda resposta de erro sai com código: quem não trouxe o seu ganha o do status.
+    public static void Customizar(ProblemDetailsOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        options.CustomizeProblemDetails = context =>
+        {
+            var problema = context.ProblemDetails;
+            if (problema.Extensions.ContainsKey(CampoCodigo))
+            {
+                return;
+            }
+
+            problema.Extensions[CampoCodigo] = problema switch
+            {
+                HttpValidationProblemDetails => "dados-invalidos",
+                _ => problema.Status switch
+                {
+                    StatusCodes.Status400BadRequest => "requisicao-invalida",
+                    StatusCodes.Status401Unauthorized => "nao-autenticado",
+                    StatusCodes.Status403Forbidden => "sem-permissao",
+                    StatusCodes.Status404NotFound => "nao-encontrado",
+                    StatusCodes.Status429TooManyRequests => "limite-de-taxa",
+                    StatusCodes.Status503ServiceUnavailable => "indisponivel",
+                    _ => "erro-interno",
+                },
+            };
+        };
+    }
 }

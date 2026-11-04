@@ -89,10 +89,263 @@
           }
         ]
       }
+    },
+    "/api/v1/auth/cadastro/sugestao": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "SugerirArroba",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentificacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SugestaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/cadastro/disponibilidade": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "VerificarDisponibilidadeDoPrefixo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisponibilidadeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/cadastro": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "Cadastrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CadastroRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CadastroRequest": {
+        "required": [
+          "ra",
+          "email",
+          "nomeDeExibicao",
+          "prefixo",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "ra": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nomeDeExibicao": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string"
+          },
+          "prefixo": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "senha": {
+            "maxLength": 512,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "DisponibilidadeRequest": {
+        "required": [
+          "ra",
+          "email",
+          "prefixo"
+        ],
+        "type": "object",
+        "properties": {
+          "ra": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "minLength": 0,
+            "type": "string"
+          },
+          "prefixo": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "DisponibilidadeResponse": {
+        "required": [
+          "disponivel"
+        ],
+        "type": "object",
+        "properties": {
+          "disponivel": {
+            "type": "boolean"
+          }
+        }
+      },
       "EuResponse": {
         "required": [
           "id",
@@ -119,6 +372,70 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "IdentificacaoRequest": {
+        "required": [
+          "ra",
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "ra": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "minLength": 0,
             "type": "string"
           }
         }
@@ -156,6 +473,53 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SessaoResponse": {
+        "required": [
+          "accessToken",
+          "accessTokenExpiraEm",
+          "refreshToken",
+          "refreshTokenExpiraEm"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "accessTokenExpiraEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "refreshTokenExpiraEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SugestaoResponse": {
+        "required": [
+          "prefixo",
+          "sufixo",
+          "arroba"
+        ],
+        "type": "object",
+        "properties": {
+          "prefixo": {
+            "type": "string"
+          },
+          "sufixo": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
           }
         }
       }

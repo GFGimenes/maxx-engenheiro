@@ -1,3 +1,4 @@
+using Maxx.Application;
 using Maxx.Application.Autenticacao;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Persistence;
@@ -24,6 +25,11 @@ public static class DependencyInjection
 
         services.AddSingleton<ISenhaHasher, Argon2idSenhaHasher>();
         services.AddSingleton<ITokenGenerator, TokenGenerator>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ICadastroElegivelRepository, CadastroElegivelRepository>();
+        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<IFamiliaDeSessaoRepository, FamiliaDeSessaoRepository>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

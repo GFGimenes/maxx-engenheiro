@@ -1,0 +1,79 @@
+namespace Maxx.Application;
+
+// Um pedido que a aplicação recusa por regra, não por falha: a borda traduz o tipo em
+// status HTTP e devolve o código no formato único de erro. A mensagem é só para o log.
+public sealed class RecusaException : Exception
+{
+    public RecusaException()
+    {
+        Codigo = string.Empty;
+    }
+
+    public RecusaException(string message) : base(message)
+    {
+        Codigo = string.Empty;
+    }
+
+    public RecusaException(string message, Exception innerException) : base(message, innerException)
+    {
+        Codigo = string.Empty;
+    }
+
+    public RecusaException(TipoDeRecusa tipo, string codigo, string? motivoParaLog = null)
+        : base(motivoParaLog ?? codigo)
+    {
+        Tipo = tipo;
+        Codigo = codigo;
+    }
+
+    public TipoDeRecusa Tipo { get; }
+
+    // Estável e em kebab-case: é o que o cliente usa para escolher a mensagem amigável.
+    public string Codigo { get; }
+}
+
+public enum TipoDeRecusa
+{
+    Invalido,
+    NaoEncontrado,
+    Conflito,
+    NaoAutorizado,
+}
+
+// Gravação recusada por uma unicidade do banco: a corrida que a checagem prévia não
+// consegue fechar sozinha.
+public sealed class ConflitoDeUnicidadeException : Exception
+{
+    public ConflitoDeUnicidadeException()
+    {
+    }
+
+    public ConflitoDeUnicidadeException(string message) : base(message)
+    {
+    }
+
+    public ConflitoDeUnicidadeException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+
+    public ConflitoDeUnicidadeException(Unicidade unicidade, Exception innerException)
+        : base($"Unicidade violada: {unicidade}.", innerException)
+    {
+        Unicidade = unicidade;
+    }
+
+    public Unicidade Unicidade { get; }
+}
+
+public enum Unicidade
+{
+    Outra,
+    ContaPorCadastro,
+    Prefixo,
+}
+
+public interface IUnitOfWork
+{
+    // Lança ConflitoDeUnicidadeException quando o banco recusa por unicidade.
+    Task SalvarAsync(CancellationToken cancellationToken);
+}

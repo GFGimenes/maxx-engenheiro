@@ -144,7 +144,8 @@ public sealed class Usuario
         Sufixo = Identidade.Sufixo.ExAluno;
     }
 
-    private static string ValidarNomeDeExibicao(string nome)
+    // Público para a borda conferir antes de montar o usuário.
+    public static string ValidarNomeDeExibicao(string nome)
     {
         nome = Texto.Obrigatorio(nome, "O nome de exibição");
         if (nome.EnumerateRunes().Count() > TamanhoMaximoDoNomeDeExibicao)

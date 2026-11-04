@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Maxx.Application.Autenticacao;
+using Maxx.Application.Autenticacao.Cadastro;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,6 +15,8 @@ internal static class AutenticacaoServiceCollectionExtensions
         var chave = LerChave(builder, exigirChave);
         builder.Services.AddSingleton(new ChaveDeAssinatura(chave));
         builder.Services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+        builder.Services.AddScoped<SessaoService>();
+        builder.Services.AddScoped<CadastroHandler>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

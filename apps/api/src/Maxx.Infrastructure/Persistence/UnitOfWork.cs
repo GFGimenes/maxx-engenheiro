@@ -1,0 +1,32 @@
+using Maxx.Application;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+
+namespace Maxx.Infrastructure.Persistence;
+
+// Grava o que o escopo acumulou. Unicidade violada vira ConflitoDeUnicidadeException com
+// o nome da regra, para a Application responder com o código certo sem conhecer o banco.
+internal sealed class UnitOfWork(MaxxDbContext db) : IUnitOfWork
+{
+    private static readonly Dictionary<string, Unicidade> _porIndice = new(StringComparer.Ordinal)
+    {
+        ["ix_usuario_cadastro_elegivel_id"] = Unicidade.ContaPorCadastro,
+        ["pk_prefixo_reservado"] = Unicidade.Prefixo,
+    };
+
+    public async Task SalvarAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException falha) when (falha.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+        } postgres)
+        {
+            throw new ConflitoDeUnicidadeException(
+                _porIndice.GetValueOrDefault(postgres.ConstraintName ?? string.Empty, Unicidade.Outra), falha);
+        }
+    }
+}

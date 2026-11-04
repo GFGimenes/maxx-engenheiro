@@ -24,7 +24,7 @@ var connectionString = builder.Configuration.GetConnectionString("Maxx")
     ?? (isOpenApiGeneration ? "Host=openapi-generation" : null)
     ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada.");
 
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(Erro.Customizar);
 
 // Número só como número: o padrão web aceita "42" em texto, e o contrato viraria
 // `number | string` em todo campo numérico do cliente TypeScript.
@@ -46,6 +46,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 // Validação de entrada na borda; a recusa sai em ProblemDetails como o resto.
 builder.Services.AddValidation();
+builder.Services.AddExceptionHandler<RecusaExceptionHandler>();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
@@ -101,6 +102,7 @@ api.MapHealthEndpoints();
 // Contrato versionado: só mudanças aditivas.
 var v1 = api.MapGroup("/v1");
 v1.MapEuEndpoints();
+v1.MapGroup("/auth").MapCadastroEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
