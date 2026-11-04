@@ -307,6 +307,231 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("vinculo_professor", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<int?>("MotivoDaRevogacao")
+                        .HasColumnType("integer")
+                        .HasColumnName("motivo_da_revogacao");
+
+                    b.Property<DateTimeOffset?>("RevogadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revogada_em");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_familia_sessao");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_familia_sessao_usuario_id")
+                        .HasFilter("revogada_em IS NULL");
+
+                    b.ToTable("familia_sessao", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_familia_sessao_revogacao", "(revogada_em IS NULL AND motivo_da_revogacao IS NULL) OR (revogada_em IS NOT NULL AND motivo_da_revogacao IN (1, 2, 3))");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.PrefixoReservado", b =>
+                {
+                    b.Property<string>("Prefixo")
+                        .HasColumnType("citext")
+                        .HasColumnName("prefixo");
+
+                    b.Property<DateTimeOffset>("ReservadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reservado_em");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Prefixo")
+                        .HasName("pk_prefixo_reservado");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_prefixo_reservado_usuario_id");
+
+                    b.ToTable("prefixo_reservado", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prefixo_reservado_prefixo", "prefixo ~ '^[A-Za-z][A-Za-z0-9]{2,29}$'");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.RecuperacaoDeSenha", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("hash");
+
+                    b.Property<DateTimeOffset?>("InvalidadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invalidada_em");
+
+                    b.Property<DateTimeOffset>("SolicitadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("solicitada_em");
+
+                    b.Property<DateTimeOffset?>("UsadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usada_em");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_recuperacao_senha");
+
+                    b.HasIndex("Hash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_recuperacao_senha_hash");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_recuperacao_senha_usuario_id")
+                        .HasFilter("usada_em IS NULL AND invalidada_em IS NULL");
+
+                    b.ToTable("recuperacao_senha", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_recuperacao_senha_encerramento", "usada_em IS NULL OR invalidada_em IS NULL");
+
+                            t.HasCheckConstraint("ck_recuperacao_senha_validade", "expira_em > solicitada_em");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("EmitidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("emitido_em");
+
+                    b.Property<DateTimeOffset>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<Guid>("FamiliaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("familia_id");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("hash");
+
+                    b.Property<DateTimeOffset?>("RotacionadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rotacionado_em");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_token");
+
+                    b.HasIndex("FamiliaId")
+                        .HasDatabaseName("ix_refresh_token_familia_id");
+
+                    b.HasIndex("Hash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_token_hash");
+
+                    b.ToTable("refresh_token", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_refresh_token_validade", "expira_em > emitido_em");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.Usuario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CadastroElegivelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cadastro_elegivel_id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<DateTimeOffset?>("ExAlunoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ex_aluno_desde");
+
+                    b.Property<string>("HashDaSenha")
+                        .HasColumnType("text")
+                        .HasColumnName("hash_da_senha");
+
+                    b.Property<string>("NomeDeExibicao")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nome_de_exibicao");
+
+                    b.Property<int>("Papeis")
+                        .HasColumnType("integer")
+                        .HasColumnName("papeis");
+
+                    b.Property<string>("Prefixo")
+                        .IsRequired()
+                        .HasColumnType("citext")
+                        .HasColumnName("prefixo");
+
+                    b.Property<string>("Sufixo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sufixo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_usuario");
+
+                    b.HasIndex("CadastroElegivelId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuario_cadastro_elegivel_id");
+
+                    b.ToTable("usuario", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_usuario_ex_aluno", "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
+
+                            t.HasCheckConstraint("ck_usuario_papeis", "papeis IN (1, 2, 4, 6)");
+
+                            t.HasCheckConstraint("ck_usuario_prefixo", "prefixo ~ '^[A-Za-z][A-Za-z0-9]{2,29}$'");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.FamiliaRow", b =>
                 {
                     b.Property<string>("Codigo")
@@ -550,6 +775,56 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_vinculo_professor_turma_turma_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_familia_sessao_usuario_usuario_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.PrefixoReservado", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany("PrefixosReservados")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_prefixo_reservado_usuario_usuario_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.RecuperacaoDeSenha", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_recuperacao_senha_usuario_usuario_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.RefreshToken", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.FamiliaDeSessao", null)
+                        .WithMany("Tokens")
+                        .HasForeignKey("FamiliaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_token_familia_sessao_familia_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.Usuario", b =>
+                {
+                    b.HasOne("Maxx.Domain.Academico.CadastroElegivel", null)
+                        .WithMany()
+                        .HasForeignKey("CadastroElegivelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_usuario_cadastro_elegivel_cadastro_elegivel_id");
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>
                 {
                     b.HasOne("Maxx.Infrastructure.Persistence.FamiliaRow", null)
@@ -567,6 +842,16 @@ namespace Maxx.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maxx.Domain.Academico.SemestreLetivo", b =>
                 {
                     b.Navigation("Bimestres");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>
+                {
+                    b.Navigation("Tokens");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.Usuario", b =>
+                {
+                    b.Navigation("PrefixosReservados");
                 });
 #pragma warning restore 612, 618
         }
