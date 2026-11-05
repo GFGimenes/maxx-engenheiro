@@ -50,5 +50,25 @@ sequenceDiagram
 | Concluir um pedido invalida os outros pendentes do mesmo usuário: um link antigo não redefine a senha de novo | `decisoes/README.md` (Autenticação) |
 | Argon2id; senha e token nunca em log | ADR 0006; `CLAUDE.md` (Segurança) |
 
-Os códigos HTTP além do 202 ficam para o fechamento do passo 3, junto com os do
-[`01-login.md`](01-login.md).
+## Códigos HTTP
+
+Como no [`01-login.md`](01-login.md), toda recusa sai em ProblemDetails com `codigo`.
+
+| Rota | Sucesso | Recusa |
+|---|---|---|
+| `POST /api/v1/auth/recuperacao` `{email}` | 202, sem corpo, sempre | 400 `dados-invalidos`; 429 `limite-de-taxa` |
+| `POST /api/v1/auth/recuperacao/confirmar` `{token, senha}` | 204, sem sessão | 400 `recuperacao-invalida`; 400 `senha-fora-da-politica`; 400 `dados-invalidos` |
+
+- **Pedido:** recebe o e-mail só quem tem conta. Aluno da base ainda sem conta, e-mail
+  inexistente e aluno de demonstração recebem o mesmo 202, sem e-mail. O link vai para o
+  endereço gravado na base, não para o digitado.
+- **Link:** `<App__UrlPublica>/redefinir-senha#token=...`, com o token no fragmento, que
+  o navegador não manda a servidor nenhum. A tela é do passo 5.
+- **`recuperacao-invalida`:** token desconhecido, expirado, já usado ou invalidado por
+  outro pedido concluído. Duas confirmações simultâneas do mesmo link deixam um 204 e um
+  400, como em sequência.
+- **`senha-fora-da-politica`:** conferida antes do token, e o link continua valendo
+  para uma senha que caiba na política.
+- **Sem sessão:** a senha nova acabou de derrubar todas, e o cliente leva ao login.
+- **Limite:** 3 pedidos a cada 15 minutos por e-mail, exista ele ou não, com
+  `Retry-After`. A confirmação não tem limite: o token tem 256 bits.

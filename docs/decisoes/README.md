@@ -53,7 +53,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Idioma do código | Domínio em português (`Premio`, `Conquista`, `Turma`, `Contestacao`), técnico em inglês (`Repository`, `Handler`, `Options`) |
 | Limite de taxa | Em login, upload e registro de demonstração, com o limitador nativo do ASP.NET Core: por réplica, sem estado compartilhado. Também em cadastro e recuperação de senha, que disparam consulta à base e e-mail. Números na seção Autenticação |
 | Validação de entrada | `AddValidation()` nativo do .NET 10 na borda; erro de validação e de domínio saem em ProblemDetails |
-| Formato de erro | ProblemDetails (RFC 9457) com a extensão `codigo`, estável e em kebab-case (`requisicao-invalida`, por exemplo), que o cliente traduz em mensagem amigável. A mensagem interna de uma regra de domínio violada vai para o log, nunca para a resposta |
+| Formato de erro | ProblemDetails (RFC 9457) com a extensão `codigo`, estável e em kebab-case (`requisicao-invalida`, por exemplo), que o cliente traduz em mensagem amigável. Todo erro sai com `codigo`: quem não traz um próprio ganha o do status (`dados-invalidos`, `nao-autenticado`, `sem-permissao`, `nao-encontrado`, `limite-de-taxa`, `erro-interno` e outros). A mensagem interna de uma regra de domínio violada vai para o log, nunca para a resposta |
 
 ## Autenticação
 
@@ -65,18 +65,26 @@ ele deixou abertas. Fechadas no plano do passo 3.
 | Access token | JWT de 15 minutos, com `sub` e papéis; nunca a lista de turmas |
 | Assinatura | HS256, com uma chave em variável de ambiente compartilhada pelas duas réplicas. Assimétrica não traz ganho: só a própria API valida o token. Sem a chave, a API não sobe fora de desenvolvimento e teste |
 | Refresh | 30 dias, renovados a cada rotação, sem teto absoluto na fase 1. Guardado no banco só como hash SHA-256 |
-| Refresh na web e no nativo | Na web, cookie `HttpOnly`, `Secure`, `SameSite=Strict`, restrito ao caminho de autenticação; no nativo, no corpo da resposta, para o secure store. O cliente se identifica por cabeçalho |
+| Refresh na web e no nativo | Na web, cookie `maxx_refresh`, `HttpOnly`, `Secure`, `SameSite=Strict`, restrito a `/api/v1/auth`; no nativo, no corpo da resposta, para o secure store. O cabeçalho `X-Maxx-Cliente: web` escolhe o cookie; sem ele, o refresh vai no corpo |
+| Cookie só com o cabeçalho | Na web, o cookie do refresh só é lido quando o pedido traz `X-Maxx-Cliente: web`: um formulário de outro site não manda cabeçalho próprio, defesa somada ao `SameSite=Strict`. Refresh recusado e logout apagam o cookie |
+| Refresh simultâneo | Conta como reuso. Quem perde a corrida relê o banco, encontra o token já trocado e derruba a família: simultâneo ou em sequência, o resultado é o mesmo. Por isso o cliente serializa o refresh (passo 5) |
+| Sessão recusada | Um só código, `sessao-invalida`, para refresh ausente, desconhecido, expirado, de família revogada ou reusado: em todos os casos o cliente volta ao login. O motivo exato fica só no log |
 | Recuperação de senha | Token aleatório de 30 minutos, uso único, guardado só como hash. A resposta ao pedido é sempre a mesma, exista o e-mail ou não. Senha nova revoga todas as famílias de refresh do usuário e invalida os outros pedidos de recuperação pendentes dele |
+| Link de recuperação | `<App__UrlPublica>/redefinir-senha#token=...`, com o token no fragmento: o navegador não manda a servidor nenhum o que vem depois do `#`, e o token não cai em log de acesso nem em `Referer`. A tela é do passo 5. Sem `App__UrlPublica`, a API não sobe fora de desenvolvimento |
 | Hash de senha | Argon2id com `Konscious.Security.Cryptography`, parâmetros do OWASP: 19 MiB de memória, 2 iterações, paralelismo 1. Login de usuário inexistente calcula um hash fictício, para o tempo de resposta não revelar quem tem conta |
 | Política de senha | De 8 a 128 caracteres, sem regra de composição, na linha do NIST SP 800-63B |
 | Normalização da senha | NFC antes do hash, no cadastro e no login: o "ç" composto de um teclado e o decomposto de outro são a mesma senha |
 | Tolerância de relógio | 30 segundos na validação do access token; as réplicas estão no mesmo host |
 | Chave em desenvolvimento | Sem `Jwt__Chave` em Development, a API gera uma chave por processo, que some no restart. Nenhuma chave versionada, nem a de desenvolvimento |
 | E-mail | SMTP genérico com MailKit; Mailpit no compose local. Provedor da VPS escolhido no passo 13 |
-| Envio de e-mail | Fora da requisição, num `BackgroundService` com fila em memória, até a fila do Postgres nascer no passo 6, quando migra para ela. Perder um e-mail num restart é aceito: o usuário pede de novo |
-| Contas de professor e instituição | Criadas pelo seed, sem senha; primeiro acesso pela recuperação de senha. Ver `produto.md` 2.5 |
+| Envio de e-mail | Fora da requisição, num `BackgroundService` com fila em memória, até a fila do Postgres nascer no passo 6, quando migra para ela. Perder um e-mail num restart é aceito: o usuário pede de novo. Falha de envio vai só para o log, sem reenvio, até a fila do passo 6. A fila em memória guarda até 1.000 mensagens por réplica; cheia, descarta a nova com log de erro |
+| Contas de professor e instituição | Criadas pelo seed demo, sem senha, para toda linha de professor e de instituição que estiver no banco, não só as do arquivo; primeiro acesso pela recuperação de senha. Ver `produto.md` 2.5 |
+| Login exigido | Toda rota de `/v1` exige login, e a pública declara `AllowAnonymous`. A exigência fica no grupo `/v1`, e não numa `FallbackPolicy`, porque a fallback vale também para pedido sem endpoint, e rota inexistente tem de continuar 404 |
+| `GET /v1/eu` | Lê papéis e arroba do banco, não do token: o arroba pode mudar depois da emissão |
 | Escopo de turma | Verificado no banco a cada mutação, contra `vinculo_professor`, só nas turmas do semestre letivo vigente, com a data interpretada em `America/Sao_Paulo`. Fora de semestre vigente, o professor não tem escopo |
 | Demonstração | Chave aleatória do dispositivo guardada só como hash; lote por configuração; cadastro elegível marcado como demonstração. Ver `produto.md` 11 |
+| Flag da demonstração | `Demo__Habilitada` só pelo `docker-compose.demo.yml`, por cima do `docker-compose.yml`, que nunca a menciona. Desligada, as rotas nem são mapeadas, e o 404 é o de uma rota inexistente; a geração do OpenAPI as mapeia mesmo assim, para o cliente ter os tipos. Ligada, `Demo__Lote` é obrigatório, ou a API não sobe |
+| Aluno de demonstração | Escolhe o curso pela sigla, entre os que têm turma no semestre vigente, e é matriculado nas turmas vigentes dele. RA gerado no formato `DEMO` mais 8 caracteres, fora do formato numérico dos RAs da faculdade; e-mail `<ra>@demonstracao.invalid`, domínio reservado que nunca recebe nada; semestre 1. Sem senha e sem recuperação: entra só pela chave do dispositivo, que vai sempre no corpo da resposta, na web também |
 
 Limites de taxa, por réplica:
 
@@ -84,12 +92,43 @@ Limites de taxa, por réplica:
 |---|---|
 | Login | 5 por minuto por identificador informado e 30 por minuto por IP |
 | Cadastro | 3 a cada 15 minutos por RA |
-| Recuperação de senha | 3 a cada 15 minutos por e-mail |
-| Registro de demonstração | 60 por hora por IP. Alto de propósito: a banca inteira entra pelo mesmo celular roteado |
-| Upload | Policy declarada no passo 3; aplicada e testada no passo 7, quando o endpoint nasce |
+| Sugestão e disponibilidade do arroba | 60 por minuto por IP, somadas as duas: elas respondem diferente para um par de RA e e-mail que existe. Cabe na digitação porque o cliente do passo 5 faz debounce antes de perguntar |
+| Recuperação de senha | 3 a cada 15 minutos por e-mail, só no pedido. A confirmação não tem limite: o token tem 256 bits |
+| Registro de demonstração | 60 por hora por IP. Alto de propósito: a banca inteira entra pelo mesmo celular roteado. A entrada pela chave do dispositivo não tem limite: a chave tem 256 bits |
+| Upload | 30 por hora por usuário, número provisório. Declarado no passo 3; aplicado, testado e revisto no passo 7, quando o endpoint nasce |
 
 O IP vem do `X-Forwarded-For` posto pelo Caddy, aceito só dele. Estourado o limite, a
 resposta é 429 em ProblemDetails, com `Retry-After`.
+
+Os limites são filtros de endpoint sobre os limitadores nativos de
+`System.Threading.RateLimiting`, e não policies do middleware: três das chaves estão no
+corpo (identificador, RA, e-mail), e o particionador do middleware roda antes de o corpo
+ser lido. Janela fixa, sem fila; toda tentativa conta, inclusive a que dá certo. A chave
+é comparada sem espaços nas pontas e em minúsculas. O log registra só o nome do limite,
+nunca a chave, que é dado pessoal.
+
+### Purga da demonstração
+
+Depois da apresentação, os dados de um lote saem numa transação só, com o lote que estava
+em `MAXX_DEMO_LOTE`:
+
+```sql
+BEGIN;
+CREATE TEMP TABLE alvo ON COMMIT DROP AS
+  SELECT id AS usuario_id, cadastro_elegivel_id AS cadastro_id
+  FROM usuario WHERE lote_da_demonstracao = :'lote';
+DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM usuario WHERE id IN (SELECT usuario_id FROM alvo);
+DELETE FROM matricula WHERE aluno_id IN (SELECT cadastro_id FROM alvo);
+DELETE FROM cadastro_elegivel WHERE id IN (SELECT cadastro_id FROM alvo) AND demonstracao;
+COMMIT;
+```
+
+Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1`. Os prefixos reservados e os refresh
+saem em cascata com o usuário e a família. A lista cresce com os passos que gravam dados
+do aluno (posts, curtidas, prêmios, pontos): cada um acrescenta aqui a tabela dele, antes
+de `usuario`.
 
 ## Cliente
 

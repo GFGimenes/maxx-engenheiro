@@ -144,6 +144,12 @@ Primeiras telas reais, fechando o ciclo entre autenticação e design.
 - Aceite do termo de uso versionado, dentro da identidade visual.
 - Entrada da demonstração: botão só com a flag ligada, registro simples, lembrança local
   do dispositivo.
+- Refresh serializado no cliente, obrigatório: um refresh por vez, e o pedido que chega
+  durante espera o resultado do que já está em voo. Dois refresh simultâneos com o mesmo
+  token contam como reuso e derrubam a sessão (`decisoes/README.md`, Refresh simultâneo).
+- Debounce na sugestão e na disponibilidade do arroba, que somam 60 consultas por minuto
+  por IP.
+- Tela de senha nova em `/redefinir-senha`, lendo o token do fragmento `#token=`.
 - e2e de cadastro, login, recuperação de senha e entrada de demonstração.
 
 ### Passo 6. Medalhas, fila e worker

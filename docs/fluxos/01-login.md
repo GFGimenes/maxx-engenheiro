@@ -47,6 +47,31 @@ sequenceDiagram
 | Logout revogando | `plano-mestre.md` passo 3 |
 
 O papel do usuário vem do cadastro na base, nunca do domínio do e-mail (`produto.md`
-2.4). Os códigos HTTP e o texto das respostas ficam para o passo 3; o único fixado aqui
-é o 401 do reuso de refresh, que vem do ADR 0006. A resposta de credencial inválida que
-não permita enumerar usuários é responsabilidade registrada no mesmo ADR.
+2.4).
+
+## Códigos HTTP
+
+Toda recusa sai em ProblemDetails com a extensão `codigo`, que o cliente traduz em
+mensagem amigável (`decisoes/README.md`, Formato de erro).
+
+| Rota | Sucesso | Recusa |
+|---|---|---|
+| `POST /api/v1/auth/login` `{identificador, senha}` | 200 com a sessão | 401 `credenciais-invalidas`; 400 `dados-invalidos`; 429 `limite-de-taxa` |
+| `POST /api/v1/auth/refresh` `{refreshToken}` | 200 com a sessão nova | 401 `sessao-invalida`; 400 `dados-invalidos` |
+| `POST /api/v1/auth/logout` `{refreshToken}` | 204, sempre | 400 `dados-invalidos` |
+
+- **Identificador:** com `@` é e-mail, de qualquer papel; sem `@` é RA, só de aluno.
+- **`credenciais-invalidas`:** a mesma resposta, e o mesmo custo de um Argon2id, para
+  usuário inexistente, conta do seed ainda sem senha, senha errada e professor ou
+  instituição pelo RA. Nem o corpo nem o tempo dizem quem tem conta.
+- **`sessao-invalida`:** refresh ausente, desconhecido, expirado, de família revogada ou
+  reusado. No reuso, a família inteira cai antes da resposta, e dois refresh simultâneos
+  com o mesmo token contam como reuso: o cliente serializa o refresh.
+- **Sessão:** `accessToken` e `accessTokenExpiraEm`, `refreshToken` e
+  `refreshTokenExpiraEm`. Com o cabeçalho `X-Maxx-Cliente: web`, o refresh vai só no
+  cookie `maxx_refresh`, e `refreshToken` volta nulo; o refresh e o logout leem o
+  cookie só com esse cabeçalho, e o corpo pode faltar.
+- **Logout:** revoga a família do refresh apresentado; refresh desconhecido ou família já
+  revogada não mudam a resposta. Na web, o refresh recusado e o logout apagam o cookie.
+- **Limites:** login, 5 por minuto por identificador e 30 por minuto por IP; o 429 traz
+  `Retry-After` (`decisoes/README.md`, Autenticação).
