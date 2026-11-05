@@ -1,4 +1,4 @@
-# Maxx: Postgres, migração, duas réplicas de API e Caddy.
+# Maxx: Postgres, migração, duas réplicas de API, Caddy e Mailpit.
 # Uso local: cp .env.example .env && docker compose up --build
 
 name: maxx
@@ -62,11 +62,32 @@ services:
     environment:
       <<: *api-env
       ASPNETCORE_ENVIRONMENT: Production
+      # HS256, a mesma nas duas réplicas. Sem ela a API não sobe.
+      Jwt__Chave: ${MAXX_JWT_CHAVE:?defina no .env}
+      # X-Forwarded-For só vale vindo da rede interna, onde está o Caddy.
+      Proxy__RedesConfiaveis__0: 172.30.0.0/24
+      # Para onde aponta o link do e-mail de recuperação de senha.
+      App__UrlPublica: ${MAXX_URL_PUBLICA:-http://localhost}
+      # SMTP: o Mailpit local por padrão. O provedor da VPS entra no passo 13, pelo .env.
+      Email__Remetente: ${MAXX_EMAIL_REMETENTE:-Maxx <nao-responda@maxx.local>}
+      Email__Smtp__Host: ${MAXX_SMTP_HOST:-mailpit}
+      Email__Smtp__Porta: ${MAXX_SMTP_PORTA:-1025}
+      Email__Smtp__Seguranca: ${MAXX_SMTP_SEGURANCA:-None}
+      Email__Smtp__Usuario: ${MAXX_SMTP_USUARIO:-}
+      Email__Smtp__Senha: ${MAXX_SMTP_SENHA:-}
     deploy:
       replicas: 2
     depends_on:
       seeder:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Recebe todo e-mail que a API manda, sem entregar a ninguém. Caixa em
+  # http://localhost:8025, só nesta máquina.
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports:
+      - "127.0.0.1:${MAXX_MAILPIT_PORT:-8025}:8025"
     restart: unless-stopped
 
   caddy:
@@ -78,6 +99,14 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+# Sub-rede fixa: é a que a API conhece como confiável para os cabeçalhos do proxy.
+# Só a porta do Caddy é publicada; a API não é alcançável de fora dela.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   postgres-data:

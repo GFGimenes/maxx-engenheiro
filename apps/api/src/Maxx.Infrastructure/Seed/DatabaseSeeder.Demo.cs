@@ -1,5 +1,6 @@
 using Maxx.Domain;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,8 @@ public sealed partial class DatabaseSeeder
         }
 
         await FalharSeRestricaoSemCursoAsync(demo.Siglas, cancellationToken);
+
+        demo.ContasDoSeed(relogio.GetUtcNow());
 
         await db.SaveChangesAsync(cancellationToken);
         await transacao.CommitAsync(cancellationToken);
@@ -115,6 +118,8 @@ public sealed partial class DatabaseSeeder
         private readonly Dictionary<string, CadastroElegivel> _porRa = new(StringComparer.Ordinal);
         private readonly HashSet<(Guid AlunoId, Guid TurmaId)> _matriculas = [];
         private readonly HashSet<(Guid ProfessorId, Guid TurmaId)> _vinculos = [];
+        private readonly HashSet<Guid> _cadastrosComConta = [];
+        private readonly HashSet<string> _prefixos = new(StringComparer.OrdinalIgnoreCase);
 
         private int _cursosNovos;
         private int _materiasNovas;
@@ -122,11 +127,12 @@ public sealed partial class DatabaseSeeder
         private int _cadastrosNovos;
         private int _matriculasNovas;
         private int _vinculosNovos;
+        private int _contasNovas;
 
         public IEnumerable<string> Siglas => _cursos.Keys;
 
         public ResultadoDoSeedDemo Resultado => new(
-            _cursosNovos, _materiasNovas, _turmasNovas, _cadastrosNovos, _matriculasNovas, _vinculosNovos);
+            _cursosNovos, _materiasNovas, _turmasNovas, _cadastrosNovos, _matriculasNovas, _vinculosNovos, _contasNovas);
 
         public async Task CarregarAsync(CancellationToken cancellationToken)
         {
@@ -159,6 +165,12 @@ public sealed partial class DatabaseSeeder
                 .ToListAsync(cancellationToken));
             _vinculos.UnionWith(await db.Set<VinculoProfessor>()
                 .Select(vinculo => new ValueTuple<Guid, Guid>(vinculo.ProfessorId, vinculo.TurmaId))
+                .ToListAsync(cancellationToken));
+            _cadastrosComConta.UnionWith(await db.Set<Usuario>()
+                .Select(usuario => usuario.CadastroElegivelId)
+                .ToListAsync(cancellationToken));
+            _prefixos.UnionWith(await db.Set<PrefixoReservado>()
+                .Select(reservado => reservado.Prefixo)
                 .ToListAsync(cancellationToken));
         }
 
@@ -254,6 +266,26 @@ public sealed partial class DatabaseSeeder
             {
                 db.Add(Construir(professor.Email, () => new VinculoProfessor(professor, turma)));
                 _vinculosNovos++;
+            }
+        }
+
+        // Professor e instituição não se cadastram: nascem aqui com conta e sem senha, e o
+        // primeiro acesso é pela recuperação (produto.md 2.5). Vale para toda linha deles no
+        // banco, não só as do arquivo. Em ordem de e-mail, para o arroba sair igual a cada
+        // banco novo.
+        public void ContasDoSeed(DateTimeOffset agora)
+        {
+            var semConta = _cadastros.Values
+                .Where(cadastro => !cadastro.EhAluno && !_cadastrosComConta.Contains(cadastro.Id))
+                .OrderBy(cadastro => cadastro.Email, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var cadastro in semConta)
+            {
+                var prefixo = PrefixoDeArroba.Sugerir(cadastro.NomeCompleto, candidato => !_prefixos.Contains(candidato));
+                db.Add(Construir(cadastro.Email, () => Usuario.CriarPeloSeed(cadastro, prefixo, agora)));
+                _cadastrosComConta.Add(cadastro.Id);
+                _prefixos.Add(prefixo);
+                _contasNovas++;
             }
         }
 

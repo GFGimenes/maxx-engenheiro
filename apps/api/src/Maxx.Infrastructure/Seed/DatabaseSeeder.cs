@@ -10,7 +10,7 @@ namespace Maxx.Infrastructure.Seed;
 // banco. Uma transação só, sob advisory lock: dois seeds ao mesmo tempo esperam um pelo
 // outro, e um seed que falha não deixa nada gravado.
 public sealed partial class DatabaseSeeder(
-    MaxxDbContext db, IOptions<SeedOptions> options, ILogger<DatabaseSeeder> logger)
+    MaxxDbContext db, IOptions<SeedOptions> options, ILogger<DatabaseSeeder> logger, TimeProvider relogio)
 {
     // Diferente da chave da migração, para os dois não se confundirem.
     public const long AdvisoryLockKey = 0x4D41_5858_0002;

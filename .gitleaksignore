@@ -1,0 +1,7 @@
+# Falsos positivos conferidos à mão. Cada linha é um achado só (commit, arquivo, regra,
+# linha), não uma regra inteira: o resto do histórico continua sob o gitleaks.
+#
+# Senha de teste literal ("outra-senha-789") ao lado de `token` em RecuperacaoTests,
+# no commit da E9 do passo 3. Hoje ela mora numa constante, fora do alcance da regra.
+6ff97f4f854e3a86a247056e15a55dfc39e2f362:apps/api/tests/Maxx.Api.IntegrationTests/Autenticacao/RecuperacaoTests.cs:generic-api-key:133
+6ff97f4f854e3a86a247056e15a55dfc39e2f362:apps/api/tests/Maxx.Api.IntegrationTests/Autenticacao/RecuperacaoTests.cs:generic-api-key:201
