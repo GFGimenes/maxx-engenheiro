@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Cadastro;
 using Maxx.Application.Autenticacao.Login;
+using Maxx.Application.Autenticacao.Recuperacao;
+using Maxx.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -21,6 +23,9 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddScoped<LoginHandler>();
         builder.Services.AddScoped<RefreshHandler>();
         builder.Services.AddScoped<LogoutHandler>();
+        builder.Services.AddScoped<RecuperacaoHandler>();
+        builder.Services.AddSingleton<ILinkDoApp>(new LinkDoApp(LerUrlPublica(builder, exigirChave)));
+        builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.Section));
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -42,6 +47,29 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddAuthorization(Politicas.Configurar);
 
         return builder;
+    }
+
+    // Sem ela o link do e-mail de recuperação não teria para onde apontar: fora de
+    // desenvolvimento a API não sobe.
+    private static Uri LerUrlPublica(WebApplicationBuilder builder, bool exigir)
+    {
+        var texto = builder.Configuration[$"{LinkDoApp.Section}:UrlPublica"];
+        if (string.IsNullOrWhiteSpace(texto))
+        {
+            if (exigir && !builder.Environment.IsDevelopment())
+            {
+                throw new InvalidOperationException($"{LinkDoApp.Section}__UrlPublica não configurada: defina a URL pública do app.");
+            }
+
+            texto = "http://localhost";
+        }
+
+        if (!Uri.TryCreate(texto.Trim().TrimEnd('/') + "/", UriKind.Absolute, out var url) || url.Scheme is not ("http" or "https"))
+        {
+            throw new InvalidOperationException($"{LinkDoApp.Section}__UrlPublica inválida: {texto}.");
+        }
+
+        return url;
     }
 
     private static SymmetricSecurityKey LerChave(WebApplicationBuilder builder, bool exigirChave)

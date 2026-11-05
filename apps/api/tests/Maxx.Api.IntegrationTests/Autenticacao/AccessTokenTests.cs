@@ -170,7 +170,7 @@ public class AccessTokenTests
         new(
             MaxxApiFactory.UnreachableDatabase,
             ambiente,
-            configuracao: new Dictionary<string, string> { ["Jwt:Chave"] = chave },
+            configuracao: new Dictionary<string, string> { ["Jwt:Chave"] = chave, ["App:UrlPublica"] = "https://maxx.teste" },
             servicos: usuario is null ? null : EmMemoria(usuario));
 
     private static Action<IServiceCollection> EmMemoria(Usuario usuario) =>

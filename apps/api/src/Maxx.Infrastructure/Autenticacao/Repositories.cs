@@ -20,6 +20,12 @@ internal sealed class CadastroElegivelRepository(MaxxDbContext db) : ICadastroEl
 
         return encontrado is null ? null : (encontrado.cadastro, encontrado.curso);
     }
+
+    public Task<string> EmailAsync(Guid cadastroElegivelId, CancellationToken cancellationToken) =>
+        db.Set<CadastroElegivel>()
+            .Where(cadastro => cadastro.Id == cadastroElegivelId)
+            .Select(cadastro => cadastro.Email)
+            .SingleAsync(cancellationToken);
 }
 
 internal sealed class UsuarioRepository(MaxxDbContext db) : IUsuarioRepository
@@ -68,4 +74,22 @@ internal sealed class FamiliaDeSessaoRepository(MaxxDbContext db) : IFamiliaDeSe
             .Include(familia => familia.Tokens.Where(token => token.Hash == hashDoRefresh))
             .Where(familia => familia.Tokens.Any(token => token.Hash == hashDoRefresh))
             .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<FamiliaDeSessao>> AtivasDoUsuarioAsync(Guid usuarioId, CancellationToken cancellationToken) =>
+        await db.Set<FamiliaDeSessao>()
+            .Where(familia => familia.UsuarioId == usuarioId && familia.RevogadaEm == null)
+            .ToListAsync(cancellationToken);
+}
+
+internal sealed class RecuperacaoDeSenhaRepository(MaxxDbContext db) : IRecuperacaoDeSenhaRepository
+{
+    public void Adicionar(RecuperacaoDeSenha recuperacao) => db.Add(recuperacao);
+
+    public Task<RecuperacaoDeSenha?> BuscarPorHashAsync(string hash, CancellationToken cancellationToken) =>
+        db.Set<RecuperacaoDeSenha>().SingleOrDefaultAsync(recuperacao => recuperacao.Hash == hash, cancellationToken);
+
+    public async Task<IReadOnlyList<RecuperacaoDeSenha>> PendentesDoUsuarioAsync(Guid usuarioId, CancellationToken cancellationToken) =>
+        await db.Set<RecuperacaoDeSenha>()
+            .Where(recuperacao => recuperacao.UsuarioId == usuarioId && recuperacao.UsadaEm == null && recuperacao.InvalidadaEm == null)
+            .ToListAsync(cancellationToken);
 }

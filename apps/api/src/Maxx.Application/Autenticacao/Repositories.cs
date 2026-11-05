@@ -8,6 +8,9 @@ public interface ICadastroElegivelRepository
     // A linha de aluno em que RA e e-mail estão juntos, com o curso dela. E-mail sem
     // diferenciar maiúsculas.
     Task<(CadastroElegivel Cadastro, Curso Curso)?> BuscarAlunoAsync(string ra, string email, CancellationToken cancellationToken);
+
+    // O e-mail como a faculdade o gravou, para onde vai a recuperação de senha.
+    Task<string> EmailAsync(Guid cadastroElegivelId, CancellationToken cancellationToken);
 }
 
 public interface IUsuarioRepository
@@ -36,4 +39,18 @@ public interface IFamiliaDeSessaoRepository
     // A família dona do refresh com este hash, carregada só com esse token: é o que a
     // rotação e o logout precisam, e a família ganha um token a cada renovação.
     Task<FamiliaDeSessao?> BuscarPorRefreshAsync(string hashDoRefresh, CancellationToken cancellationToken);
+
+    // As famílias ainda não revogadas do usuário, sem os tokens: a senha redefinida revoga
+    // todas.
+    Task<IReadOnlyList<FamiliaDeSessao>> AtivasDoUsuarioAsync(Guid usuarioId, CancellationToken cancellationToken);
+}
+
+public interface IRecuperacaoDeSenhaRepository
+{
+    void Adicionar(RecuperacaoDeSenha recuperacao);
+
+    Task<RecuperacaoDeSenha?> BuscarPorHashAsync(string hash, CancellationToken cancellationToken);
+
+    // Os pedidos do usuário ainda não usados nem invalidados, que a conclusão invalida.
+    Task<IReadOnlyList<RecuperacaoDeSenha>> PendentesDoUsuarioAsync(Guid usuarioId, CancellationToken cancellationToken);
 }

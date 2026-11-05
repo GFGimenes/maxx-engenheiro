@@ -168,6 +168,8 @@ public sealed class AutorizacaoTests(PostgresFixture postgres) : IClassFixture<P
                 "/api/v1/auth/cadastro/sugestao",
                 "/api/v1/auth/login",
                 "/api/v1/auth/logout",
+                "/api/v1/auth/recuperacao",
+                "/api/v1/auth/recuperacao/confirmar",
                 "/api/v1/auth/refresh",
             ],
             rotas.Where(rota => rota.Metadata.GetMetadata<IAllowAnonymous>() is not null)

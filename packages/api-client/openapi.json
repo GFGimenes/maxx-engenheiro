@@ -414,6 +414,72 @@
           }
         }
       }
+    },
+    "/api/v1/auth/recuperacao": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "SolicitarRecuperacaoDeSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/recuperacao/confirmar": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "operationId": "ConfirmarRecuperacaoDeSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -445,6 +511,25 @@
           },
           "prefixo": {
             "maxLength": 64,
+            "minLength": 0,
+            "type": "string"
+          },
+          "senha": {
+            "maxLength": 512,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "ConfirmacaoRequest": {
+        "required": [
+          "token",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "maxLength": 128,
             "minLength": 0,
             "type": "string"
           },
@@ -641,6 +726,19 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RecuperacaoRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "minLength": 0,
+            "type": "string"
           }
         }
       },

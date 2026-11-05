@@ -23,4 +23,8 @@ public static class CodigosDeRecusa
     // Refresh ausente, desconhecido, expirado, de família revogada ou reusado: em todos os
     // casos o cliente volta ao login.
     public const string SessaoInvalida = "sessao-invalida";
+
+    // Token de recuperação desconhecido, expirado, já usado ou invalidado por outro pedido
+    // concluído: em todos os casos o cliente oferece pedir um link novo.
+    public const string RecuperacaoInvalida = "recuperacao-invalida";
 }
