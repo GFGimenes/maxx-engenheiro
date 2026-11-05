@@ -34,4 +34,5 @@ public sealed record ResultadoDoSeedDemo(
     int TurmasNovas,
     int CadastrosNovos,
     int MatriculasNovas,
-    int VinculosNovos);
+    int VinculosNovos,
+    int ContasNovas);

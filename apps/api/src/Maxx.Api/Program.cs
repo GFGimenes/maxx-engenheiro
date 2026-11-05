@@ -99,10 +99,13 @@ app.UseAuthorization();
 var api = app.MapGroup("/api");
 api.MapHealthEndpoints();
 
-// Contrato versionado: só mudanças aditivas.
-var v1 = api.MapGroup("/v1");
+// Contrato versionado: só mudanças aditivas. Fechado por padrão: toda rota de /v1 exige
+// login, e a pública diz isso com AllowAnonymous. No grupo, e não numa FallbackPolicy,
+// porque a fallback vale também para pedido sem endpoint, e rota inexistente tem de
+// continuar 404 (as rotas da demonstração desligada respondem igual a ela).
+var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
-v1.MapGroup("/auth").MapCadastroEndpoints().MapLoginEndpoints();
+v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

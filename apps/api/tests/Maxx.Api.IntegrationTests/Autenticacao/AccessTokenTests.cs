@@ -14,7 +14,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace Maxx.Api.IntegrationTests.Autenticacao;
 
 // O access token de ponta a ponta, sem banco: emitido pela API, conferido pela API, e
-// recusado em 401 no formato único quando vencido, mal assinado ou ausente.
+// recusado em 401 no formato único quando vencido, mal assinado ou ausente. O /eu lê o
+// usuário de um repositório em memória.
 public class AccessTokenTests
 {
     private static readonly Uri _eu = new("/api/v1/eu", UriKind.Relative);
@@ -30,8 +31,8 @@ public class AccessTokenTests
     [Fact]
     public async Task Token_emitido_pela_api_abre_o_eu_com_id_e_papeis()
     {
-        await using var factory = ComChave(_chave);
         var renata = Professora(tambemInstituicao: true);
+        await using var factory = ComChave(_chave, usuario: renata);
         var token = Emitir(factory, renata);
         using var client = factory.CreateClient();
 
@@ -41,6 +42,7 @@ public class AccessTokenTests
         var eu = await response.Content.ReadFromJsonAsync<EuResponse>(Ct);
         Assert.Equal(renata.Id, eu!.Id);
         Assert.Equal(["professor", "instituicao"], eu.Papeis);
+        Assert.Equal("@renataAlbuquerque-PROF", eu.Arroba);
     }
 
     [Fact]
@@ -155,15 +157,24 @@ public class AccessTokenTests
     [Fact]
     public async Task Em_desenvolvimento_sem_chave_a_api_sobe_com_chave_do_processo()
     {
-        await using var factory = new MaxxApiFactory(MaxxApiFactory.UnreachableDatabase, "Development");
-        var token = Emitir(factory, Professora(tambemInstituicao: false));
+        var renata = Professora(tambemInstituicao: false);
+        await using var factory = new MaxxApiFactory(
+            MaxxApiFactory.UnreachableDatabase, "Development", servicos: EmMemoria(renata));
+        var token = Emitir(factory, renata);
         using var client = factory.CreateClient();
 
         Assert.Equal(HttpStatusCode.OK, (await client.SendAsync(Get(token.Valor), Ct)).StatusCode);
     }
 
-    private static MaxxApiFactory ComChave(string chave, string ambiente = "Development") =>
-        new(MaxxApiFactory.UnreachableDatabase, ambiente, configuracao: new Dictionary<string, string> { ["Jwt:Chave"] = chave });
+    private static MaxxApiFactory ComChave(string chave, string ambiente = "Development", Usuario? usuario = null) =>
+        new(
+            MaxxApiFactory.UnreachableDatabase,
+            ambiente,
+            configuracao: new Dictionary<string, string> { ["Jwt:Chave"] = chave },
+            servicos: usuario is null ? null : EmMemoria(usuario));
+
+    private static Action<IServiceCollection> EmMemoria(Usuario usuario) =>
+        servicos => servicos.AddScoped<IUsuarioRepository>(_ => new UsuarioEmMemoria(usuario));
 
     private static AccessToken Emitir(MaxxApiFactory factory, Usuario usuario) =>
         factory.Services.GetRequiredService<IAccessTokenIssuer>().Issue(usuario);
@@ -196,5 +207,25 @@ public class AccessTokenTests
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         using var corpo = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
         Assert.Equal(401, corpo.RootElement.GetProperty("status").GetInt32());
+    }
+
+    private sealed class UsuarioEmMemoria(Usuario usuario) : IUsuarioRepository
+    {
+        public Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+            Task.FromResult(id == usuario.Id ? usuario : null);
+
+        public Task<bool> ExisteParaCadastroAsync(Guid cadastroElegivelId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlySet<string>> PrefixosOcupadosAsync(
+            IReadOnlyCollection<string> candidatos, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public void Adicionar(Usuario novo) => throw new NotSupportedException();
+
+        public Task<Usuario?> BuscarPorEmailAsync(string email, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<Usuario?> BuscarAlunoPorRaAsync(string ra, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

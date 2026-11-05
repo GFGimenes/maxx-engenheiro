@@ -494,7 +494,8 @@
       "EuResponse": {
         "required": [
           "id",
-          "papeis"
+          "papeis",
+          "arroba"
         ],
         "type": "object",
         "properties": {
@@ -507,6 +508,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "arroba": {
+            "type": "string"
           }
         }
       },

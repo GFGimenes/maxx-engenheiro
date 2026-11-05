@@ -171,6 +171,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             papeis: string[];
+            arroba: string;
         };
         HealthResponse: {
             status: string;

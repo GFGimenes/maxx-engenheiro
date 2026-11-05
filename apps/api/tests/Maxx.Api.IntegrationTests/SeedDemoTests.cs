@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +26,9 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         var resultado = await factory.SeedDemoAsync(Ct);
 
         // 4 cursos × 4 matérias, uma turma cada em 2026/2; 20 alunos, 4 professores, 1 instituição;
-        // cada aluno nas 4 turmas do curso, cada professor nas 4 turmas do curso.
-        Assert.Equal(new ResultadoDoSeedDemo(4, 16, 16, 25, 80, 16), resultado);
+        // cada aluno nas 4 turmas do curso, cada professor nas 4 turmas do curso; conta só
+        // para os 4 professores e a instituição.
+        Assert.Equal(new ResultadoDoSeedDemo(4, 16, 16, 25, 80, 16, 5), resultado);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
@@ -89,7 +91,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await ContagensAsync(factory));
     }
 
@@ -129,6 +131,31 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
     }
 
     [Fact]
+    public async Task Professores_e_instituicao_ganham_conta_sem_senha_e_aluno_nenhum()
+    {
+        await using var factory = await ComBaseAsync();
+        await factory.SeedDemoAsync(Ct);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var contas = await db.Set<Usuario>().ToListAsync(Ct);
+
+        // O primeiro acesso é pela recuperação de senha (produto.md 2.5).
+        Assert.Equal(5, contas.Count);
+        Assert.All(contas, conta => Assert.False(conta.TemSenha));
+        Assert.Equal(4, contas.Count(conta => conta.Papeis == Papeis.Professor && conta.Sufixo == Sufixo.Professor));
+        Assert.Single(contas, conta => conta.Papeis == Papeis.Instituicao && conta.Sufixo == Sufixo.Instituicao);
+        Assert.Equal(5, contas.Select(conta => conta.Prefixo).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Equal(5, await db.Set<PrefixoReservado>().CountAsync(Ct));
+
+        // De novo, nada muda: nem conta nova, nem o arroba das que já existem.
+        var arrobas = contas.Select(conta => conta.Arroba.ToString()).Order(StringComparer.Ordinal).ToList();
+        Assert.Equal(0, (await factory.SeedDemoAsync(Ct)).ContasNovas);
+        db.ChangeTracker.Clear();
+        Assert.Equal(arrobas, (await db.Set<Usuario>().ToListAsync(Ct)).Select(conta => conta.Arroba.ToString()).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public async Task Aluno_novo_no_arquivo_entra_sem_mexer_no_resto()
     {
         await using var factory = await ComBaseAsync();
@@ -144,7 +171,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         }));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 1, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 1, 0, 0), resultado);
     }
 
     [Fact]

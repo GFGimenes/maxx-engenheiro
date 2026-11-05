@@ -1,6 +1,8 @@
 using Maxx.Application;
 using Maxx.Application.Autenticacao;
+using Maxx.Application.Autorizacao;
 using Maxx.Infrastructure.Autenticacao;
+using Maxx.Infrastructure.Autorizacao;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<ICadastroElegivelRepository, CadastroElegivelRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IFamiliaDeSessaoRepository, FamiliaDeSessaoRepository>();
+        services.AddScoped<IEscopoDeTurma, EscopoDeTurma>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

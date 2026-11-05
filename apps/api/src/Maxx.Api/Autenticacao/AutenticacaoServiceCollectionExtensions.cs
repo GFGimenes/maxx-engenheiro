@@ -39,7 +39,7 @@ internal static class AutenticacaoServiceCollectionExtensions
                     RoleClaimType = MaxxClaims.Papel,
                 };
             });
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(Politicas.Configurar);
 
         return builder;
     }
