@@ -14,11 +14,7 @@ internal sealed class EscopoDeTurma(MaxxDbContext db, TimeProvider relogio) : IE
     {
         var hoje = FusoHorario.DataLocal(relogio.GetUtcNow());
 
-        // O semestre vai do início do primeiro bimestre ao fim do último (SemestreLetivo).
-        var semestresVigentes = db.Set<Bimestre>()
-            .GroupBy(bimestre => EF.Property<Guid>(bimestre, "SemestreLetivoId"))
-            .Where(semestre => semestre.Min(bimestre => bimestre.Inicio) <= hoje && semestre.Max(bimestre => bimestre.Fim) >= hoje)
-            .Select(semestre => semestre.Key);
+        var semestresVigentes = SemestreVigente.Ids(db, hoje);
 
         return db.Set<VinculoProfessor>()
             .Where(vinculo => vinculo.TurmaId == turmaId)

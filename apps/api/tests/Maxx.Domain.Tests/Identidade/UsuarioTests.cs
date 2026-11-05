@@ -259,4 +259,46 @@ public class UsuarioTests
         Assert.Throws<DomainException>(() => renata.TrocarDeCurso(_cc));
         Assert.Throws<DomainException>(() => renata.MarcarExAluno(_agora));
     }
+
+    [Fact]
+    public void Aluno_de_demonstracao_entra_sem_senha_com_lote_e_chave()
+    {
+        var cadastro = CadastroElegivel.AlunoDeDemonstracao("DEMOABCD2345", "Ana Paula", _cc);
+
+        var ana = Usuario.EntrarNaDemonstracao(cadastro, _cc, "anaPaula", "hash-da-chave", "banca-1", _agora);
+
+        Assert.True(cadastro.Demonstracao);
+        Assert.Equal("demoabcd2345@demonstracao.invalid", cadastro.Email);
+        Assert.Equal(1, cadastro.Semestre);
+        Assert.Equal("Ana Paula", ana.NomeDeExibicao);
+        Assert.Equal("@anaPaula-CC", ana.Arroba.ToString());
+        Assert.False(ana.TemSenha);
+        Assert.True(ana.EhDemonstracao);
+        Assert.Equal("banca-1", ana.LoteDaDemonstracao);
+        Assert.Equal("hash-da-chave", ana.HashDaChaveDoDispositivo);
+    }
+
+    [Fact]
+    public void So_linha_de_demonstracao_entra_pela_demonstracao()
+    {
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(AnaNaBase(), _cc, "anaSouza", "hash", "banca-1", _agora));
+    }
+
+    [Fact]
+    public void Demonstracao_exige_lote_e_chave()
+    {
+        var cadastro = CadastroElegivel.AlunoDeDemonstracao("DEMOABCD2345", "Ana Paula", _cc);
+
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(cadastro, _cc, "anaPaula", "hash", " ", _agora));
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(cadastro, _cc, "anaPaula", "", "banca-1", _agora));
+    }
+
+    [Fact]
+    public void Aluno_cadastrado_pelo_app_nao_e_demonstracao()
+    {
+        var ana = Ana();
+
+        Assert.False(ana.EhDemonstracao);
+        Assert.Null(ana.HashDaChaveDoDispositivo);
+    }
 }

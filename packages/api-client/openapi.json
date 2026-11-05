@@ -480,6 +480,126 @@
           }
         }
       }
+    },
+    "/api/v1/demo": {
+      "get": {
+        "tags": [
+          "Demonstracao"
+        ],
+        "operationId": "GetDemonstracao",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemonstracaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/alunos": {
+      "post": {
+        "tags": [
+          "Demonstracao"
+        ],
+        "operationId": "RegistrarAlunoDeDemonstracao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroDeDemonstracaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroDeDemonstracaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/entrar": {
+      "post": {
+        "tags": [
+          "Demonstracao"
+        ],
+        "operationId": "EntrarNaDemonstracao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradaDeDemonstracaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -540,6 +660,35 @@
           }
         }
       },
+      "CursoDeDemonstracao": {
+        "required": [
+          "sigla",
+          "nome"
+        ],
+        "type": "object",
+        "properties": {
+          "sigla": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          }
+        }
+      },
+      "DemonstracaoResponse": {
+        "required": [
+          "cursos"
+        ],
+        "type": "object",
+        "properties": {
+          "cursos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CursoDeDemonstracao"
+            }
+          }
+        }
+      },
       "DisponibilidadeRequest": {
         "required": [
           "ra",
@@ -573,6 +722,19 @@
         "properties": {
           "disponivel": {
             "type": "boolean"
+          }
+        }
+      },
+      "EntradaDeDemonstracaoRequest": {
+        "required": [
+          "chaveDoDispositivo"
+        ],
+        "type": "object",
+        "properties": {
+          "chaveDoDispositivo": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": "string"
           }
         }
       },
@@ -758,6 +920,40 @@
           }
         }
       },
+      "RegistroDeDemonstracaoRequest": {
+        "required": [
+          "nome",
+          "curso"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string"
+          },
+          "curso": {
+            "maxLength": 16,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "RegistroDeDemonstracaoResponse": {
+        "required": [
+          "chaveDoDispositivo",
+          "sessao"
+        ],
+        "type": "object",
+        "properties": {
+          "chaveDoDispositivo": {
+            "type": "string"
+          },
+          "sessao": {
+            "$ref": "#/components/schemas/SessaoResponse"
+          }
+        }
+      },
       "SessaoResponse": {
         "required": [
           "accessToken",
@@ -821,6 +1017,9 @@
     },
     {
       "name": "Autenticacao"
+    },
+    {
+      "name": "Demonstracao"
     }
   ]
 }

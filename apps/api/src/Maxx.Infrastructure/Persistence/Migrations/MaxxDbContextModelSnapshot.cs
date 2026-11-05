@@ -90,6 +90,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("curso_id");
 
+                    b.Property<bool>("Demonstracao")
+                        .HasColumnType("boolean")
+                        .HasColumnName("demonstracao");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("citext")
@@ -491,9 +495,18 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ex_aluno_desde");
 
+                    b.Property<string>("HashDaChaveDoDispositivo")
+                        .HasColumnType("text")
+                        .HasColumnName("hash_da_chave_do_dispositivo");
+
                     b.Property<string>("HashDaSenha")
                         .HasColumnType("text")
                         .HasColumnName("hash_da_senha");
+
+                    b.Property<string>("LoteDaDemonstracao")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("lote_da_demonstracao");
 
                     b.Property<string>("NomeDeExibicao")
                         .IsRequired()
@@ -522,8 +535,19 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_usuario_cadastro_elegivel_id");
 
+                    b.HasIndex("HashDaChaveDoDispositivo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuario_hash_da_chave_do_dispositivo")
+                        .HasFilter("hash_da_chave_do_dispositivo IS NOT NULL");
+
+                    b.HasIndex("LoteDaDemonstracao")
+                        .HasDatabaseName("ix_usuario_lote_da_demonstracao")
+                        .HasFilter("lote_da_demonstracao IS NOT NULL");
+
                     b.ToTable("usuario", null, t =>
                         {
+                            t.HasCheckConstraint("ck_usuario_demonstracao", "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
+
                             t.HasCheckConstraint("ck_usuario_ex_aluno", "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
 
                             t.HasCheckConstraint("ck_usuario_papeis", "papeis IN (1, 2, 4, 6)");

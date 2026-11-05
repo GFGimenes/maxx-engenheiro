@@ -1,8 +1,10 @@
 using Maxx.Application;
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autorizacao;
+using Maxx.Application.Demonstracao;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
+using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
@@ -35,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IFamiliaDeSessaoRepository, FamiliaDeSessaoRepository>();
         services.AddScoped<IEscopoDeTurma, EscopoDeTurma>();
         services.AddScoped<IRecuperacaoDeSenhaRepository, RecuperacaoDeSenhaRepository>();
+        services.AddScoped<IDemonstracaoRepository, DemonstracaoRepository>();
 
         // E-mail fora da requisição. As opções (EmailOptions) vêm da borda.
         services.AddSingleton<FilaDeEmailEmMemoria>();

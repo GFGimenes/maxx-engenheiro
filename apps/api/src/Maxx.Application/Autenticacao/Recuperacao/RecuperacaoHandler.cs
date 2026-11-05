@@ -23,9 +23,10 @@ public sealed class RecuperacaoHandler(
         ArgumentNullException.ThrowIfNull(email);
 
         // Aluno que está na base mas ainda não criou conta não recebe nada: o caminho dele é
-        // o cadastro.
+        // o cadastro. Aluno de demonstração também não: não tem senha, e o e-mail dele é de
+        // um domínio que não existe.
         var usuario = await usuarios.BuscarPorEmailAsync(email.Trim(), cancellationToken);
-        if (usuario is null)
+        if (usuario is null || usuario.EhDemonstracao)
         {
             return;
         }

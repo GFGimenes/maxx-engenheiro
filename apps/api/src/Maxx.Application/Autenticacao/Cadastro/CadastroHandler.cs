@@ -11,27 +11,17 @@ public sealed class CadastroHandler(
     IUsuarioRepository usuarios,
     ISenhaHasher senhas,
     SessaoService sessoes,
+    SugestaoDeArroba sugestoes,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
-    // Quantos candidatos de sugestão por consulta ao banco.
-    private const int _loteDeSugestoes = 20;
-
     public async Task<Arroba> SugerirAsync(string ra, string email, CancellationToken cancellationToken)
     {
         var (cadastro, curso) = await BuscarSemContaAsync(ra, email, cancellationToken);
 
-        foreach (var lote in PrefixoDeArroba.Sugestoes(cadastro.NomeCompleto).Chunk(_loteDeSugestoes))
-        {
-            var ocupados = await usuarios.PrefixosOcupadosAsync(lote, cancellationToken);
-            var livre = lote.FirstOrDefault(candidato => !ocupados.Contains(candidato));
-            if (livre is not null)
-            {
-                return new Arroba(livre, Sufixo.Para(cadastro.Papeis, curso, exAluno: false));
-            }
-        }
-
-        throw new InvalidOperationException($"Nenhuma sugestão de arroba livre para o cadastro {cadastro.Id}.");
+        return new Arroba(
+            await sugestoes.PrimeiroLivreAsync(cadastro.NomeCompleto, cancellationToken),
+            Sufixo.Para(cadastro.Papeis, curso, exAluno: false));
     }
 
     public async Task<bool> PrefixoDisponivelAsync(string ra, string email, string prefixo, CancellationToken cancellationToken)

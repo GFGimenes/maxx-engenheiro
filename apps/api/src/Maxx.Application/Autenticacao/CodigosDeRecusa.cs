@@ -27,4 +27,10 @@ public static class CodigosDeRecusa
     // Token de recuperação desconhecido, expirado, já usado ou invalidado por outro pedido
     // concluído: em todos os casos o cliente oferece pedir um link novo.
     public const string RecuperacaoInvalida = "recuperacao-invalida";
+
+    // Demonstração: curso que não existe ou sem turma no semestre vigente.
+    public const string CursoDeDemonstracaoIndisponivel = "curso-indisponivel";
+
+    // Demonstração: a chave guardada no dispositivo não abre conta nenhuma.
+    public const string ChaveDoDispositivoInvalida = "chave-invalida";
 }

@@ -61,6 +61,14 @@ public sealed class Usuario
 
     public DateTimeOffset CriadoEm { get; private set; }
 
+    // Só do aluno de demonstração (produto.md 11): o lote da apresentação, chave da purga,
+    // e o SHA-256 da chave do dispositivo, que é como ele volta sem senha.
+    public string? LoteDaDemonstracao { get; private set; }
+
+    public string? HashDaChaveDoDispositivo { get; private set; }
+
+    public bool EhDemonstracao => LoteDaDemonstracao is not null;
+
     // Todo prefixo que o usuário já teve, o atual inclusive. Nenhum volta a ser de outro.
     public IReadOnlyCollection<PrefixoReservado> PrefixosReservados => _prefixosReservados.AsReadOnly();
 
@@ -87,6 +95,36 @@ public sealed class Usuario
             Identidade.Sufixo.Para(cadastro.Papeis, curso, exAluno: false),
             Texto.Obrigatorio(hashDaSenha, "O hash da senha"),
             agora);
+    }
+
+    // Sem senha: entra só pela chave do dispositivo.
+    public static Usuario EntrarNaDemonstracao(
+        CadastroElegivel cadastro, Curso curso, string prefixo, string hashDaChaveDoDispositivo, string lote, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(cadastro);
+        ArgumentNullException.ThrowIfNull(curso);
+
+        if (!cadastro.Demonstracao || !cadastro.EhAluno)
+        {
+            throw new DomainException($"Só linha de aluno de demonstração entra pela demonstração: {cadastro.Email}.");
+        }
+
+        if (cadastro.CursoId != curso.Id)
+        {
+            throw new DomainException($"O curso {curso.Sigla} não é o do cadastro de {cadastro.Email}.");
+        }
+
+        return new Usuario(
+            cadastro,
+            cadastro.NomeCompleto,
+            prefixo,
+            Identidade.Sufixo.Para(cadastro.Papeis, curso, exAluno: false),
+            hashDaSenha: null,
+            agora)
+        {
+            LoteDaDemonstracao = Texto.Obrigatorio(lote, "O lote da demonstração"),
+            HashDaChaveDoDispositivo = Texto.Obrigatorio(hashDaChaveDoDispositivo, "O hash da chave do dispositivo"),
+        };
     }
 
     public static Usuario CriarPeloSeed(CadastroElegivel cadastro, string prefixo, DateTimeOffset agora)

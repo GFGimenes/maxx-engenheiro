@@ -1,0 +1,10 @@
+# Só para a apresentação do TCC (produto.md 11): liga o modo de demonstração por cima do
+# docker-compose.yml, que nunca o liga.
+#   docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
+# Sem este arquivo, as rotas de demonstração respondem 404.
+services:
+  api:
+    environment:
+      Demo__Habilitada: "true"
+      # Gravado em cada aluno de demonstração: a chave da purga depois da apresentação.
+      Demo__Lote: ${MAXX_DEMO_LOTE:?defina MAXX_DEMO_LOTE no .env}

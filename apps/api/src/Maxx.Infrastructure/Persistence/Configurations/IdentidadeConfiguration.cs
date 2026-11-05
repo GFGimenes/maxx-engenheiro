@@ -24,6 +24,12 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             table.HasCheckConstraint(
                 "ck_usuario_ex_aluno",
                 "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
+
+            // Aluno de demonstração: lote e chave juntos, sem senha (produto.md 11).
+            table.HasCheckConstraint(
+                "ck_usuario_demonstracao",
+                "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) " +
+                "OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
         });
         builder.HasKey(usuario => usuario.Id);
         builder.Property(usuario => usuario.Id).ValueGeneratedNever();
@@ -44,6 +50,11 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Property(usuario => usuario.Sufixo).IsRequired();
         builder.Property(usuario => usuario.HashDaSenha);
 
+        // A purga apaga por lote; a volta pelo dispositivo busca pelo hash da chave.
+        builder.Property(usuario => usuario.LoteDaDemonstracao).HasMaxLength(64);
+        builder.HasIndex(usuario => usuario.LoteDaDemonstracao).HasFilter("lote_da_demonstracao IS NOT NULL");
+        builder.HasIndex(usuario => usuario.HashDaChaveDoDispositivo).IsUnique().HasFilter("hash_da_chave_do_dispositivo IS NOT NULL");
+
         builder.HasMany(usuario => usuario.PrefixosReservados)
             .WithOne()
             .HasForeignKey(reservado => reservado.UsuarioId)
@@ -53,6 +64,7 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Ignore(usuario => usuario.Arroba);
         builder.Ignore(usuario => usuario.TemSenha);
         builder.Ignore(usuario => usuario.EhExAluno);
+        builder.Ignore(usuario => usuario.EhDemonstracao);
     }
 }
 

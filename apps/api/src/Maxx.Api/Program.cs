@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Maxx.Api.Autenticacao;
+using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
 using Maxx.Api.Health;
 using Maxx.Api.OpenApi;
@@ -50,6 +51,7 @@ builder.Services.AddExceptionHandler<RecusaExceptionHandler>();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
+var demonstracao = builder.AddDemonstracao(servindo: !isMigrate && !isSeed && !isOpenApiGeneration, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
 
 var app = builder.Build();
@@ -106,6 +108,10 @@ api.MapHealthEndpoints();
 var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
+if (demonstracao)
+{
+    v1.MapDemonstracaoEndpoints();
+}
 
 if (app.Environment.IsDevelopment())
 {

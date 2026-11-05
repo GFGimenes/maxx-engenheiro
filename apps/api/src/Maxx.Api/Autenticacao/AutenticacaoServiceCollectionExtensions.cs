@@ -19,6 +19,7 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddSingleton(new ChaveDeAssinatura(chave));
         builder.Services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         builder.Services.AddScoped<SessaoService>();
+        builder.Services.AddScoped<SugestaoDeArroba>();
         builder.Services.AddScoped<CadastroHandler>();
         builder.Services.AddScoped<LoginHandler>();
         builder.Services.AddScoped<RefreshHandler>();
