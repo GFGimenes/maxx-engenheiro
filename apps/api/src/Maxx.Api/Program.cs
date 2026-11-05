@@ -1,6 +1,11 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Maxx.Api.Autenticacao;
+using Maxx.Api.Demonstracao;
+using Maxx.Api.Erros;
 using Maxx.Api.Health;
+using Maxx.Api.LimiteDeTaxa;
+using Maxx.Api.OpenApi;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
@@ -21,21 +26,35 @@ var connectionString = builder.Configuration.GetConnectionString("Maxx")
     ?? (isOpenApiGeneration ? "Host=openapi-generation" : null)
     ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada.");
 
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(Erro.Customizar);
 
 // Número só como número: o padrão web aceita "42" em texto, e o contrato viraria
 // `number | string` em todo campo numérico do cliente TypeScript.
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
-{
-    document.Info.Title = "Maxx API";
-    document.Info.Version = "v1";
-    return Task.CompletedTask;
-}));
+builder.Services.AddOpenApi(options => options
+    .AddDocumentTransformer((document, _, _) =>
+    {
+        document.Info.Title = "Maxx API";
+        document.Info.Version = "v1";
+        return Task.CompletedTask;
+    })
+    .AddBearerSecurity());
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOptions.Section));
+
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Validação de entrada na borda; a recusa sai em ProblemDetails como o resto.
+builder.Services.AddValidation();
+builder.Services.AddExceptionHandler<RecusaExceptionHandler>();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+
+builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
+var demonstracao = builder.AddDemonstracao(servindo: !isMigrate && !isSeed && !isOpenApiGeneration, gerandoOpenApi: isOpenApiGeneration);
+builder.Services.AddProxyConfiavel(builder.Configuration);
+builder.Services.AddLimitesDeTaxa();
 
 var app = builder.Build();
 
@@ -70,13 +89,31 @@ if (isSeed)
     return 0;
 }
 
+// Primeiro de tudo: o IP e o esquema reais vêm do Caddy, e só dele.
+app.UseForwardedHeaders();
+
 // Um formato só de erro: ProblemDetails (RFC 9457).
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Origem única (ADR 0001): toda rota da API vive sob /api, e o Caddy não corta o prefixo.
 var api = app.MapGroup("/api");
 api.MapHealthEndpoints();
+
+// Contrato versionado: só mudanças aditivas. Fechado por padrão: toda rota de /v1 exige
+// login, e a pública diz isso com AllowAnonymous. No grupo, e não numa FallbackPolicy,
+// porque a fallback vale também para pedido sem endpoint, e rota inexistente tem de
+// continuar 404 (as rotas da demonstração desligada respondem igual a ela).
+var v1 = api.MapGroup("/v1").RequireAuthorization();
+v1.MapEuEndpoints();
+v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
+if (demonstracao)
+{
+    v1.MapDemonstracaoEndpoints();
+}
 
 if (app.Environment.IsDevelopment())
 {

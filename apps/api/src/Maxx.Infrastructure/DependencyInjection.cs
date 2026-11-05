@@ -1,3 +1,11 @@
+using Maxx.Application;
+using Maxx.Application.Autenticacao;
+using Maxx.Application.Autorizacao;
+using Maxx.Application.Demonstracao;
+using Maxx.Infrastructure.Autenticacao;
+using Maxx.Infrastructure.Autorizacao;
+using Maxx.Infrastructure.Demonstracao;
+using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +27,23 @@ public static class DependencyInjection
 
         services.AddScoped<DatabaseMigrator>();
         services.AddScoped<DatabaseSeeder>();
+
+        services.AddSingleton<ISenhaHasher, Argon2idSenhaHasher>();
+        services.AddSingleton<ITokenGenerator, TokenGenerator>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ICadastroElegivelRepository, CadastroElegivelRepository>();
+        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<IFamiliaDeSessaoRepository, FamiliaDeSessaoRepository>();
+        services.AddScoped<IEscopoDeTurma, EscopoDeTurma>();
+        services.AddScoped<IRecuperacaoDeSenhaRepository, RecuperacaoDeSenhaRepository>();
+        services.AddScoped<IDemonstracaoRepository, DemonstracaoRepository>();
+
+        // E-mail fora da requisição. As opções (EmailOptions) vêm da borda.
+        services.AddSingleton<FilaDeEmailEmMemoria>();
+        services.AddSingleton<IFilaDeEmail>(provider => provider.GetRequiredService<FilaDeEmailEmMemoria>());
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddHostedService<EnvioDeEmailService>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

@@ -39,6 +39,9 @@ public sealed class CadastroElegivel
 
     public int? Semestre { get; private set; }
 
+    // Linha criada pela banca no modo de demonstração (produto.md 11), não pela faculdade.
+    public bool Demonstracao { get; private set; }
+
     public bool EhAluno => Papeis == Papeis.Aluno;
 
     public bool EhProfessor => Papeis.HasFlag(Papeis.Professor);
@@ -61,6 +64,18 @@ public sealed class CadastroElegivel
             curso.Id,
             semestre);
     }
+
+    // RA gerado e e-mail num domínio reservado (RFC 2606), que nunca recebe nada: o aluno
+    // de demonstração não tem senha nem recuperação. Semestre 1, que é só perfil.
+    public static CadastroElegivel AlunoDeDemonstracao(string ra, string nomeCompleto, Curso curso)
+    {
+        ra = Texto.Obrigatorio(ra, "O RA do aluno");
+        var cadastro = Aluno(ra, $"{ra.ToLowerInvariant()}@{DominioDaDemonstracao}", nomeCompleto, curso, semestre: 1);
+        cadastro.Demonstracao = true;
+        return cadastro;
+    }
+
+    public const string DominioDaDemonstracao = "demonstracao.invalid";
 
     public static CadastroElegivel Professor(string email, string nomeCompleto, bool tambemInstituicao = false, string? ra = null) =>
         Funcionario(tambemInstituicao ? Papeis.Professor | Papeis.Instituicao : Papeis.Professor, email, nomeCompleto, ra);

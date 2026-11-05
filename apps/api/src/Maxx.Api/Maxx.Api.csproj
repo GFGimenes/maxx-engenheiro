@@ -10,12 +10,18 @@
     <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
   </PropertyGroup>
 
+  <!-- Os testes exercitam peças internas da borda, como o tratador de DomainException. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Maxx.Api.IntegrationTests" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Maxx.Application\Maxx.Application.csproj" />
     <ProjectReference Include="..\Maxx.Infrastructure\Maxx.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
