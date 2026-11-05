@@ -21,6 +21,7 @@ public sealed partial class RecuperacaoTests(PostgresFixture postgres) : IClassF
 {
     private const string _senha = "senha-boa-123";
     private const string _senhaNova = "senha-nova-456";
+    private const string _outraSenha = "outra-senha-789";
     private const string _ana = "ana.souza@al.unieduk.com.br";
     private const string _renata = "renata@prof.unieduk.com.br";
 
@@ -130,7 +131,7 @@ public sealed partial class RecuperacaoTests(PostgresFixture postgres) : IClassF
         var token = Token(await caixa.ProximoAsync());
         await ConfirmarAsync(client, token, _senhaNova);
 
-        await AssertRecusaAsync(await ConfirmarAsync(client, token, "outra-senha-789"), "recuperacao-invalida");
+        await AssertRecusaAsync(await ConfirmarAsync(client, token, _outraSenha), "recuperacao-invalida");
         Assert.Equal(HttpStatusCode.OK, (await PedirLoginAsync(client, _ana, _senhaNova)).StatusCode);
     }
 
@@ -162,7 +163,7 @@ public sealed partial class RecuperacaoTests(PostgresFixture postgres) : IClassF
 
         Assert.Equal(HttpStatusCode.NoContent, (await ConfirmarAsync(client, segundo, _senhaNova)).StatusCode);
 
-        await AssertRecusaAsync(await ConfirmarAsync(client, primeiro, "outra-senha-789"), "recuperacao-invalida");
+        await AssertRecusaAsync(await ConfirmarAsync(client, primeiro, _outraSenha), "recuperacao-invalida");
     }
 
     [Fact]
@@ -198,7 +199,7 @@ public sealed partial class RecuperacaoTests(PostgresFixture postgres) : IClassF
         var token = Token(await caixa.ProximoAsync());
 
         var respostas = await Task.WhenAll(
-            ConfirmarAsync(client, token, _senhaNova), ConfirmarAsync(client, token, "outra-senha-789"));
+            ConfirmarAsync(client, token, _senhaNova), ConfirmarAsync(client, token, _outraSenha));
 
         Assert.Single(respostas, response => response.StatusCode == HttpStatusCode.NoContent);
         await AssertRecusaAsync(
