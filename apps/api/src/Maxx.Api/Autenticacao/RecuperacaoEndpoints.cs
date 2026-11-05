@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Maxx.Api.LimiteDeTaxa;
 using Maxx.Application.Autenticacao.Recuperacao;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -13,7 +14,9 @@ internal static class RecuperacaoEndpoints
 
         recuperacao.MapPost("", SolicitarAsync)
             .WithName("SolicitarRecuperacaoDeSenha")
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ComLimiteDeTaxa(
+                Limite.RecuperacaoPorEmail, contexto => LimiteDeTaxaExtensions.Do<RecuperacaoRequest>(contexto, pedido => pedido.Email));
 
         recuperacao.MapPost("/confirmar", ConfirmarAsync)
             .WithName("ConfirmarRecuperacaoDeSenha")

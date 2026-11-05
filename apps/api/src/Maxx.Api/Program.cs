@@ -4,6 +4,7 @@ using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
 using Maxx.Api.Health;
+using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.OpenApi;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Persistence;
@@ -53,6 +54,7 @@ builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
 var demonstracao = builder.AddDemonstracao(servindo: !isMigrate && !isSeed && !isOpenApiGeneration, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
+builder.Services.AddLimitesDeTaxa();
 
 var app = builder.Build();
 

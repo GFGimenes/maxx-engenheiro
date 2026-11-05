@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Maxx.Api.Autenticacao;
+using Maxx.Api.LimiteDeTaxa;
 using Maxx.Application.Demonstracao;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -46,7 +47,8 @@ internal static class DemonstracaoEndpoints
         demo.MapPost("/alunos", RegistrarAsync)
             .WithName("RegistrarAlunoDeDemonstracao")
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ComLimiteDeTaxa(Limite.RegistroDeDemonstracaoPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
 
         demo.MapPost("/entrar", EntrarAsync)
             .WithName("EntrarNaDemonstracao")

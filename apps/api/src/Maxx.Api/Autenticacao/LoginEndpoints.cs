@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Maxx.Api.Erros;
+using Maxx.Api.LimiteDeTaxa;
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Login;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,7 +18,11 @@ internal static partial class LoginEndpoints
         grupo.MapPost("/login", EntrarAsync)
             .WithName("Entrar")
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ComLimiteDeTaxa(Limite.LoginPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext))
+            .ComLimiteDeTaxa(
+                Limite.LoginPorIdentificador,
+                contexto => LimiteDeTaxaExtensions.Do<LoginRequest>(contexto, pedido => pedido.Identificador));
 
         grupo.MapPost("/refresh", RenovarAsync)
             .WithName("RenovarSessao")

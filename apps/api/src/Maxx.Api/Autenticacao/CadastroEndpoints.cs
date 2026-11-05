@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Maxx.Api.LimiteDeTaxa;
 using Maxx.Application.Autenticacao.Cadastro;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -16,19 +17,22 @@ internal static class CadastroEndpoints
             .WithName("SugerirArroba")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ComLimiteDeTaxa(Limite.ConsultaDeCadastroPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
 
         cadastro.MapPost("/disponibilidade", VerificarDisponibilidadeAsync)
             .WithName("VerificarDisponibilidadeDoPrefixo")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ComLimiteDeTaxa(Limite.ConsultaDeCadastroPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
 
         cadastro.MapPost("", CadastrarAsync)
             .WithName("Cadastrar")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ComLimiteDeTaxa(Limite.CadastroPorRa, contexto => LimiteDeTaxaExtensions.Do<CadastroRequest>(contexto, pedido => pedido.Ra));
 
         return auth;
     }
