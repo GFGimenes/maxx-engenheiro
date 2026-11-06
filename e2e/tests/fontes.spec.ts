@@ -53,7 +53,9 @@ test(
     expect(estados.flat()).toEqual(FAMILIAS.map((f) => `${f}: loaded`));
 
     // A largura óptica chega ao navegador: em Archivo 800, o M tem 1026 unidades em 112%
-    // (914 em 100%), então quatro deles a 100 px medem cerca de 410 px.
+    // (914 em 100%), então quatro deles a 100 px medem cerca de 410 px, contra 366 em 100%.
+    // O Linux da CI arredonda o avanço de cada letra para o pixel inteiro (412), daí a folga
+    // de meio pixel por letra.
     const largura = await page.evaluate(() => {
       const medida = document.createElement("span");
       medida.style.cssText =
@@ -64,7 +66,7 @@ test(
       medida.remove();
       return width;
     });
-    expect(Math.abs(largura - 410.4)).toBeLessThan(1);
+    expect(Math.abs(largura - 410.4)).toBeLessThanOrEqual(2);
 
     // O texto usa a fonte embarcada, não a do sistema.
     await expect(detalhe).toHaveCSS("font-family", /InstrumentSans-500/);
