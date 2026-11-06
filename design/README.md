@@ -10,7 +10,8 @@ identidade visual. Insumo do projeto, produzido antes de qualquer código.
 | `telas/` | As seis telas (login, feed, perfil, mural, troféus e medalhas, rankings) mais cadastro, cada uma em tema claro e escuro, em PNG de 780 x 1688 (390 x 844 em escala 2x), e `padrao-visual.png` (1280 x 1400 em 2x) com a prancheta do padrão visual |
 | `tokens.json` | Cores por tema, tipografia, espaçamentos, raios, estilos de tier e raridade, extraídos das telas finais |
 | `identidade-visual.md` | As regras da identidade: paleta Marinho e Ouro, fontes, medalhões, navegação, estados, o que nunca fazer |
-| `assets/` | Logos (`maxx-ouro.png`, `maxx-branco.png`) e selo `unimax.png` |
+| `assets/` | Logos (`maxx-ouro.png`, `maxx-ouro.svg`, `maxx-branco.png`) e selo `unimax.png` |
+| `icones/gerar.js` | Gera ícone, adaptativo, splash e favicon do app a partir de `assets/maxx-ouro.svg` |
 
 Telas sem desenho (entrada da demonstração, aceite de termos, busca, editar perfil,
 perfil do professor, turmas do professor, modal de medalha, área web da instituição)
@@ -38,3 +39,14 @@ Tipografia: Archivo com largura óptica 112% para títulos e números, Instrumen
 texto. Paleta clara: fundo `#FFFFFF`, superfície `#F3F5F9`, tinta `#0B1B33`, marinho
 `#0B2A55`, ouro `#F5B400`. Paleta escura: fundo `#06142A`, superfície `#0D2142`, tinta
 `#F2F5FA`, ouro `#F5B400`. Valores completos em `tokens.json`.
+
+## Vetor do logo
+
+Não há vetor original do logo no repositório. `assets/maxx-ouro.svg` foi vetorizado de
+`assets/maxx-ouro.png`, de 338 x 89 px, com potrace 2.1.8: o alfa ampliado 8 vezes, com
+desfoque gaussiano de 0,6 px do original e os dois cortes do XX reabertos em 1 px pelo eixo
+lido no alfa do PNG. A cor é o `gold` de `tokens.json`, `#F5B400`; o PNG é `#FAB301`. O
+traçado tem os cantos levemente arredondados, e o autor o aprovou por captura.
+
+Se o vetor original aparecer, ele pode substituir esse arquivo sem mudança de código: basta
+trocar o SVG, mantendo o `viewBox` na origem, e rodar `node design/icones/gerar.js`.
