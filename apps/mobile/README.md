@@ -23,6 +23,38 @@ no `docker-compose.yml` da raiz.
 
 No nativo, a URL da API vem de `EXPO_PUBLIC_API_URL`.
 
+## Design system
+
+As decisões estão em `docs/decisoes/README.md`, em "Design system (passo 4)".
+
+| Onde              | O quê                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `src/theme/`      | Tokens tipados sobre `design/tokens.json`, tema com `useTheme()`, fontes e escala em `textStyles`                            |
+| `src/components/` | `Button`, `TextField`, `SegmentedControl`, `FilterChip`, `BottomNav`, `Avatar`, `EmptyState`, `ErrorState`, `Icon`, `Screen` |
+| `src/premios/`    | `Medalhao`, `SeloPremio`, `FaixaPremio`, `TrilhaFamilia`                                                                     |
+| `src/vitrine/`    | A bancada dos componentes, em `/vitrine`, só em desenvolvimento                                                              |
+| `assets/`         | Fontes, licenças, ícone, adaptativo, splash e favicon                                                                        |
+
+Cor só pelo token: o ESLint recusa cor literal em `src/`. Gradiente só em `Medalhao` e
+`SeloPremio`, e sombra só em `SegmentedControl`, conferidos por teste.
+
+Para ver os componentes, com o app em desenvolvimento (`npm run web -w @maxx/mobile`), abra
+`/vitrine`. No build de produção, a rota volta para o início.
+
+Os arquivos gerados têm script próprio, rodado da raiz. As fontes precisam de Docker; os
+ícones, do `npm ci`:
+
+```bash
+bash design/fontes/gerar.sh
+node design/icones/gerar.js
+```
+
+## Nativo
+
+O identificador do app é `tech.gimenes.maxx`, no Android e no iOS. `npx expo prebuild` gera
+`android/` e `ios/`, que ficam fora do git. Ele também mexe em `package.json`, e isso não
+deve entrar em commit.
+
 ## Verificações
 
 ```bash
