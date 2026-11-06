@@ -31,6 +31,10 @@ public static class CodigosDeRecusa
     // Demonstração: curso que não existe ou sem turma no semestre vigente.
     public const string CursoDeDemonstracaoIndisponivel = "curso-indisponivel";
 
+    // Demonstração: muita gente com o mesmo nome entrando junto, e as tentativas acabaram.
+    // O cliente oferece tentar de novo.
+    public const string RegistroSimultaneo = "registro-simultaneo";
+
     // Demonstração: a chave guardada no dispositivo não abre conta nenhuma.
     public const string ChaveDoDispositivoInvalida = "chave-invalida";
 }
