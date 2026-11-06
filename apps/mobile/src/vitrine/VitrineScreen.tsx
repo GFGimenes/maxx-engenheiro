@@ -1,11 +1,14 @@
 import { useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { Avatar } from "../components/Avatar";
+import { BottomNav, type Aba } from "../components/BottomNav";
 import { Button } from "../components/Button";
 import { FilterChip } from "../components/FilterChip";
 import { Icon, iconNames } from "../components/Icon";
 import { Screen } from "../components/Screen";
 import { SegmentedControl } from "../components/SegmentedControl";
+import { EmptyState, ErrorState } from "../components/StateMessage";
 import { TextField } from "../components/TextField";
 import { textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
@@ -82,6 +85,8 @@ export function VitrineScreen() {
         </Secao>
 
         <Controles />
+
+        <Estrutura />
 
         <Secao titulo="Espaçamento">
           {espacamento.escala.map((valor) => (
@@ -172,6 +177,43 @@ function Controles() {
             disabled
           />
         </View>
+      </Secao>
+    </>
+  );
+}
+
+function Estrutura() {
+  const [aba, setAba] = useState<Aba>("mural");
+
+  return (
+    <>
+      <Secao titulo="Avatar">
+        <View style={styles.linha}>
+          <Avatar nome="Ana Souza" size={tamanhos.avatarNav} />
+          <Avatar nome="João Lima" />
+          <Avatar nome="Maria Costa" size={80} />
+        </View>
+      </Secao>
+
+      <Secao titulo="Navegação">
+        <BottomNav
+          active={aba}
+          onSelect={setAba}
+          nome="Ana Souza"
+          novidades={{ mural: true, trofeus: true }}
+        />
+      </Secao>
+
+      <Secao titulo="Vazio">
+        <EmptyState
+          title="Nenhum aviso por aqui"
+          message="Os avisos da faculdade aparecem nesta tela."
+          action={{ label: "Atualizar", onPress: () => {} }}
+        />
+      </Secao>
+
+      <Secao titulo="Erro">
+        <ErrorState onRetry={() => {}} />
       </Secao>
     </>
   );

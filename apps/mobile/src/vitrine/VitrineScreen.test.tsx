@@ -26,6 +26,9 @@ test("mostra a escala tipográfica, os ícones nos dois modos e a troca de tema"
   expect(screen.getAllByRole("button", { name: "Entrar" })).toHaveLength(2);
   expect(screen.getByLabelText("Senha")).toBeTruthy();
   expect(screen.getByRole("checkbox", { name: "Todos" })).toBeTruthy();
+  expect(screen.getByRole("tab", { name: "Mural, com novidade" })).toBeTruthy();
+  expect(screen.getByRole("alert")).toBeTruthy();
+  expect(screen.getByText("Nenhum aviso por aqui")).toBeTruthy();
   for (const name of iconNames) {
     expect(
       screen.getAllByTestId(`icone-${name}`, { includeHiddenElements: true }),

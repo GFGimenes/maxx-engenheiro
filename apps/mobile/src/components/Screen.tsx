@@ -8,14 +8,21 @@ interface ScreenProps {
   children: ReactNode;
   // Conteúdo maior que a tela. Sem isso, a tela ocupa a altura disponível, sem rolar.
   scroll?: boolean;
+  // Acima da navegação inferior, que já cuida da área segura de baixo.
+  aboveNav?: boolean;
 }
 
 // O espaço de toda tela: margem lateral de 16, área segura do aparelho e 24 de respiro no fim.
-export function Screen({ children, scroll = false }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = false,
+  aboveNav = false,
+}: ScreenProps) {
   const insets = useSafeAreaInsets();
   const padding = {
     paddingTop: insets.top,
-    paddingBottom: espacamento.respiroAntesDaNavegacao + insets.bottom,
+    paddingBottom:
+      espacamento.respiroAntesDaNavegacao + (aboveNav ? 0 : insets.bottom),
     paddingLeft: espacamento.margemLateral + insets.left,
     paddingRight: espacamento.margemLateral + insets.right,
   };
