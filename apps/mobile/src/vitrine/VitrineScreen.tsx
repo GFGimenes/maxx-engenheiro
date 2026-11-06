@@ -1,8 +1,12 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+import { Button } from "../components/Button";
+import { FilterChip } from "../components/FilterChip";
 import { Icon, iconNames } from "../components/Icon";
 import { Screen } from "../components/Screen";
+import { SegmentedControl } from "../components/SegmentedControl";
+import { TextField } from "../components/TextField";
 import { textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
@@ -77,6 +81,8 @@ export function VitrineScreen() {
           </View>
         </Secao>
 
+        <Controles />
+
         <Secao titulo="Espaçamento">
           {espacamento.escala.map((valor) => (
             <View key={valor} style={styles.medida}>
@@ -98,6 +104,79 @@ export function VitrineScreen() {
   );
 }
 
+const ACESSO = [
+  { value: "entrar", label: "Entrar" },
+  { value: "cadastrar", label: "Cadastrar" },
+] as const;
+const FILTROS = ["Todos", "Faculdade", "Curso", "Professores"];
+
+function Controles() {
+  const [acesso, setAcesso] = useState<"entrar" | "cadastrar">("entrar");
+  const [filtro, setFiltro] = useState("Todos");
+  const [senha, setSenha] = useState("maxx2026");
+  const nada = () => {};
+
+  return (
+    <>
+      <Secao titulo="Botões">
+        <Button label="Entrar" size="large" onPress={nada} />
+        <Button label="Entrar" size="large" onPress={nada} disabled />
+        <View style={styles.linha}>
+          <Button label="Seguir" onPress={nada} />
+          <Button label="Editar perfil" variant="secondary" onPress={nada} />
+          <Button label="Seguir" onPress={nada} disabled />
+        </View>
+      </Secao>
+
+      <Secao titulo="Campos">
+        <TextField label="RA ou e-mail" placeholder="2023001" />
+        <TextField
+          label="Senha"
+          password
+          value={senha}
+          onChangeText={setSenha}
+        />
+        <TextField label="Curso" value="ADS" disabled />
+      </Secao>
+
+      <Secao titulo="Controle segmentado">
+        <SegmentedControl
+          label="Acesso"
+          options={ACESSO}
+          value={acesso}
+          onChange={setAcesso}
+        />
+        <SegmentedControl
+          label="Acesso desativado"
+          options={ACESSO}
+          value="entrar"
+          onChange={nada}
+          disabled
+        />
+      </Secao>
+
+      <Secao titulo="Filtros">
+        <View style={styles.linha}>
+          {FILTROS.map((nome) => (
+            <FilterChip
+              key={nome}
+              label={nome}
+              selected={nome === filtro}
+              onPress={() => setFiltro(nome)}
+            />
+          ))}
+          <FilterChip
+            label="Desativado"
+            selected={false}
+            onPress={nada}
+            disabled
+          />
+        </View>
+      </Secao>
+    </>
+  );
+}
+
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   const { colors } = useTheme();
 
@@ -114,5 +193,6 @@ const styles = StyleSheet.create({
   cabecalho: { gap: 4 },
   secao: { gap: 12, borderTopWidth: 1, paddingTop: 16 },
   grade: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
+  linha: { flexDirection: "row", flexWrap: "wrap", columnGap: 8 },
   medida: { flexDirection: "row", alignItems: "center", gap: 8 },
 });

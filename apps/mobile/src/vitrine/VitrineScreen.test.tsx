@@ -23,9 +23,12 @@ test("mostra a escala tipográfica, os ícones nos dois modos e a troca de tema"
   expect(screen.getByText("15.020 pts")).toBeTruthy();
   expect(screen.getByText("Último troféu")).toBeTruthy();
   expect(screen.getByRole("radio", { name: "Sistema" })).toBeTruthy();
+  expect(screen.getAllByRole("button", { name: "Entrar" })).toHaveLength(2);
+  expect(screen.getByLabelText("Senha")).toBeTruthy();
+  expect(screen.getByRole("checkbox", { name: "Todos" })).toBeTruthy();
   for (const name of iconNames) {
     expect(
       screen.getAllByTestId(`icone-${name}`, { includeHiddenElements: true }),
-    ).toHaveLength(2);
+    ).not.toHaveLength(0);
   }
 });

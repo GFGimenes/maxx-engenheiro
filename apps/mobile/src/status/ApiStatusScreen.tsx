@@ -1,14 +1,8 @@
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 
 import { useHealth } from "../api/useHealth";
-import { fontFamily, textStyles } from "../theme/fonts";
+import { Button } from "../components/Button";
+import { textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -52,15 +46,11 @@ export function ApiStatusScreen() {
             <Text style={[styles.message, { color: colors.ink }]}>
               Não conseguimos falar com o servidor agora.
             </Text>
-            <Pressable
-              accessibilityRole="button"
+            <Button
+              label="Tentar de novo"
+              variant="secondary"
               onPress={() => health.refetch()}
-              style={[styles.button, { backgroundColor: colors.surface }]}
-            >
-              <Text style={[styles.buttonText, { color: colors.ink }]}>
-                Tentar de novo
-              </Text>
-            </Pressable>
+            />
           </>
         )}
       </View>
@@ -82,16 +72,4 @@ const styles = StyleSheet.create({
   status: { alignItems: "center", gap: 8 },
   message: { ...textStyles.corpo, textAlign: "center" },
   detail: { ...textStyles.legenda, textAlign: "center" },
-  // Botão discreto da identidade: 32 de altura visual, raio 8, texto 13, 44 de toque.
-  button: {
-    height: 32,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  buttonText: {
-    fontFamily: fontFamily({ familia: "Instrument Sans", peso: 600 }),
-    fontSize: 13,
-  },
 });

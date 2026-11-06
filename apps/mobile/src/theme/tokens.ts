@@ -69,6 +69,15 @@ export const tamanhos = {
   tracoIcone: 1.8,
 } as const;
 
+// Estados dos controles. Não estão no JSON: o foco do campo vem da identidade visual; o resto,
+// das decisões do passo 4.
+export const interacao = {
+  opacidadePressionado: 0.85,
+  anelDeFoco: { espessura: 2, afastamento: 2 },
+  bordaDeCampo: 1,
+  bordaDeCampoEmFoco: 1.5,
+} as const;
+
 export interface EstiloDeTexto {
   familia: "Archivo" | "Instrument Sans";
   tamanho: number;
