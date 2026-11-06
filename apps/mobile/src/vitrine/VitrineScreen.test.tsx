@@ -21,7 +21,9 @@ test("mostra a escala tipográfica, os ícones nos dois modos e a troca de tema"
   await act(async () => {});
 
   expect(screen.getByText("15.020 pts")).toBeTruthy();
-  expect(screen.getByText("Último troféu")).toBeTruthy();
+  expect(screen.getAllByText("Último troféu")).toHaveLength(2);
+  expect(screen.getAllByRole("img", { name: /Lendário/ })).toHaveLength(5);
+  expect(screen.getAllByText("Techday 2026")).toHaveLength(2);
   expect(screen.getByRole("radio", { name: "Sistema" })).toBeTruthy();
   expect(screen.getAllByRole("button", { name: "Entrar" })).toHaveLength(2);
   expect(screen.getByLabelText("Senha")).toBeTruthy();
