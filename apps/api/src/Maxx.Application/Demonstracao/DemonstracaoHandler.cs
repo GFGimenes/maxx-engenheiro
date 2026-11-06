@@ -19,8 +19,10 @@ public sealed class DemonstracaoHandler(
     TimeProvider relogio)
 {
     // Um nome igual de outra pessoa da banca, registrado no mesmo instante, pode pegar o
-    // mesmo prefixo: a gravação recusa, e a sugestão é refeita.
-    private const int _tentativas = 3;
+    // mesmo prefixo: a gravação recusa, e o registro avança para a próxima sugestão livre.
+    // Cada recusa de prefixo vem de outro pedido que gravou, então 10 tentativas cobrem até
+    // 10 pedidos simultâneos com o mesmo nome.
+    private const int _tentativas = 10;
 
     private const string _alfabetoDoRa = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -46,14 +48,16 @@ public sealed class DemonstracaoHandler(
             ?? throw new RecusaException(
                 TipoDeRecusa.NaoEncontrado, CodigosDeRecusa.CursoDeDemonstracaoIndisponivel, $"Sem turma vigente em {siglaDoCurso}.");
 
+        var recusados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         for (var tentativa = 1; ; tentativa++)
         {
+            var prefixo = await sugestoes.PrimeiroLivreAsync(nome, recusados, cancellationToken);
             var chave = tokens.Generate();
             var cadastro = CadastroElegivel.AlunoDeDemonstracao(GerarRa(), nome, curso);
             var usuario = Usuario.EntrarNaDemonstracao(
                 cadastro,
                 curso,
-                await sugestoes.PrimeiroLivreAsync(nome, cancellationToken),
+                prefixo,
                 chave.Hash,
                 configuracao.Lote,
                 relogio.GetUtcNow());
@@ -72,9 +76,19 @@ public sealed class DemonstracaoHandler(
                 await unitOfWork.SalvarAsync(cancellationToken);
                 return new RegistroDeDemonstracao(chave.Valor, sessao);
             }
-            catch (ConflitoDeUnicidadeException) when (tentativa < _tentativas)
+            catch (ConflitoDeUnicidadeException) when (tentativa == _tentativas)
+            {
+                throw new RecusaException(
+                    TipoDeRecusa.Conflito, CodigosDeRecusa.RegistroSimultaneo, $"Sem arroba livre depois de {_tentativas} tentativas.");
+            }
+            catch (ConflitoDeUnicidadeException conflito)
             {
                 unitOfWork.Descartar();
+                if (conflito.Unicidade == Unicidade.Prefixo)
+                {
+                    recusados.Add(prefixo);
+                }
+
                 (curso, turmas) = (await demonstracao.TurmasVigentesAsync(curso.Sigla, Hoje, cancellationToken))!.Value;
             }
         }

@@ -48,6 +48,7 @@ internal static class DemonstracaoEndpoints
             .WithName("RegistrarAlunoDeDemonstracao")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ComLimiteDeTaxa(Limite.RegistroDeDemonstracaoPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
 
         demo.MapPost("/entrar", EntrarAsync)

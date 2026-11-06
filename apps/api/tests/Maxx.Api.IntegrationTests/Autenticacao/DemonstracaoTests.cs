@@ -145,14 +145,32 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
 
-        var respostas = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ =>
+        var respostas = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
             client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC" }, Ct)));
 
         Assert.All(respostas, response => Assert.Equal(HttpStatusCode.Created, response.StatusCode));
         await using var scope = factory.Services.CreateAsyncScope();
         var prefixos = await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Usuario>()
             .Select(usuario => usuario.Prefixo).ToListAsync(Ct);
-        Assert.Equal(4, prefixos.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Equal(8, prefixos.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Fact]
+    public async Task Esgotadas_as_tentativas_responde_409_sem_repetir_sugestao_nem_gravar()
+    {
+        var tentados = new List<string>();
+        await using var factory = await MundoAsync(servicos => servicos.AddScoped<IUnitOfWork>(
+            provedor => new GravacaoSempreRecusada(provedor.GetRequiredService<MaxxDbContext>(), tentados)));
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC" }, Ct);
+
+        await AssertRecusaAsync(response, HttpStatusCode.Conflict, "registro-simultaneo");
+        Assert.Equal(
+            ["anaPaula", "anaPaula2", "anaPaula3", "anaPaula4", "anaPaula5", "anaPaula6", "anaPaula7", "anaPaula8", "anaPaula9", "anaPaula10"],
+            tentados);
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Equal(0, await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Usuario>().CountAsync(Ct));
     }
 
     [Theory]
@@ -188,7 +206,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
     public async Task Aluno_de_demonstracao_nao_entra_por_senha_nem_recebe_recuperacao()
     {
         var caixa = new CaixaDeEmail();
-        await using var factory = await MundoAsync(caixa);
+        await using var factory = await MundoAsync(servicos => servicos.AddSingleton<IEmailSender>(caixa));
         using var client = factory.CreateClient();
         await RegistrarAsync(client, "Ana Paula");
         await using var scope = factory.Services.CreateAsyncScope();
@@ -221,12 +239,12 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             "ck_usuario_demonstracao");
     }
 
-    private async Task<MaxxApiFactory> MundoAsync(CaixaDeEmail? caixa = null)
+    private async Task<MaxxApiFactory> MundoAsync(Action<IServiceCollection>? servicos = null)
     {
         var factory = new MaxxApiFactory(
             await postgres.CreateDatabaseAsync(),
             configuracao: new Dictionary<string, string> { ["Demo:Habilitada"] = "true", ["Demo:Lote"] = _lote },
-            servicos: caixa is null ? null : servicos => servicos.AddSingleton<IEmailSender>(caixa));
+            servicos: servicos);
         await factory.MigrateAsync(Ct);
 
         // Ano passado inteiro no passado; neste ano, o semestre 1 contém hoje.
@@ -321,6 +339,18 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
     }
 
     private static string Sha256(string valor) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(valor)));
+
+    // Toda gravação perde a corrida pelo prefixo; guarda qual prefixo cada tentativa pediu.
+    private sealed class GravacaoSempreRecusada(MaxxDbContext db, List<string> tentados) : IUnitOfWork
+    {
+        public Task SalvarAsync(CancellationToken cancellationToken)
+        {
+            tentados.Add(db.ChangeTracker.Entries<Usuario>().Single().Entity.Prefixo);
+            throw new ConflitoDeUnicidadeException(Unicidade.Prefixo, new InvalidOperationException("Prefixo já reservado."));
+        }
+
+        public void Descartar() => db.ChangeTracker.Clear();
+    }
 
     private sealed class CaixaDeEmail : IEmailSender
     {
