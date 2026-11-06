@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { fontFamily } from "./fonts";
 import { useTheme, type ThemePreference } from "./ThemeProvider";
 import { raios, tamanhos } from "./tokens";
 
@@ -66,5 +67,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: raios.segmentoAtivo,
   },
-  label: { fontSize: 13, fontWeight: "600" },
+  label: {
+    fontFamily: fontFamily({ familia: "Instrument Sans", peso: 600 }),
+    fontSize: tamanhos.botaoDiscreto.texto,
+  },
 });

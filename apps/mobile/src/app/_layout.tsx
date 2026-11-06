@@ -9,6 +9,7 @@ import {
   defaultBaseUrl,
 } from "../api/ApiClientProvider";
 import { PhoneFrame } from "../components/PhoneFrame";
+import { FontGate } from "../theme/FontGate";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 // A barra de status segue o tema do app, que pode diferir do tema do aparelho.
@@ -26,7 +27,9 @@ export default function RootLayout() {
       <ApiClientProvider client={apiClient}>
         <ThemeProvider>
           <PhoneFrame>
-            <Slot />
+            <FontGate>
+              <Slot />
+            </FontGate>
           </PhoneFrame>
           <ThemedStatusBar />
         </ThemeProvider>

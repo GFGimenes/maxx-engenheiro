@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { useHealth } from "../api/useHealth";
+import { fontFamily, textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -79,8 +80,8 @@ const styles = StyleSheet.create({
   },
   logo: { width: 106, height: 28 },
   status: { alignItems: "center", gap: 8 },
-  message: { fontSize: 14, lineHeight: 20, textAlign: "center" },
-  detail: { fontSize: 12, lineHeight: 16, textAlign: "center" },
+  message: { ...textStyles.corpo, textAlign: "center" },
+  detail: { ...textStyles.legenda, textAlign: "center" },
   // Botão discreto da identidade: 32 de altura visual, raio 8, texto 13, 44 de toque.
   button: {
     height: 32,
@@ -89,5 +90,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  buttonText: { fontSize: 13, fontWeight: "600" },
+  buttonText: {
+    fontFamily: fontFamily({ familia: "Instrument Sans", peso: 600 }),
+    fontSize: 13,
+  },
 });

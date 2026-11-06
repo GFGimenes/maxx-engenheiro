@@ -79,12 +79,20 @@ export interface EstiloDeTexto {
   caixaAlta?: boolean;
   // Em em, como no JSON.
   espacamentoLetras?: number;
+  // Vem do uso em tipografia.display no JSON: "pontos em itálico 800 com algarismos tabulares".
+  algarismosTabulares?: boolean;
 }
 
 export const tipografia = {
   display: { familia: "Archivo", tamanho: 28, alturaLinha: 32, peso: 800 },
   titulo: { familia: "Archivo", tamanho: 22, alturaLinha: 26, peso: 700 },
-  pontos: { familia: "Archivo", tamanho: 18, peso: 800, italico: true },
+  pontos: {
+    familia: "Archivo",
+    tamanho: 18,
+    peso: 800,
+    italico: true,
+    algarismosTabulares: true,
+  },
   secao: { familia: "Archivo", tamanho: 15, alturaLinha: 19, peso: 700 },
   corpo: {
     familia: "Instrument Sans",
