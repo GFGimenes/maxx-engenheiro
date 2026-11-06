@@ -8,4 +8,17 @@ module.exports = defineConfig([
   // Formatação é do Prettier: desliga as regras de estilo que brigariam com ele.
   prettierConfig,
   { ignores: ["dist/*", ".expo/*"] },
+  // Toda cor vem dos tokens (design/tokens.json), nos dois temas.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/^(#[0-9a-fA-F]{3,8}|rgba?\\(|hsla?\\()/]",
+          message: "Cor literal: use os tokens do tema.",
+        },
+      ],
+    },
+  },
 ]);

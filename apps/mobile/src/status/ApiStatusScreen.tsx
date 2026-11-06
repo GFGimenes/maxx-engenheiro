@@ -1,18 +1,14 @@
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 
 import { useHealth } from "../api/useHealth";
-import { useThemeColors } from "../theme/useThemeColors";
+import { Button } from "../components/Button";
+import { textStyles } from "../theme/fonts";
+import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
+import { useTheme } from "../theme/ThemeProvider";
 
 // Tela provisória do passo 1: prova que a web fala com a API. Sai quando chegar o login.
 export function ApiStatusScreen() {
-  const colors = useThemeColors();
+  const { colors } = useTheme();
   const health = useHealth();
 
   return (
@@ -50,18 +46,16 @@ export function ApiStatusScreen() {
             <Text style={[styles.message, { color: colors.ink }]}>
               Não conseguimos falar com o servidor agora.
             </Text>
-            <Pressable
-              accessibilityRole="button"
+            <Button
+              label="Tentar de novo"
+              variant="secondary"
               onPress={() => health.refetch()}
-              style={[styles.button, { backgroundColor: colors.surface }]}
-            >
-              <Text style={[styles.buttonText, { color: colors.ink }]}>
-                Tentar de novo
-              </Text>
-            </Pressable>
+            />
           </>
         )}
       </View>
+
+      <ThemePreferenceControl />
     </View>
   );
 }
@@ -76,15 +70,6 @@ const styles = StyleSheet.create({
   },
   logo: { width: 106, height: 28 },
   status: { alignItems: "center", gap: 8 },
-  message: { fontSize: 14, lineHeight: 20, textAlign: "center" },
-  detail: { fontSize: 12, lineHeight: 16, textAlign: "center" },
-  // Botão discreto da identidade: 32 de altura visual, raio 8, texto 13, 44 de toque.
-  button: {
-    height: 32,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  buttonText: { fontSize: 13, fontWeight: "600" },
+  message: { ...textStyles.corpo, textAlign: "center" },
+  detail: { ...textStyles.legenda, textAlign: "center" },
 });
