@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
 
-import { useThemeColors } from "../theme/useThemeColors";
+import { useTheme } from "../theme/ThemeProvider";
 
 // Moldura de celular no desktop: a partir de 600 px de janela, coluna de 390 px
 // (a largura das pranchetas) com teto de 844 px de altura, centralizada nos dois eixos.
@@ -10,7 +10,7 @@ export const FRAME_WIDTH = 390;
 export const FRAME_MAX_HEIGHT = 844;
 
 export function PhoneFrame({ children }: { children: ReactNode }) {
-  const colors = useThemeColors();
+  const { colors } = useTheme();
   const { width, height } = useWindowDimensions();
 
   if (Platform.OS !== "web" || width < FRAME_MIN_WINDOW_WIDTH) {

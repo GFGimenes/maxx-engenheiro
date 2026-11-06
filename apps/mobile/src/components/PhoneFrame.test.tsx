@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react-native";
+import { screen } from "@testing-library/react-native";
 import { Platform, StyleSheet, Text } from "react-native";
 
+import { renderWithTheme } from "../test/renderWithTheme";
 import { PhoneFrame } from "./PhoneFrame";
 
 // O `react-native` exporta o hook por getter, então o mock vai no módulo de origem.
@@ -13,7 +14,7 @@ jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
 function renderAt(os: typeof Platform.OS, width: number, height: number) {
   jest.replaceProperty(Platform, "OS", os);
   Object.assign(mockWindow, { width, height });
-  return render(
+  return renderWithTheme(
     <PhoneFrame>
       <Text>conteúdo</Text>
     </PhoneFrame>,
