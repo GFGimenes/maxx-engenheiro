@@ -81,3 +81,39 @@ test(
     expect(await backgroundOf(app)).toBe(rgb(colors.bg));
   },
 );
+
+test(
+  "a troca de tema aplica na hora, sobrevive à recarga e Sistema volta a seguir o aparelho",
+  { tag: ["@desktop", "@celular"] },
+  async ({ page }, testInfo) => {
+    const aparelho =
+      testInfo.project.use.colorScheme === "dark" ? "escuro" : "claro";
+    const oposto = aparelho === "escuro" ? "claro" : "escuro";
+    const rotulo = oposto === "escuro" ? "Escuro" : "Claro";
+    const app = page.getByTestId("moldura").or(page.getByTestId("app-fundo"));
+    const fundo = (tema: "claro" | "escuro") =>
+      expect(app).toHaveCSS("background-color", rgb(tokens.cores[tema].bg));
+
+    await openApp(page);
+
+    // Padrão: Sistema, seguindo o aparelho.
+    await expect(page.getByRole("radio", { name: "Sistema" })).toBeChecked();
+    await fundo(aparelho);
+
+    // Escolha contrária ao aparelho: vale na hora e depois de recarregar.
+    await page.getByRole("radio", { name: rotulo }).click();
+    await fundo(oposto);
+
+    await openApp(page);
+    await expect(page.getByRole("radio", { name: rotulo })).toBeChecked();
+    await fundo(oposto);
+
+    // De volta a Sistema, acompanha o aparelho ao vivo.
+    await page.getByRole("radio", { name: "Sistema" }).click();
+    await fundo(aparelho);
+    await page.emulateMedia({
+      colorScheme: oposto === "escuro" ? "dark" : "light",
+    });
+    await fundo(oposto);
+  },
+);

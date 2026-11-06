@@ -9,6 +9,13 @@ import {
   defaultBaseUrl,
 } from "../api/ApiClientProvider";
 import { PhoneFrame } from "../components/PhoneFrame";
+import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
+
+// A barra de status segue o tema do app, que pode diferir do tema do aparelho.
+function ThemedStatusBar() {
+  const { name } = useTheme();
+  return <StatusBar style={name === "escuro" ? "light" : "dark"} />;
+}
 
 export default function RootLayout() {
   const [queryClient] = useState(() => new QueryClient());
@@ -17,10 +24,12 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ApiClientProvider client={apiClient}>
-        <PhoneFrame>
-          <Slot />
-        </PhoneFrame>
-        <StatusBar style="auto" />
+        <ThemeProvider>
+          <PhoneFrame>
+            <Slot />
+          </PhoneFrame>
+          <ThemedStatusBar />
+        </ThemeProvider>
       </ApiClientProvider>
     </QueryClientProvider>
   );

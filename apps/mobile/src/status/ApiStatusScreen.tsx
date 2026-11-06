@@ -8,11 +8,12 @@ import {
 } from "react-native";
 
 import { useHealth } from "../api/useHealth";
-import { useThemeColors } from "../theme/useThemeColors";
+import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
+import { useTheme } from "../theme/ThemeProvider";
 
 // Tela provisória do passo 1: prova que a web fala com a API. Sai quando chegar o login.
 export function ApiStatusScreen() {
-  const colors = useThemeColors();
+  const { colors } = useTheme();
   const health = useHealth();
 
   return (
@@ -62,6 +63,8 @@ export function ApiStatusScreen() {
           </>
         )}
       </View>
+
+      <ThemePreferenceControl />
     </View>
   );
 }

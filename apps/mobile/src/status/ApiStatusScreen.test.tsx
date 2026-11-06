@@ -1,8 +1,9 @@
 import type { ApiClient } from "@maxx/api-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 import { ApiClientProvider } from "../api/ApiClientProvider";
+import { renderWithTheme } from "../test/renderWithTheme";
 import { ApiStatusScreen } from "./ApiStatusScreen";
 
 function renderWith(get: jest.Mock) {
@@ -11,7 +12,7 @@ function renderWith(get: jest.Mock) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: Infinity } },
   });
-  return render(
+  return renderWithTheme(
     <QueryClientProvider client={queryClient}>
       <ApiClientProvider client={client}>
         <ApiStatusScreen />
