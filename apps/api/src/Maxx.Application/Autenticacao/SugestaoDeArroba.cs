@@ -9,9 +9,17 @@ public sealed class SugestaoDeArroba(IUsuarioRepository usuarios)
     // Quantos candidatos de sugestão por consulta ao banco.
     private const int _loteDeSugestoes = 20;
 
-    public async Task<string> PrimeiroLivreAsync(string nomeCompleto, CancellationToken cancellationToken)
+    public Task<string> PrimeiroLivreAsync(string nomeCompleto, CancellationToken cancellationToken) =>
+        PrimeiroLivreAsync(nomeCompleto, new HashSet<string>(), cancellationToken);
+
+    // recusados: prefixos que a gravação já recusou neste pedido, pulados sem perguntar ao banco.
+    public async Task<string> PrimeiroLivreAsync(
+        string nomeCompleto, IReadOnlySet<string> recusados, CancellationToken cancellationToken)
     {
-        foreach (var lote in PrefixoDeArroba.Sugestoes(nomeCompleto).Chunk(_loteDeSugestoes))
+        ArgumentNullException.ThrowIfNull(recusados);
+
+        var candidatos = PrefixoDeArroba.Sugestoes(nomeCompleto).Where(candidato => !recusados.Contains(candidato));
+        foreach (var lote in candidatos.Chunk(_loteDeSugestoes))
         {
             var ocupados = await usuarios.PrefixosOcupadosAsync(lote, cancellationToken);
             var livre = lote.FirstOrDefault(candidato => !ocupados.Contains(candidato));
