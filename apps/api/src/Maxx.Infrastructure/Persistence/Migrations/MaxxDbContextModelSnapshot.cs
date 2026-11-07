@@ -406,7 +406,6 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnName("expira_em");
 
                     b.Property<string>("Hash")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("hash");
 
@@ -446,6 +445,8 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("recuperacao_senha", null, t =>
                         {
                             t.HasCheckConstraint("ck_recuperacao_senha_encerramento", "usada_em IS NULL OR invalidada_em IS NULL");
+
+                            t.HasCheckConstraint("ck_recuperacao_senha_token", "usada_em IS NULL OR hash IS NOT NULL");
 
                             t.HasCheckConstraint("ck_recuperacao_senha_validade", "expira_em > solicitada_em");
                         });

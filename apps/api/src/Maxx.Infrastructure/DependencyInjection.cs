@@ -1,5 +1,6 @@
 using Maxx.Application;
 using Maxx.Application.Autenticacao;
+using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autorizacao;
 using Maxx.Application.Demonstracao;
 using Maxx.Application.Fila;
@@ -48,11 +49,10 @@ public static class DependencyInjection
         services.AddSingleton<TiposDeTrabalho>();
         services.AddSingleton<ConsumidorDeTrabalhos>();
 
-        // E-mail fora da requisição. As opções (EmailOptions) vêm da borda.
-        services.AddSingleton<FilaDeEmailEmMemoria>();
-        services.AddSingleton<IFilaDeEmail>(provider => provider.GetRequiredService<FilaDeEmailEmMemoria>());
+        // Os tipos de trabalho. O e-mail sai só por eles, no worker; as opções (EmailOptions)
+        // e o link do app (ILinkDoApp) vêm da borda.
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
-        services.AddHostedService<EnvioDeEmailService>();
+        services.AddTrabalho<EmailDeRecuperacao, EmailDeRecuperacaoHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

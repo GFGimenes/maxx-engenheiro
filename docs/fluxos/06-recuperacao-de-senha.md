@@ -2,27 +2,32 @@
 
 O mesmo fluxo serve a dois casos: o aluno que esqueceu a senha e o primeiro acesso de
 professor e instituição, cuja conta nasce do seed sem senha. A API é do passo 3; as telas,
-do passo 5.
+do passo 5. Desde o passo 6, o e-mail sai pela fila do Postgres, no worker.
 
 ```mermaid
 sequenceDiagram
   participant App as App (web ou nativo)
   participant API
   participant DB as Postgres
-  participant Envio as Envio em segundo plano
+  participant W as Worker
   participant SMTP
 
   App->>API: pede recuperacao (e-mail)
   Note over API: limite de taxa por e-mail, por replica
   API->>DB: busca o usuario pelo e-mail
   alt usuario existe
-    API->>DB: grava o hash do token T, validade de 30 minutos
-    API->>Envio: enfileira o e-mail com o link de T
+    API->>DB: grava o pedido sem token e enfileira o id dele, na mesma transacao
   end
   API-->>App: 202, a mesma resposta exista o e-mail ou nao
 
-  Envio->>SMTP: envia o link com T
-  Note over Envio: fora da requisicao; fila em memoria ate o passo 6
+  W->>DB: pega o trabalho (SKIP LOCKED)
+  alt pedido ainda aberto
+    W->>DB: grava o hash do token T, validade de 30 minutos a partir daqui
+    W->>SMTP: envia o link com T
+    Note over W: falha no envio desfaz o hash e volta com recuo
+  else pedido ja encerrado
+    W->>W: nada a enviar
+  end
 
   App->>API: confirma (T + senha nova)
   API->>DB: busca o token pelo hash de T
@@ -43,9 +48,9 @@ sequenceDiagram
 | Recuperação por e-mail desde a fase 1 | `produto.md` 2.5 |
 | Primeiro acesso de professor e instituição por este fluxo | `produto.md` 2.5; `decisoes/README.md` (Autenticação) |
 | Mesma resposta exista o e-mail ou não | ADR 0006 (enumeração de usuário); `decisoes/README.md` (Autenticação) |
-| Token de 30 minutos, uso único, guardado só como hash | `decisoes/README.md` (Autenticação) |
+| Token de 30 minutos contados do envio, uso único, guardado só como hash | `decisoes/README.md` (Autenticação) |
 | Limite de taxa por e-mail | `decisoes/README.md` (Autenticação) |
-| Envio fora da requisição, em segundo plano até a fila do passo 6 | `decisoes/README.md` (Autenticação) |
+| Envio fora da requisição, por trabalho da fila no worker; o token nasce no worker, e a fila leva só o id do pedido | `decisoes/README.md` (Autenticação, Envio de e-mail); ADR 0008 |
 | Senha nova revoga todas as famílias de refresh | `decisoes/README.md` (Autenticação) |
 | Concluir um pedido invalida os outros pendentes do mesmo usuário: um link antigo não redefine a senha de novo | `decisoes/README.md` (Autenticação) |
 | Argon2id; senha e token nunca em log | ADR 0006; `CLAUDE.md` (Segurança) |

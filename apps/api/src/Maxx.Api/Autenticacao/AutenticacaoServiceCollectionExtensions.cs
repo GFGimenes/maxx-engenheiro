@@ -27,8 +27,7 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddScoped<RefreshHandler>();
         builder.Services.AddScoped<LogoutHandler>();
         builder.Services.AddScoped<RecuperacaoHandler>();
-        builder.Services.AddSingleton<ILinkDoApp>(new LinkDoApp(LerUrlPublica(builder, exigirChave)));
-        builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.Section));
+        builder.AddEnvioDeEmail(exigirChave);
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -52,9 +51,19 @@ internal static class AutenticacaoServiceCollectionExtensions
         return builder;
     }
 
+    // O que o handler do e-mail de recuperação precisa da borda: SMTP e URL pública do app.
+    // Na API e no worker: quem executa o trabalho é o worker, e a API e os testes de
+    // integração montam os mesmos tipos de trabalho.
+    public static IHostApplicationBuilder AddEnvioDeEmail(this IHostApplicationBuilder builder, bool exigirUrl)
+    {
+        builder.Services.AddSingleton<ILinkDoApp>(new LinkDoApp(LerUrlPublica(builder, exigirUrl)));
+        builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.Section));
+        return builder;
+    }
+
     // Sem ela o link do e-mail de recuperação não teria para onde apontar: fora de
-    // desenvolvimento a API não sobe.
-    private static Uri LerUrlPublica(WebApplicationBuilder builder, bool exigir)
+    // desenvolvimento nem a API nem o worker sobem.
+    private static Uri LerUrlPublica(IHostApplicationBuilder builder, bool exigir)
     {
         var texto = builder.Configuration[$"{LinkDoApp.Section}:UrlPublica"];
         if (string.IsNullOrWhiteSpace(texto))

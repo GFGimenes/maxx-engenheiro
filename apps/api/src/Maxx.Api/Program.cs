@@ -26,6 +26,7 @@ if (args is ["worker", ..])
     worker.Services.AddInfrastructure(
         worker.Configuration.GetConnectionString("Maxx")
             ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada."));
+    worker.AddEnvioDeEmail(exigirUrl: true);
     worker.Services.AddWorker();
     await worker.Build().RunAsync();
     return 0;
