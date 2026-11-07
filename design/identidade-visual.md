@@ -49,10 +49,14 @@ resto. Escala em `tokens.json`. Números no formato brasileiro: 15.020, #29.
 ## Componentes
 
 - Botões discretos: 32 px de altura visual, raio 8, texto 13, com 44 px de área de
-  toque. O Entrar do login é o único botão grande (50 px, raio 8). Estados: padrão,
+  toque. O botão grande (50 px, raio 8) é só o da ação principal das telas de
+  autenticação: Entrar, Continuar, Aceitar e criar conta, Enviar link, Salvar senha,
+  Aceitar e entrar. Estados: padrão,
   pressionado, foco (anel em `focus`), desativado.
 - Campos: 48 px, raio 8, borda `fieldLine`; em foco, borda de 1.5px em `focus`;
-  placeholder em `ink3`. Senha com botão de mostrar.
+  placeholder em `ink3`. Senha com botão de mostrar. Com erro, borda em `like` (a única
+  exceção ao `like` só em ícone), ícone de alerta em `like` e a frase do erro em `ink`,
+  abaixo do campo.
 - Controle segmentado (Entrar / Cadastrar): trilho em `surface` com raio 10, segmento
   ativo em `segmentOn` com raio 8.
 - Chips de filtro: raio 8, ativo em `primaryBg` com texto `primaryFg`, inativos em

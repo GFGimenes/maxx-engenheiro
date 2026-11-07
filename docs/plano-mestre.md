@@ -250,6 +250,8 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Purga de ensaio testada, para a purga real do dia seguinte ser rotina.
 - Avaliar a troca do Node 22 (em manutenção até abril de 2027) pelo Node 24 LTS no
   `.nvmrc`, no `engines` e na CI.
+- Revisar os 33 achados do `npm audit` abaixo do corte alto ou crítico (1 baixo e 32
+  moderados), registrados no passo 5, depois da entrada do `expo-secure-store`.
 - Revisar os três achados moderados do `npm audit` no `minimatch`, que chega pelo
   `openapi-typescript` via `@redocly/openapi-core`. Registrados no passo 1: só ferramenta
   de geração, fora do app, abaixo do corte alto ou crítico do job de segurança.
@@ -261,7 +263,8 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 Registrado para não voltar como surpresa: aprovação e concessão em lote por evento,
 importação CSV, integração com o sistema de chamada, push nativo, denúncia de post pelo
 usuário, posts salvos, sub-papéis de coordenação e secretaria, verificação de e-mail no
-cadastro, publicação nas lojas.
+cadastro, publicação nas lojas. No termo de uso: base legal da LGPD e direitos do
+titular, canal de contato e prazo de guarda dos dados.
 
 ## 6. Riscos acompanhados
 
@@ -273,3 +276,7 @@ cadastro, publicação nas lojas.
 | Fila disputando I/O com o feed no pico | Passo 13, primeiro lugar a olhar se o p95 não bater |
 | Avaliador de conquista é ponto único de falha lógica | Passo 9, teste por forma, por item e por fronteira |
 | Foto pública para quem tem o link | Decisão consciente, ADR 0002, coberta pelo termo de uso no passo 5 |
+| Semestre vigente na avaliação | A demonstração só oferece cursos com turma no semestre vigente, e o e2e dela depende disso: no recesso (2026/2 termina em 05/12/2026), `GET /v1/demo` vem sem cursos. A avaliação acontece antes de 05/12 e não há apresentação presencial, então o semestre vigente cobre. Depois disso, o e2e da demonstração falha até o calendário ganhar o semestre seguinte |
+| Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. Acompanhar no passo 13 |
+| Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP |
+| Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest até o Maestro do passo 13. No nativo, o link de senha nova abre no navegador |

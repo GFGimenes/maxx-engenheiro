@@ -7,12 +7,12 @@ Nenhum deles cria regra nova.
 
 | Fluxo | Arquivo | Implementado no passo |
 |---|---|---|
-| Login, refresh rotativo e logout | [`01-login.md`](01-login.md) | 3 |
+| Login, refresh rotativo e logout | [`01-login.md`](01-login.md) | 3 (API) e 5 (telas) |
 | Post com comprovação de prêmio de participação | [`02-post-com-comprovacao.md`](02-post-com-comprovacao.md) | 7 e 8 |
 | Concessão de medalha com recálculo de conquistas | [`03-concessao-de-medalha.md`](03-concessao-de-medalha.md) | 6 e 9 |
 | Contestação de prêmio de participação | [`04-contestacao.md`](04-contestacao.md) | 8 |
 | Ranking | [`05-ranking.md`](05-ranking.md) | 11 |
-| Recuperação de senha e primeiro acesso | [`06-recuperacao-de-senha.md`](06-recuperacao-de-senha.md) | 3 |
+| Recuperação de senha e primeiro acesso | [`06-recuperacao-de-senha.md`](06-recuperacao-de-senha.md) | 3 (API) e 5 (telas) |
 
 Convenções dos diagramas, as mesmas dos ADRs:
 

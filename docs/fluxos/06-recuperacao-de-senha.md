@@ -1,8 +1,8 @@
 # Recuperação de senha e primeiro acesso
 
 O mesmo fluxo serve a dois casos: o aluno que esqueceu a senha e o primeiro acesso de
-professor e instituição, cuja conta nasce do seed sem senha. Implementado no passo 3; a
-tela chega no passo 5.
+professor e instituição, cuja conta nasce do seed sem senha. A API é do passo 3; as telas,
+do passo 5.
 
 ```mermaid
 sequenceDiagram
@@ -63,7 +63,8 @@ Como no [`01-login.md`](01-login.md), toda recusa sai em ProblemDetails com `cod
   inexistente e aluno de demonstração recebem o mesmo 202, sem e-mail. O link vai para o
   endereço gravado na base, não para o digitado.
 - **Link:** `<App__UrlPublica>/redefinir-senha#token=...`, com o token no fragmento, que
-  o navegador não manda a servidor nenhum. A tela é do passo 5.
+  o navegador não manda a servidor nenhum. A tela lê o token uma vez, quando a página
+  abre, e o apaga da barra de endereço.
 - **`recuperacao-invalida`:** token desconhecido, expirado, já usado ou invalidado por
   outro pedido concluído. Duas confirmações simultâneas do mesmo link deixam um 204 e um
   400, como em sequência.
@@ -72,3 +73,11 @@ Como no [`01-login.md`](01-login.md), toda recusa sai em ProblemDetails com `cod
 - **Sem sessão:** a senha nova acabou de derrubar todas, e o cliente leva ao login.
 - **Limite:** 3 pedidos a cada 15 minutos por e-mail, exista ele ou não, com
   `Retry-After`. A confirmação não tem limite: o token tem 256 bits.
+
+## Telas (passo 5)
+
+- `/esqueci-senha`, no grupo público: pede o link pelo e-mail institucional e diz o mesmo
+  exista a conta ou não.
+- `/redefinir-senha`, fora dos grupos, porque o link pode ser aberto com ou sem sessão:
+  senha fora da política fica no campo, sem gastar o link; link usado ou vencido oferece
+  pedir outro; salvar a senha nova encerra a sessão aberta no aparelho e leva ao login.
