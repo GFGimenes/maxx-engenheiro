@@ -103,6 +103,9 @@ jobs:
           done
           echo "A API não ficou pronta a tempo."
           exit 1
+      # O mundo de demonstração: o curso CC, onde o e2e cria os alunos de cada teste.
+      - name: Seed demo
+        run: docker compose run --rm seeder seed demo
       - run: npx -w @maxx/e2e playwright install --with-deps chromium
       - run: npm test -w @maxx/e2e
       - name: Logs do compose

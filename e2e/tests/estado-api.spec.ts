@@ -20,7 +20,7 @@ async function backgroundOf(locator: Locator): Promise<string> {
 }
 
 async function openApp(page: Page) {
-  await page.goto("/");
+  await page.goto("/status");
   // O estado vem de uma chamada real: web, Caddy, réplica da API, /api/health.
   await expect(page.getByText("A API respondeu 200.")).toBeVisible();
 }

@@ -58,7 +58,9 @@ export function TelaDeAutenticacao({
 
 const styles = StyleSheet.create({
   tela: { flexGrow: 1, justifyContent: "space-between", gap: 32 },
-  conteudo: { gap: 24, paddingTop: 72 },
+  // Centrado no espaço acima do pé, como nas pranchetas: o logo sobe quando o
+  // formulário é maior, e a tela rola quando não cabe.
+  conteudo: { flexGrow: 1, justifyContent: "center", gap: 24, paddingTop: 24 },
   marca: { alignItems: "center", gap: 8 },
   rodape: {
     flexDirection: "row",

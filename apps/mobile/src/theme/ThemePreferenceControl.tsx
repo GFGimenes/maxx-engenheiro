@@ -7,7 +7,8 @@ const OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: "escuro", label: "Escuro" },
 ];
 
-// Escolha do tema. Fica na tela de status e na vitrine até o passo 7, quando vai para o perfil.
+// Escolha do tema. Fica na tela de status, no início provisório e na vitrine até o passo 7,
+// quando vai para o perfil.
 export function ThemePreferenceControl() {
   const { preference, setPreference } = useTheme();
 
