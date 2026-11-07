@@ -5,8 +5,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Maxx.Api.Autenticacao;
+using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,19 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
     private static readonly CadastroRequest _outraMaria = new("20260104", "maria.c.silva@al.unieduk.com.br", "Maria C.", "mariaC", _senha, VersaoDoTermo);
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task Conta_nova_pede_o_recalculo_da_raridade_na_mesma_gravacao()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+
+        await CadastrarAsync(client, _ana);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var trabalho = await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Trabalho>().SingleAsync(Ct);
+        Assert.Equal(RecalcularRaridade.Tipo, trabalho.Tipo);
+    }
 
     [Fact]
     public async Task Sugestao_parte_do_nome_do_cadastro_com_o_sufixo_do_curso()

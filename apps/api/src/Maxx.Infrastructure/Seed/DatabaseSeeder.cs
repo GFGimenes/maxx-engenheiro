@@ -1,6 +1,10 @@
+using Maxx.Application.Fila;
+using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.RaridadeDosItens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,7 +15,7 @@ namespace Maxx.Infrastructure.Seed;
 // banco. Uma transação só, sob advisory lock: dois seeds ao mesmo tempo esperam um pelo
 // outro, e um seed que falha não deixa nada gravado.
 public sealed partial class DatabaseSeeder(
-    MaxxDbContext db, IOptions<SeedOptions> options, ILogger<DatabaseSeeder> logger, TimeProvider relogio)
+    MaxxDbContext db, IFilaDeTrabalhos fila, IOptions<SeedOptions> options, ILogger<DatabaseSeeder> logger, TimeProvider relogio)
 {
     // Diferente da chave da migração, para os dois não se confundirem.
     public const long AdvisoryLockKey = 0x4D41_5858_0002;
@@ -55,6 +59,7 @@ public sealed partial class DatabaseSeeder(
         var (itensNovos, itensAtualizados, itensInalterados) = await GravarItensAsync(catalogo.Catalogo!, cancellationToken);
         var (anosNovos, anosAtualizados) = await GravarCalendarioAsync(calendario, cancellationToken);
         var termosNovos = await GravarTermosAsync(termos, cancellationToken);
+        await PedirRaridadeAsync(itensNovos + itensAtualizados > 0, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await transacao.CommitAsync(cancellationToken);
@@ -63,6 +68,26 @@ public sealed partial class DatabaseSeeder(
             itensNovos, itensAtualizados, itensInalterados, familiasNovas, familiasAtualizadas, anosNovos, anosAtualizados, termosNovos);
         LogDone(logger, PerfilDeSeed.Base, resultado);
         return resultado;
+    }
+
+    // Item novo, item mudado ou item ainda sem raridade calculada: um pedido de recálculo ao
+    // worker, para a tela nunca ficar sem raridade (produto.md 4.3). Só um: com um pedido
+    // pendente, rodar de novo não acrescenta nada, e o seed segue idempotente.
+    private async Task PedirRaridadeAsync(bool catalogoMudou, CancellationToken cancellationToken)
+    {
+        var pendente = await db.Set<Trabalho>()
+            .AnyAsync(trabalho => trabalho.Tipo == RecalcularRaridade.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, cancellationToken);
+        if (pendente)
+        {
+            return;
+        }
+
+        var semRaridade = await db.Set<ItemCatalogoRow>()
+            .AnyAsync(item => !db.Set<RaridadeDoItemRow>().Any(raridade => raridade.ItemCodigo == item.Codigo), cancellationToken);
+        if (catalogoMudou || semRaridade)
+        {
+            fila.Enfileirar(new RecalcularRaridade());
+        }
     }
 
     // Base e demo usam a mesma chave: um espera o outro.

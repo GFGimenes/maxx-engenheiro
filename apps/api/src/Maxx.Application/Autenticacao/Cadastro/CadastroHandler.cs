@@ -1,4 +1,6 @@
 using Maxx.Application.Autenticacao.Termos;
+using Maxx.Application.Fila;
+using Maxx.Application.Medalhas;
 using Maxx.Domain;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
@@ -14,6 +16,7 @@ public sealed class CadastroHandler(
     SessaoService sessoes,
     SugestaoDeArroba sugestoes,
     TermoDeUsoHandler termos,
+    IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
@@ -53,6 +56,9 @@ public sealed class CadastroHandler(
             cadastro, curso, pedido.NomeDeExibicao, pedido.Prefixo, senhas.Hash(pedido.Senha), relogio.GetUtcNow());
         usuario.AceitarTermo(termo, relogio.GetUtcNow());
         usuarios.Adicionar(usuario);
+
+        // Aluno novo muda o divisor da raridade (ADR 0005): o recálculo grava junto.
+        fila.Enfileirar(new RecalcularRaridade());
         var sessao = sessoes.Abrir(usuario);
 
         try

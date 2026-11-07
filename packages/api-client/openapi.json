@@ -120,6 +120,41 @@
         }
       }
     },
+    "/api/v1/eu/premios": {
+      "get": {
+        "tags": [
+          "Premios"
+        ],
+        "operationId": "GetMeusPremios",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PremiosDoAlunoResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -1124,6 +1159,30 @@
           }
         }
       },
+      "FamiliaResponse": {
+        "required": [
+          "codigo",
+          "nome",
+          "descricao",
+          "passos"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "passos": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "status"
@@ -1240,6 +1299,71 @@
           }
         }
       },
+      "ItemDoAlunoResponse": {
+        "required": [
+          "codigo",
+          "tipo",
+          "nome",
+          "criterio",
+          "tier",
+          "pontos",
+          "familia",
+          "ordemNaFamilia",
+          "raridade",
+          "obtidos"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "criterio": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "familia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ordemNaFamilia": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "raridade": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RaridadeResponse"
+              }
+            ]
+          },
+          "obtidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PremioObtidoResponse"
+            }
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "identificador",
@@ -1320,6 +1444,73 @@
           }
         }
       },
+      "PremioObtidoResponse": {
+        "required": [
+          "id",
+          "tier",
+          "pontos",
+          "materia",
+          "bimestre",
+          "obtidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "materia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bimestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "obtidoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PremiosDoAlunoResponse": {
+        "required": [
+          "pontos",
+          "familias",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "familias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamiliaResponse"
+            }
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDoAlunoResponse"
+            }
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -1353,6 +1544,22 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RaridadeResponse": {
+        "required": [
+          "nivel",
+          "percentual"
+        ],
+        "type": "object",
+        "properties": {
+          "nivel": {
+            "type": "string"
+          },
+          "percentual": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -1534,6 +1741,9 @@
     },
     {
       "name": "Autenticacao"
+    },
+    {
+      "name": "Premios"
     },
     {
       "name": "Professor"

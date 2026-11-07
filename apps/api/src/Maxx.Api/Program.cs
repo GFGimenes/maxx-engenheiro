@@ -7,6 +7,7 @@ using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
+using Maxx.Api.Premios;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
@@ -144,6 +145,7 @@ var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
 v1.MapTermoDeUsoEndpoints();
 v1.MapProfessorEndpoints();
+v1.MapPremiosEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

@@ -1,6 +1,6 @@
 # ADR 0005 · Ranking e raridade em tabela, escritos pelo worker com coalescência
 
-Status: aceito · 01/11/2026 · revisado em 02/11/2026 (eventos que enfileiram o recálculo)
+Status: aceito · 01/11/2026 · revisado em 02/11/2026 (eventos que enfileiram o recálculo) · revisado em 07/11/2026 (aluno novo muda o divisor da raridade)
 
 ## Contexto
 
@@ -39,6 +39,11 @@ pontuação** de algum aluno, não só pela medalha:
 - decisão da instituição sobre a contestação, confirmando ou revogando;
 - anulação de medalha;
 - conquista concedida ou removida pelo worker.
+
+A raridade tem ainda um evento só dela, porque o divisor é o número de alunos com conta:
+**aluno novo**, pelo cadastro ou pelo registro da demonstração, enfileira o recálculo da
+raridade na mesma transação da conta. Ele não muda pontuação, e por isso não move o
+ranking.
 
 A coalescência é o que torna isso barato: uma rajada de eventos no mesmo intervalo vira
 uma execução só por visão. O diagrama abaixo mostra a medalha, o caso da demonstração; os

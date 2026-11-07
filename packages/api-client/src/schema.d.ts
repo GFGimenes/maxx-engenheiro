@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eu/premios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMeusPremios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/professor/turmas": {
         parameters: {
             query?: never;
@@ -361,6 +377,13 @@ export interface components {
             papeis: string[];
             arroba: string;
         };
+        FamiliaResponse: {
+            codigo: string;
+            nome: string;
+            descricao: string;
+            /** Format: int32 */
+            passos: number;
+        };
         HealthResponse: {
             status: string;
         };
@@ -391,6 +414,20 @@ export interface components {
             /** Format: int32 */
             limitePorPeriodo: number;
         };
+        ItemDoAlunoResponse: {
+            codigo: string;
+            tipo: string;
+            nome: string;
+            criterio: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            familia: null | string;
+            /** Format: int32 */
+            ordemNaFamilia: null | number;
+            raridade: null | components["schemas"]["RaridadeResponse"];
+            obtidos: components["schemas"]["PremioObtidoResponse"][];
+        };
         LoginRequest: {
             identificador: string;
             senha: string;
@@ -416,6 +453,24 @@ export interface components {
             /** Format: date-time */
             concedidaEm: string;
         };
+        PremioObtidoResponse: {
+            /** Format: uuid */
+            id: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            materia: null | string;
+            /** Format: int32 */
+            bimestre: null | number;
+            /** Format: date-time */
+            obtidoEm: string;
+        };
+        PremiosDoAlunoResponse: {
+            /** Format: int32 */
+            pontos: number;
+            familias: components["schemas"]["FamiliaResponse"][];
+            itens: components["schemas"]["ItemDoAlunoResponse"][];
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -423,6 +478,11 @@ export interface components {
             status?: null | number;
             detail?: null | string;
             instance?: null | string;
+        };
+        RaridadeResponse: {
+            nivel: string;
+            /** Format: double */
+            percentual: number;
         };
         RecuperacaoRequest: {
             email: string;
@@ -574,6 +634,35 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetMeusPremios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PremiosDoAlunoResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

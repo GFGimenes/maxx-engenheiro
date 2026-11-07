@@ -37,6 +37,19 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
     private static DateOnly Hoje => FusoHorario.DataLocal(DateTimeOffset.UtcNow);
 
     [Fact]
+    public async Task Registro_pede_o_recalculo_da_raridade_na_mesma_gravacao()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+
+        await RegistrarAsync(client, "Ana Paula");
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var trabalho = await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Trabalho>().SingleAsync(Ct);
+        Assert.Equal(RecalcularRaridade.Tipo, trabalho.Tipo);
+    }
+
+    [Fact]
     public async Task Desligada_as_tres_rotas_respondem_igual_a_uma_rota_inexistente()
     {
         await using var factory = new MaxxApiFactory(MaxxApiFactory.UnreachableDatabase);
