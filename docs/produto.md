@@ -23,7 +23,8 @@ usuários. Ninguém de fora entra: não existe cadastro público nem login socia
 exceção é o modo de demonstração da seção 11, que existe apenas com uma flag de
 configuração ligada.
 
-A fase 1 é o TCC, apresentado a uma banca rotativa. A web é o acesso principal dessa
+A fase 1 é o TCC, avaliado por uma banca rotativa em avaliação remota, sem apresentação
+presencial: cada avaliador entra pela própria conexão. A web é o acesso principal dessa
 fase; o nativo fica pronto para publicar, sem publicação em loja.
 
 ---
@@ -433,7 +434,7 @@ São quatro visões, combinando escopo e período:
 ### 6.2 Feed
 
 Mostra sempre os posts de quem o aluno segue, mais recomendações aleatórias de outros
-alunos. Aluno novo (e qualquer membro da banca) vê recomendações desde o primeiro
+alunos. Aluno novo (e qualquer avaliador) vê recomendações desde o primeiro
 acesso, e nunca um feed vazio.
 
 ### 6.3 Seguir
@@ -535,7 +536,7 @@ desses dados na fase 1.
 
 ## 11. Modo de demonstração
 
-Existe só na apresentação do TCC e só com uma flag de configuração ligada. A flag vem
+Existe só na avaliação do TCC e só com uma flag de configuração ligada. A flag vem
 desligada por padrão e não existe na configuração de produção; desligada, as rotas de
 demonstração respondem 404 e o botão não aparece no login.
 
@@ -547,13 +548,13 @@ demonstração respondem 404 e o botão não aparece no login.
   nos rankings.
 - Voltando pelo mesmo dispositivo, a pessoa pode entrar no usuário que criou ou criar
   outro. A lembrança é local, sem senha, e se perde ao trocar de aparelho.
-- O aluno de demonstração entra nos mesmos rankings dos alunos semeados, e os membros da
-  banca veem os posts uns dos outros.
+- O aluno de demonstração entra nos mesmos rankings dos alunos semeados, e os avaliadores
+  veem os posts uns dos outros.
 - Dados de demonstração têm marcação por flag e por lote, para purga manual depois da
-  apresentação.
+  avaliação.
 - Na fase 1 existe só o mundo do seed: nenhuma conta real.
 - O seed traz os professores dos quatro cursos de demonstração e a conta de instituição
-  usada para conceder ao vivo durante a apresentação.
+  usada para conceder durante a avaliação.
 
 Como isso se traduz no sistema:
 
@@ -572,7 +573,7 @@ Como isso se traduz no sistema:
 
 ## 12. Decisões assumidas de propósito
 
-Registradas porque são as primeiras perguntas que uma banca faz, e a resposta é "sim, de
+Registradas porque são as primeiras perguntas que um avaliador faz, e a resposta é "sim, de
 propósito":
 
 1. **O ranking histórico favorece quem está há mais semestres.** É um placar acumulado.

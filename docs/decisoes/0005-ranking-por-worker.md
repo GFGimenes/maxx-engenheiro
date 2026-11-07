@@ -6,8 +6,9 @@ Status: aceito · 01/11/2026 · revisado em 02/11/2026 (eventos que enfileiram o
 
 São quatro visões de ranking (geral e por curso, cada uma em semestre atual e histórico),
 3.200 alunos, e um alvo de p95 de 300 ms na leitura com 2.000 usuários virtuais. Não há
-Redis. E existe um requisito de apresentação: na banca, uma medalha concedida ao vivo
-precisa mexer a posição em segundos, e é o momento de maior impacto da demonstração.
+Redis. E existe um requisito da demonstração: na avaliação remota, uma medalha concedida
+durante a avaliação precisa mexer a posição em segundos, e é o momento de maior impacto da
+demonstração.
 
 A raridade dos itens (percentual de alunos que têm cada prêmio) tem exatamente a mesma
 natureza: cálculo agregado, leitura muito frequente, tolerância a alguns segundos de
@@ -40,7 +41,7 @@ pontuação** de algum aluno, não só pela medalha:
 - conquista concedida ou removida pelo worker.
 
 A coalescência é o que torna isso barato: uma rajada de eventos no mesmo intervalo vira
-uma execução só por visão. O diagrama abaixo mostra a medalha, o caso da banca; os
+uma execução só por visão. O diagrama abaixo mostra a medalha, o caso da demonstração; os
 outros eventos seguem o mesmo caminho, e os diagramas de `docs/fluxos/` mostram cada um.
 
 ```mermaid
@@ -71,7 +72,7 @@ sequenceDiagram
   sem parecer defeito.
 - **Negativa:** o worker é ponto único de atraso. Se ele morre, o ranking congela **sem
   erro visível**: nenhuma tela quebra, os números só param. Precisa de verificação de
-  saúde própria e de um alerta, senão o sintoma aparece primeiro na banca.
+  saúde própria e de um alerta, senão o sintoma aparece primeiro na avaliação.
 - **Negativa:** o congelamento do ranking semestral 30 dias após o fim do semestre passa a
   ser regra do worker, não da consulta: quem lê a tabela não sabe que ela parou de ser
   atualizada de propósito.

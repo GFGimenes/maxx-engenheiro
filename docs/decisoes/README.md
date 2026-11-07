@@ -30,7 +30,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Storage | Cloudflare R2 com a CDN da Cloudflare |
 | Migrations | Contêiner separado com advisory lock, antes de subir as réplicas. Nunca no startup da aplicação |
 | Backup | `pg_dump` noturno para o bucket, mais dump manual obrigatório antes de cada migration, com restauração testada uma vez |
-| Banca | Sem plano B local: a VPS é o único ambiente. Se o wifi do campus falhar, a banca entra pela rede móvel e o notebook é roteado pelo celular |
+| Avaliação | Sem plano B local: a VPS é o único ambiente. A avaliação é remota, antes de 05/12, sem apresentação presencial: cada avaliador entra na VPS pela própria conexão, e não há rede do campus nem aparelho compartilhado de que dependa. O ensaio do passo 13 confirma o acesso de fora, por conexões diferentes |
 | CI | GitHub Actions, seis jobs: api, mobile, api-client, e2e, segurança e build (imagens da API e do Caddy com o build web) |
 
 ## Dados
@@ -98,7 +98,7 @@ Limites de taxa, por réplica:
 | Cadastro | 3 a cada 15 minutos por RA |
 | Sugestão e disponibilidade do arroba | 60 por minuto por IP, somadas as duas: elas respondem diferente para um par de RA e e-mail que existe. Cabe na digitação porque o cliente do passo 5 faz debounce antes de perguntar |
 | Recuperação de senha | 3 a cada 15 minutos por e-mail, só no pedido. A confirmação não tem limite: o token tem 256 bits |
-| Registro de demonstração | 60 por hora por IP. Alto de propósito: a banca inteira entra pelo mesmo celular roteado. A entrada pela chave do dispositivo não tem limite: a chave tem 256 bits |
+| Registro de demonstração | 60 por hora por IP. Alto de propósito: na avaliação remota, cada avaliador entra pela própria conexão, mas a rede móvel costuma pôr muitos aparelhos atrás do mesmo IP (CGNAT da operadora), e o ensaio do passo 13 cria várias contas a partir de poucas conexões. Um limite baixo recusaria avaliador legítimo. A entrada pela chave do dispositivo não tem limite: a chave tem 256 bits |
 | Upload | 30 por hora por usuário, número provisório. Declarado no passo 3; aplicado, testado e revisto no passo 7, quando o endpoint nasce |
 
 O IP vem do `X-Forwarded-For` posto pelo Caddy, aceito só dele. Estourado o limite, a
@@ -113,7 +113,7 @@ nunca a chave, que é dado pessoal.
 
 ### Purga da demonstração
 
-Depois da apresentação, os dados de um lote saem numa transação só, com o lote que estava
+Depois da avaliação, os dados de um lote saem numa transação só, com o lote que estava
 em `MAXX_DEMO_LOTE`:
 
 ```sql
