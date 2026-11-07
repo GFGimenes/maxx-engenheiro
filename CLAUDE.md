@@ -102,6 +102,8 @@ Tabelas e colunas em `snake_case` no Postgres, mapeadas a partir do PascalCase d
 | `Turma` | Matéria mais semestre letivo |
 | `Matricula` | Vínculo aluno e turma. Única fonte de "quantas matérias o aluno tem" |
 | `CadastroElegivel` | Base com RA, e-mail e curso que a faculdade abastece. Estar nela não é ter conta |
+| `TermoDeUso` | Texto do termo, versionado. Versão publicada não muda; a vigente é a de número mais alto |
+| `AceiteDeTermo` | Quem aceitou qual versão do termo, e quando. Gravado no cadastro e no registro da demonstração |
 | Semestre letivo | 2026/2, corta o ranking. Diferente do semestre do aluno, que é só perfil |
 
 Não invente sinônimo: nada de `Award`, `Prize`, `Badge`, `Reward`, `Trophy` no código.

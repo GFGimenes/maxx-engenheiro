@@ -245,9 +245,10 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Backup: `pg_dump` noturno para o bucket e dump manual antes de migration, com
   restauração testada uma vez.
 - APK gerado e fumaça mínima com Maestro.
-- Ensaio da apresentação com a banca entrando por rede móvel e o notebook roteado pelo
-  celular.
-- Purga de ensaio testada, para a purga real do dia seguinte ser rotina.
+- Ensaio da demonstração remota: não há apresentação presencial, a avaliação é remota,
+  antes de 05/12, e cada avaliador entra pela própria conexão. O ensaio entra na VPS de
+  fora, por conexões diferentes, com a demonstração ligada.
+- Purga de ensaio testada, para a purga real, ao fim da avaliação, ser rotina.
 - Avaliar a troca do Node 22 (em manutenção até abril de 2027) pelo Node 24 LTS no
   `.nvmrc`, no `engines` e na CI.
 - Revisar os 33 achados do `npm audit` abaixo do corte alto ou crítico (1 baixo e 32
@@ -270,7 +271,7 @@ titular, canal de contato e prazo de guarda dos dados.
 
 | Risco | Onde é tratado |
 |---|---|
-| Rede do campus na apresentação | Passo 13, ensaio por rede móvel. Não há ambiente local alternativo |
+| Conexão de cada avaliador na avaliação remota | Não há apresentação presencial: a avaliação é remota, antes de 05/12, e cada avaliador entra pela própria conexão na VPS. Passo 13, ensaio da demonstração remota. Não há ambiente local alternativo |
 | Worker morto congela ranking sem erro em tela | Passo 13, verificação de saúde e alerta |
 | Bundle da web grande no primeiro acesso | Passo 13, medição no ensaio com celular real |
 | Fila disputando I/O com o feed no pico | Passo 13, primeiro lugar a olhar se o p95 não bater |
