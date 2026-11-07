@@ -13,6 +13,8 @@ interface ButtonProps {
   // que o pai der.
   size?: "compact" | "large";
   disabled?: boolean;
+  // Quando o rótulo visível não diz o bastante fora de contexto ("Conceder" a quem?).
+  accessibilityLabel?: string;
 }
 
 export function Button({
@@ -21,6 +23,7 @@ export function Button({
   variant = "primary",
   size = "compact",
   disabled = false,
+  accessibilityLabel,
 }: ButtonProps) {
   const { colors } = useTheme();
   const { focusVisible, focusProps } = useFocusRing();
@@ -34,6 +37,7 @@ export function Button({
   return (
     <Pressable
       role="button"
+      accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={onPress}
       {...focusProps}

@@ -55,6 +55,8 @@ public interface IRecuperacaoDeSenhaRepository
 {
     void Adicionar(RecuperacaoDeSenha recuperacao);
 
+    Task<RecuperacaoDeSenha?> BuscarAsync(Guid id, CancellationToken cancellationToken);
+
     Task<RecuperacaoDeSenha?> BuscarPorHashAsync(string hash, CancellationToken cancellationToken);
 
     // Os pedidos do usuário ainda não usados nem invalidados, que a conclusão invalida.

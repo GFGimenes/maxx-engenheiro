@@ -56,7 +56,7 @@ As decisões estão em `docs/decisoes/README.md`, em "Autenticação no cliente 
 | Onde                                                                          | O quê                                                                                                     |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `src/app/(publico)/`                                                          | Login, cadastro em três passos, esqueci-senha e demonstração: só para quem não entrou                     |
-| `src/app/(app)/`                                                              | O que exige sessão; por enquanto, o início provisório em `/`                                              |
+| `src/app/(app)/`                                                              | O que exige sessão: as cinco abas em `(abas)/` e as telas internas, como `/turmas` (passo 6)              |
 | `src/app/status.tsx`, `src/app/redefinir-senha.tsx`                           | Fora dos grupos, com ou sem sessão                                                                        |
 | `src/sessao/`                                                                 | `GerenciadorDeSessao` (access em memória, refresh serializado, fila entre abas na web) e `SessaoProvider` |
 | `src/api/erros.ts`, `src/api/FalhaDaApi.ts`                                   | Código da API para mensagem amigável                                                                      |
@@ -80,6 +80,24 @@ docker compose up -d   # desliga de novo
 
 Os testes criam linhas no cadastro elegível e alunos de demonstração no banco local. Os de
 demonstração saem com a purga de `docs/decisoes/README.md`, com o lote usado.
+
+## Medalhas e Troféus (passo 6)
+
+As decisões estão em `docs/decisoes/README.md`, em "Medalhas, fila e worker (passo 6)".
+
+| Onde                           | O quê                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `src/app/(app)/(abas)/`        | As cinco abas: Home (início provisório), Busca, Mural, Troféus e Perfil; Busca, Mural e Perfil em breve |
+| `src/navegacao/`               | `LayoutDasAbas`, com o `BottomNav` do passo 4, e as telas "Em breve"                                    |
+| `src/app/(app)/turmas/`        | As turmas do professor e os alunos de cada turma, fora das abas                                         |
+| `src/professor/`               | Consultas e concessão (`api.ts`), as telas de turmas e o `ModalDeConcessao`                             |
+| `src/trofeus/`                 | A tela de Troféus: abas, lista, trilhas e a montagem pura em `montagem.ts`                              |
+| `src/components/Cabecalho.tsx` | O topo das telas internas, com voltar                                                                   |
+
+O professor entra por "Minhas turmas", no início. O e2e do passo (`e2e/tests/medalhas.spec.ts`)
+cria a própria professora, que ganha conta pelo `seed demo` e senha pelo Mailpit, e roda o
+comando de anulação no contêiner do seeder; precisa do compose de pé e de hoje cair num
+bimestre do calendário.
 
 ## Nativo
 

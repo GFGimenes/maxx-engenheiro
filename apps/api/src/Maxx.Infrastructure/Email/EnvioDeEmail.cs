@@ -1,8 +1,6 @@
-using System.Threading.Channels;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Maxx.Application;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -35,7 +33,8 @@ public sealed class SmtpOptions
 }
 
 // Uma conexão por mensagem: o volume da fase 1 é de e-mails de recuperação, não de lote.
-internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSender
+// Roda só no worker, dentro de um trabalho da fila: a falha sobe para a retentativa.
+internal sealed partial class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger) : IEmailSender
 {
     public async Task EnviarAsync(MensagemDeEmail mensagem, CancellationToken cancellationToken)
     {
@@ -61,62 +60,10 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
 
         await smtp.SendAsync(mime, cancellationToken);
         await smtp.DisconnectAsync(quit: true, cancellationToken);
-    }
-}
-
-// A fila em memória, por réplica. Cheia, recusa a mensagem nova em vez de segurar o pedido:
-// o usuário pede o link de novo.
-internal sealed partial class FilaDeEmailEmMemoria(ILogger<FilaDeEmailEmMemoria> logger) : IFilaDeEmail
-{
-    public const int Capacidade = 1000;
-
-    private readonly Channel<MensagemDeEmail> _canal = Channel.CreateBounded<MensagemDeEmail>(
-        new BoundedChannelOptions(Capacidade) { SingleReader = true, FullMode = BoundedChannelFullMode.Wait });
-
-    public ChannelReader<MensagemDeEmail> Leitor => _canal.Reader;
-
-    public void Enfileirar(MensagemDeEmail mensagem)
-    {
-        if (!_canal.Writer.TryWrite(mensagem))
-        {
-            LogFilaCheia(logger, mensagem.Assunto);
-        }
+        LogEnviado(logger, mensagem.Assunto);
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Fila de e-mail cheia: \"{Assunto}\" descartado.")]
-    private static partial void LogFilaCheia(ILogger logger, string assunto);
-}
-
-// Esvazia a fila fora da requisição. Falha de envio fica no log, sem destinatário nem
-// texto, e não volta para a fila: sem reenvio até a fila do passo 6.
-internal sealed partial class EnvioDeEmailService(
-    FilaDeEmailEmMemoria fila, IEmailSender sender, ILogger<EnvioDeEmailService> logger) : BackgroundService
-{
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await foreach (var mensagem in fila.Leitor.ReadAllAsync(stoppingToken))
-        {
-            try
-            {
-                await sender.EnviarAsync(mensagem, stoppingToken);
-                LogEnviado(logger, mensagem.Assunto);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                return;
-            }
-#pragma warning disable CA1031 // Uma mensagem que falha não pode parar o envio das outras.
-            catch (Exception falha)
-#pragma warning restore CA1031
-            {
-                LogFalha(logger, mensagem.Assunto, falha.GetType().Name, falha.Message);
-            }
-        }
-    }
-
+    // Só o assunto: destinatário e texto (com o link) nunca vão para o log.
     [LoggerMessage(Level = LogLevel.Information, Message = "E-mail \"{Assunto}\" enviado.")]
     private static partial void LogEnviado(ILogger logger, string assunto);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Falha ao enviar o e-mail \"{Assunto}\": {Tipo}: {Erro}")]
-    private static partial void LogFalha(ILogger logger, string assunto, string tipo, string erro);
 }

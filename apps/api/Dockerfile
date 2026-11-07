@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 # Contexto: raiz do repositório (global.json e Directory.*.props ficam lá).
-# A mesma imagem serve a API, o contêiner de migração (`migrate`) e o de seed (`seed`).
+# A mesma imagem serve a API, o contêiner de migração (`migrate`), o de seed (`seed`) e o
+# worker (`worker`).
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src

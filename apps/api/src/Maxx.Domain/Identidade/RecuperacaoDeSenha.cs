@@ -2,7 +2,8 @@ namespace Maxx.Domain.Identidade;
 
 // Um pedido de recuperação de senha, que também é o primeiro acesso de quem vem do seed
 // (docs/fluxos/06-recuperacao-de-senha.md). Token de uso único, por 30 minutos; o domínio
-// só vê o hash dele.
+// só vê o hash dele. O pedido nasce sem token: o worker o emite na hora de mandar o e-mail,
+// para nenhum token esperar em claro na fila (decisoes/README.md, Envio de e-mail).
 public sealed class RecuperacaoDeSenha
 {
     public static readonly TimeSpan Validade = TimeSpan.FromMinutes(30);
@@ -10,14 +11,12 @@ public sealed class RecuperacaoDeSenha
     // Para o EF Core materializar do banco.
     private RecuperacaoDeSenha()
     {
-        Hash = null!;
     }
 
-    private RecuperacaoDeSenha(Guid usuarioId, string hash, DateTimeOffset agora)
+    private RecuperacaoDeSenha(Guid usuarioId, DateTimeOffset agora)
     {
         Id = Guid.CreateVersion7();
         UsuarioId = usuarioId;
-        Hash = Texto.Obrigatorio(hash, "O hash do token de recuperação");
         SolicitadaEm = agora;
         ExpiraEm = agora + Validade;
     }
@@ -26,7 +25,8 @@ public sealed class RecuperacaoDeSenha
 
     public Guid UsuarioId { get; private set; }
 
-    public string Hash { get; private set; }
+    // Nulo até o token ser emitido: um pedido sem token não é encontrado por link nenhum.
+    public string? Hash { get; private set; }
 
     public DateTimeOffset SolicitadaEm { get; private set; }
 
@@ -37,7 +37,24 @@ public sealed class RecuperacaoDeSenha
     // Outro pedido do mesmo usuário foi concluído antes deste.
     public DateTimeOffset? InvalidadaEm { get; private set; }
 
-    public static RecuperacaoDeSenha Solicitar(Guid usuarioId, string hash, DateTimeOffset agora) => new(usuarioId, hash, agora);
+    // Nem usado nem invalidado: ainda pode receber token e ser concluído.
+    public bool EstaAberta => UsadaEm is null && InvalidadaEm is null;
+
+    public static RecuperacaoDeSenha Solicitar(Guid usuarioId, DateTimeOffset agora) => new(usuarioId, agora);
+
+    // O token que vai no e-mail. Os 30 minutos contam daqui, do envio, e não do pedido. Uma
+    // nova emissão (retentativa do envio) troca o hash: o token anterior nunca chegou a
+    // ninguém, porque o envio dele falhou.
+    public void EmitirToken(string hash, DateTimeOffset agora)
+    {
+        if (!EstaAberta)
+        {
+            throw new InvalidOperationException($"A recuperação {Id} já foi encerrada e não recebe token.");
+        }
+
+        Hash = Texto.Obrigatorio(hash, "O hash do token de recuperação");
+        ExpiraEm = agora + Validade;
+    }
 
     // Senha nova, todas as sessões do usuário derrubadas e os outros pedidos pendentes dele
     // invalidados, ou nada muda: um link antigo não redefine a senha de novo. A política já
@@ -104,7 +121,7 @@ public sealed class RecuperacaoDeSenha
     // Só pedido ainda aberto: usado ou já invalidado fica como está.
     private void Invalidar(DateTimeOffset agora)
     {
-        if (UsadaEm is null && InvalidadaEm is null)
+        if (EstaAberta)
         {
             InvalidadaEm = agora;
         }

@@ -175,11 +175,14 @@ internal sealed class RecuperacaoDeSenhaConfiguration : IEntityTypeConfiguration
             table.HasCheckConstraint("ck_recuperacao_senha_validade", "expira_em > solicitada_em");
             table.HasCheckConstraint(
                 "ck_recuperacao_senha_encerramento", "usada_em IS NULL OR invalidada_em IS NULL");
+
+            // Só se usa um pedido cujo token foi emitido.
+            table.HasCheckConstraint("ck_recuperacao_senha_token", "usada_em IS NULL OR hash IS NOT NULL");
         });
         builder.HasKey(recuperacao => recuperacao.Id);
         builder.Property(recuperacao => recuperacao.Id).ValueGeneratedNever();
 
-        builder.Property(recuperacao => recuperacao.Hash).IsRequired();
+        // Nulo até o worker emitir o token; o índice único ignora os nulos.
         builder.HasIndex(recuperacao => recuperacao.Hash).IsUnique();
 
         // "Os outros pedidos pendentes do usuário", que a conclusão invalida.

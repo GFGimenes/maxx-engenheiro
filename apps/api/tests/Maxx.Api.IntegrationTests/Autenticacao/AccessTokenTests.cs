@@ -43,6 +43,7 @@ public class AccessTokenTests
         Assert.Equal(renata.Id, eu!.Id);
         Assert.Equal(["professor", "instituicao"], eu.Papeis);
         Assert.Equal("@renataAlbuquerque-PROF", eu.Arroba);
+        Assert.Equal(renata.NomeDeExibicao, eu.NomeDeExibicao);
     }
 
     [Fact]

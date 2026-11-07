@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Termos;
+using Maxx.Application.Fila;
+using Maxx.Application.Medalhas;
 using Maxx.Domain;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
@@ -16,6 +18,7 @@ public sealed class DemonstracaoHandler(
     SessaoService sessoes,
     TermoDeUsoHandler termos,
     ITokenGenerator tokens,
+    IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     ConfiguracaoDaDemonstracao configuracao,
     TimeProvider relogio)
@@ -74,6 +77,10 @@ public sealed class DemonstracaoHandler(
             }
 
             usuarios.Adicionar(usuario);
+
+            // Aluno novo muda o divisor da raridade (ADR 0005). Na nova tentativa, o
+            // Descartar leva o pedido junto, e ele é feito de novo aqui.
+            fila.Enfileirar(new RecalcularRaridade());
             var sessao = sessoes.Abrir(usuario);
 
             try
