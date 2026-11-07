@@ -97,4 +97,20 @@ describe("SessaoProvider", () => {
     expect(screen.getByTestId("estado")).toHaveTextContent("anonimo");
     expect(queryClient.getQueryData(["eu"])).toBeUndefined();
   });
+
+  it("abrir sem sessão não apaga as consultas que já estão no cache", async () => {
+    const fetch = jest.fn(
+      async () =>
+        new Response(JSON.stringify({ codigo: "sessao-invalida" }), {
+          status: 401,
+        }),
+    );
+    const { gerenciador, queryClient } = montar("r0", fetch);
+    queryClient.setQueryData(["health"], { status: "ok" });
+
+    await renderizar(gerenciador, queryClient);
+
+    expect(screen.getByTestId("estado")).toHaveTextContent("anonimo");
+    expect(queryClient.getQueryData(["health"])).toEqual({ status: "ok" });
+  });
 });

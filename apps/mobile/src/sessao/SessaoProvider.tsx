@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -41,11 +42,14 @@ export function SessaoProvider({
     void gerenciador.restaurar();
   }, [gerenciador]);
 
-  // Dado de uma conta não pode aparecer para a próxima que entrar no mesmo aparelho.
+  // Dado de uma conta não pode aparecer para a próxima que entrar no mesmo aparelho. Só
+  // na saída de uma sessão: abrir o app sem sessão não apaga o que já está carregando.
+  const anterior = useRef(estado);
   useEffect(() => {
-    if (estado === "anonimo") {
+    if (anterior.current === "autenticado" && estado !== "autenticado") {
       queryClient.clear();
     }
+    anterior.current = estado;
   }, [estado, queryClient]);
 
   const sessao = useMemo<Sessao>(
