@@ -604,6 +604,46 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<DateTimeOffset?>("LidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lida_em");
+
+                    b.Property<Guid>("ReferenciaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("referencia_id");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notificacao");
+
+                    b.HasIndex("UsuarioId", "Tipo", "ReferenciaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_notificacao_usuario_id_tipo_referencia_id");
+
+                    b.ToTable("notificacao", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida')");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>
                 {
                     b.Property<Guid>("Id")
@@ -932,6 +972,57 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.RaridadeDosItens.RaridadeDoItemRow", b =>
+                {
+                    b.Property<string>("ItemCodigo")
+                        .HasColumnType("text")
+                        .HasColumnName("item_codigo");
+
+                    b.Property<int>("AlunosComItem")
+                        .HasColumnType("integer")
+                        .HasColumnName("alunos_com_item");
+
+                    b.Property<int>("AlunosElegiveis")
+                        .HasColumnType("integer")
+                        .HasColumnName("alunos_elegiveis");
+
+                    b.Property<DateTimeOffset>("CalculadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("calculada_em");
+
+                    b.Property<string>("Raridade")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("raridade");
+
+                    b.HasKey("ItemCodigo")
+                        .HasName("pk_raridade_do_item");
+
+                    b.ToTable("raridade_do_item", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_raridade_do_item_contagem", "alunos_com_item >= 0 AND alunos_com_item <= alunos_elegiveis");
+
+                            t.HasCheckConstraint("ck_raridade_do_item_raridade", "raridade IN ('comum', 'raro', 'epico', 'lendario')");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.RaridadeDosItens.RecalculoRow", b =>
+                {
+                    b.Property<string>("Nome")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("nome");
+
+                    b.Property<DateTimeOffset?>("UltimaExecucaoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultima_execucao_em");
+
+                    b.HasKey("Nome")
+                        .HasName("pk_recalculo");
+
+                    b.ToTable("recalculo", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Academico.Bimestre", b =>
                 {
                     b.HasOne("Maxx.Domain.Academico.SemestreLetivo", null)
@@ -1091,6 +1182,16 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_usuario_cadastro_elegivel_cadastro_elegivel_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_notificacao_usuario_usuario_id");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -1156,6 +1257,16 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasForeignKey("FamiliaCodigo")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_item_catalogo_familia_familia_codigo");
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.RaridadeDosItens.RaridadeDoItemRow", b =>
+                {
+                    b.HasOne("Maxx.Infrastructure.Persistence.ItemCatalogoRow", null)
+                        .WithOne()
+                        .HasForeignKey("Maxx.Infrastructure.RaridadeDosItens.RaridadeDoItemRow", "ItemCodigo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_raridade_do_item_item_catalogo_item_codigo");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Academico.AnoLetivo", b =>

@@ -12,7 +12,9 @@ using Maxx.Application;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Domain.Notificacoes;
 using Maxx.Domain.Premios;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -329,6 +331,12 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             await scope.ServiceProvider.GetRequiredService<ConcederMedalhaHandler>().ConcederAsync(contaDaRenata.Id, turma, aluno.Id, "M03", Ct);
         }
 
+        // O worker grava as notificações de medalha recebida, que a purga também leva.
+        var consumidor = factory.Services.GetRequiredService<ConsumidorDeTrabalhos>();
+        while (await consumidor.ProcessarProximoAsync(Ct))
+        {
+        }
+
         var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);
         var purga = Regex.Match(readme, @"```sql\s+(BEGIN;.*?COMMIT;)\s+```", RegexOptions.Singleline, TimeSpan.FromSeconds(5));
         Assert.True(purga.Success);
@@ -346,6 +354,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal("Carla Dias", restante.NomeDeExibicao);
         Assert.Equal(restante.Id, (await db.Set<AceiteDeTermo>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<Medalha>().SingleAsync(Ct)).AlunoId);
+        Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(cadastro => cadastro.Papeis == Papeis.Aluno, Ct));
         Assert.Equal(1, await db.Set<TermoDeUso>().CountAsync(Ct));
     }

@@ -54,8 +54,7 @@ public sealed record AlunoDaTurma(Guid Id, string NomeDeExibicao, string Arroba,
 
 public sealed record MedalhaNaTurma(Guid Id, string Item, int Bimestre, DateTimeOffset ConcedidaEm);
 
-// Os trabalhos que a concessão enfileira, na mesma transação. Os handlers chegam com a
-// notificação e a raridade.
+// Os trabalhos que a concessão e a anulação enfileiram, na mesma transação.
 public sealed record NotificarMedalhaRecebida(Guid MedalhaId) : ICargaDeTrabalho
 {
     public static string Tipo => "notificar-medalha-recebida";

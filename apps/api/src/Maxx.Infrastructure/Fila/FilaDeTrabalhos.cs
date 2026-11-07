@@ -8,7 +8,7 @@ namespace Maxx.Infrastructure.Fila;
 // Só acrescenta a linha ao DbContext do escopo: grava junto com a escrita de quem chamou.
 internal sealed class FilaDeTrabalhos(MaxxDbContext db, TimeProvider clock) : IFilaDeTrabalhos
 {
-    public void Enfileirar<TCarga>(TCarga carga)
+    public void Enfileirar<TCarga>(TCarga carga, DateTimeOffset? disponivelEm = null)
         where TCarga : ICargaDeTrabalho
     {
         ArgumentNullException.ThrowIfNull(carga);
@@ -18,7 +18,7 @@ internal sealed class FilaDeTrabalhos(MaxxDbContext db, TimeProvider clock) : IF
             Tipo = TCarga.Tipo,
             Carga = JsonSerializer.Serialize(carga, JsonSerializerOptions.Web),
             CriadoEm = agora,
-            DisponivelEm = agora,
+            DisponivelEm = disponivelEm ?? agora,
         });
     }
 }

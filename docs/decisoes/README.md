@@ -123,6 +123,7 @@ CREATE TEMP TABLE alvo ON COMMIT DROP AS
   FROM usuario WHERE lote_da_demonstracao = :'lote';
 DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM medalha WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM usuario WHERE id IN (SELECT usuario_id FROM alvo);
 DELETE FROM matricula WHERE aluno_id IN (SELECT cadastro_id FROM alvo);

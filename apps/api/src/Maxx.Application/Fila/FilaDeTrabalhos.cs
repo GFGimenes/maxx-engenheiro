@@ -10,10 +10,11 @@ public interface ICargaDeTrabalho
 }
 
 // Enfileira na unidade de trabalho de quem chama: o trabalho só existe se a escrita que o
-// originou gravar, no mesmo IUnitOfWork.SalvarAsync. Nada sai daqui sozinho.
+// originou gravar, no mesmo IUnitOfWork.SalvarAsync. Nada sai daqui sozinho. disponivelEm
+// adia o trabalho; sem ele, fica disponível já.
 public interface IFilaDeTrabalhos
 {
-    void Enfileirar<TCarga>(TCarga carga)
+    void Enfileirar<TCarga>(TCarga carga, DateTimeOffset? disponivelEm = null)
         where TCarga : ICargaDeTrabalho;
 }
 

@@ -5,13 +5,16 @@ using Maxx.Application.Autorizacao;
 using Maxx.Application.Demonstracao;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
+using Maxx.Application.Notificacoes;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
 using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Medalhas;
+using Maxx.Infrastructure.Notificacoes;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IDemonstracaoRepository, DemonstracaoRepository>();
         services.AddScoped<IMedalhaRepository, MedalhaRepository>();
         services.AddScoped<IConsultaDoProfessor, ConsultaDoProfessor>();
+        services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
@@ -57,6 +61,8 @@ public static class DependencyInjection
         // e o link do app (ILinkDoApp) vêm da borda.
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddTrabalho<EmailDeRecuperacao, EmailDeRecuperacaoHandler>();
+        services.AddTrabalho<NotificarMedalhaRecebida, NotificarMedalhaRecebidaHandler>();
+        services.AddTrabalho<RecalcularRaridade, RecalculoDeRaridade>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()
