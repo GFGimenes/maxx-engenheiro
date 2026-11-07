@@ -20,7 +20,7 @@ export interface Aluno {
   senha: string;
 }
 
-function sql(comando: string): string {
+export function sql(comando: string): string {
   return execFileSync(
     "docker",
     [
@@ -64,7 +64,10 @@ export function novoElegivel(): Aluno {
 }
 
 // Um aluno com conta, criada pela API como o app cria, com o termo vigente aceito.
-export async function novaConta(request: APIRequestContext): Promise<Aluno> {
+export async function novaConta(
+  request: APIRequestContext,
+  nomeDeExibicao = "Teste",
+): Promise<Aluno> {
   const aluno = novoElegivel();
   const termo = await request.get("/api/v1/termo-de-uso");
   expect(termo.ok()).toBe(true);
@@ -73,7 +76,7 @@ export async function novaConta(request: APIRequestContext): Promise<Aluno> {
     data: {
       ra: aluno.ra,
       email: aluno.email,
-      nomeDeExibicao: "Teste",
+      nomeDeExibicao,
       prefixo: aluno.prefixo,
       senha: aluno.senha,
       versaoDoTermo: (await termo.json()).versao,

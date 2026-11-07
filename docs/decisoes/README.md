@@ -29,6 +29,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 | Réplicas | Duas réplicas de API sem estado atrás do Caddy: resiliência de deploy, não capacidade |
 | Storage | Cloudflare R2 com a CDN da Cloudflare |
 | Migrations | Contêiner separado com advisory lock, antes de subir as réplicas. Nunca no startup da aplicação |
+| Worker | Contêiner separado, `Maxx.Api worker`, uma réplica, consumindo a fila do Postgres (ADR 0008). Ver Medalhas, fila e worker (passo 6) |
 | Backup | `pg_dump` noturno para o bucket, mais dump manual obrigatório antes de cada migration, com restauração testada uma vez |
 | Avaliação | Sem plano B local: a VPS é o único ambiente. A avaliação é remota, antes de 05/12, sem apresentação presencial: cada avaliador entra na VPS pela própria conexão, e não há rede do campus nem aparelho compartilhado de que dependa. O ensaio do passo 13 confirma o acesso de fora, por conexões diferentes |
 | CI | GitHub Actions, seis jobs: api, mobile, api-client, e2e, segurança e build (imagens da API e do Caddy com o build web) |
@@ -204,6 +205,74 @@ seguem a identidade visual.
 | Botão grande | A ação principal das telas de autenticação (Entrar, Continuar, Aceitar e criar conta, Enviar link, Salvar senha, Aceitar e entrar), como na prancheta do cadastro |
 | Logo | Componente `Logo` em vetor, com `react-native-svg` no `gold` do tema. O traçado é gerado de `design/assets/maxx-ouro.svg` por `design/icones/logoVetor.js`, que o `gerar.js` também roda; um teste falha se o SVG mudar sem gerar de novo |
 | e2e | Cada teste cria a própria linha do cadastro elegível, direto no Postgres do compose, e a conta pela API; a CI roda o `seed demo`. A recuperação lê o e-mail no Mailpit. Os fluxos com conta rodam só no celular, pelo limite de taxa por IP. A demonstração tem uma segunda passada, com `docker-compose.demo.yml` por cima |
+
+## Medalhas, fila e worker (passo 6)
+
+A concessão de medalha pelo professor, a anulação pela instituição, a fila do Postgres com
+o worker e a tela de Troféus. As decisões A a L foram fechadas no plano do passo; as
+demais, nas etapas. A regra de produto que nasceu aqui (aluno sem conta não recebe
+medalha) está em `produto.md` 4.8.
+
+### Fila e worker
+
+| Decisão | Detalhe |
+|---|---|
+| Onde roda o worker | Contêiner próprio, `worker` no compose, com a mesma imagem e o comando `Maxx.Api worker`, uma réplica e sem porta. As réplicas da API enfileiram e não consomem |
+| Tabela `trabalho` | Tipo, carga em jsonb, estado (`pendente` ou `falho`), tentativas, criado em, disponível em e último erro. Trabalho concluído sai da tabela; o falho fica para alguém olhar. A carga nunca leva segredo |
+| Consumo | Um trabalho por vez, com `FOR UPDATE SKIP LOCKED`, e o handler roda na transação que segura a linha: o que ele grava e a saída do trabalho valem juntos. Com a fila vazia, o worker espera 1 s |
+| Retentativa | 5 tentativas, com recuo de 10, 20, 40 e 80 s. A falha volta a um ponto de salvamento anterior ao handler e é registrada ainda sob o lock. Na quinta, o trabalho fica `falho`, com tipo e mensagem do erro, sem pilha e sem a carga |
+| Limites do handler | Passados 60 s, o trabalho é cancelado e conta como falha. Tipo sem handler também é falha. Queda do processo desfaz a transação, e o trabalho volta sem contar tentativa: por isso todo handler é idempotente |
+| Trabalho adiado | `Enfileirar` aceita o instante em que o trabalho fica disponível; é o que a coalescência usa |
+| Teste do worker hospedado | O worker sobe antes da migração do banco do teste e registra uma vez "relation trabalho does not exist" antes de se recuperar. Ruído só desse teste, aceito: no compose o worker depende do seeder |
+
+### Concessão e anulação
+
+| Decisão | Detalhe |
+|---|---|
+| Rotas do professor | `GET /v1/professor/turmas`, `GET /v1/professor/turmas/{turmaId}/alunos`, `GET /v1/professor/medalhas` e `POST /v1/professor/turmas/{turmaId}/medalhas` com `{alunoId, item}`, sob a policy de professor. Escopo de turma sempre no banco: turma fora dele é 403 `fora-do-escopo`, tipo de recusa `Proibido` |
+| Aluno sem conta | Não aparece na lista da turma e não recebe medalha; ex-aluno também não (`produto.md` 4.8). A medalha é sempre de uma conta |
+| Entrada do professor | No passo 6, pela lista de alunos da turma, a partir de "Minhas turmas" no início provisório. O perfil do aluno vira outra entrada no passo 7 |
+| Ocorrência | Atribuída pelo sistema: a menor vaga livre de 1 ao limite do período, por aluno, item, matéria e instância do período (bimestre ou semestre). O professor não escolhe |
+| Chave de deduplicação | Montada dos campos que o item declara no catálogo, com a ocorrência nos repetíveis. Índice único `ix_medalha_chave_ativa` só entre as medalhas não anuladas |
+| Concessão simultânea | Quem perde a corrida pela mesma vaga relê e tenta uma vez a próxima vaga livre. Sem vaga, 409 `limite-atingido`, nunca 500 |
+| Fora de bimestre | Data do semestre entre dois bimestres, ou fora do semestre da turma: 409 `fora-do-periodo`. A medalha de período semestre (M10, M11) também grava o bimestre da data |
+| Outras recusas | 404 `aluno-fora-da-turma` e `item-nao-encontrado`; 409 `ex-aluno`, `item-fora-de-vigencia`, `item-de-outro-curso` e `limite-atingido`. Códigos em `CodigosDaMedalha.cs` |
+| Gravação | A medalha, quem concedeu e quando, e os trabalhos `notificar-medalha-recebida` e `recalcular-raridade`, numa transação só |
+| Auditoria | Colunas na própria `medalha`: quem concedeu e quando, quem anulou e quando, sempre juntos por constraint. Sem tabela genérica de auditoria |
+| Anulação | Por comando administrativo até a área web do passo 12: `Maxx.Api anular-medalha <id> --instituicao <e-mail>`, no compose `docker compose run --rm seeder anular-medalha <id> --instituicao <e-mail>`. Recusa e-mail sem papel de instituição; conta de professor e instituição anula. Sai com 0 (anulada ou já estava), 1 (recusa) ou 2 (uso errado) |
+| Anulação e vaga | A anulada sai do índice de vagas e libera a ocorrência para nova concessão. Anular de novo não muda nada |
+| Anulação simultânea | `xmin` na medalha: só a primeira grava, e a segunda responde "já estava anulada" |
+| Purga | A purga da demonstração apaga `notificacao` e `medalha` do lote antes do usuário |
+
+### Notificação e raridade
+
+| Decisão | Detalhe |
+|---|---|
+| Notificação | Tabela `notificacao`, com usuário, tipo, referência, criada em e lida em. Uma por usuário, tipo e referência, por índice único. Medalha anulada antes do trabalho, ou apagada pela purga, não notifica. O texto é do cliente, pelo tipo, no passo 10 |
+| Bolinha de novidade | A de Troféus chega no passo 10, com o sininho. No passo 6, a notificação só é gravada |
+| Raridade | Tabela `raridade_do_item`, uma linha por item do catálogo, com alunos com o item, alunos elegíveis, raridade e quando foi calculada. A leitura só lê |
+| Numerador | Alunos distintos com ao menos uma medalha ativa do item, ex-alunos inclusive. Prêmio de participação e conquista entram nos passos 8 e 9 |
+| Divisor | Alunos com conta, ativos e ex-alunos, os de demonstração inclusive: o campus inteiro para item aberto, o curso atual para item restrito |
+| Troca de curso | Quem trocou de curso leva a medalha de item restrito ao curso antigo e não é elegível no curso novo: o numerador fica limitado ao divisor |
+| Faixas | Em inteiros, com "abaixo de" estrito: Lendário abaixo de 1%, Épico abaixo de 5%, Raro abaixo de 20%. Item que ninguém tem é Lendário com 0% |
+| Coalescência | Uma linha travada em `recalculo` impede dois cálculos ao mesmo tempo; o recálculo apaga os outros pedidos pendentes, e, se a última execução foi há menos de 10 s, deixa um pedido só para quando a janela fechar (ADR 0005) |
+| Quem pede o recálculo | Concessão e anulação de medalha; cadastro de aluno e registro da demonstração, porque mudam o divisor (ADR 0005); e o seed base, quando há item novo, mudado ou ainda sem raridade, sem acrescentar pedido se já houver um pendente |
+
+### Leitura do aluno e tela de Troféus
+
+| Decisão | Detalhe |
+|---|---|
+| Rota | `GET /v1/eu/premios`, só para aluno: pontos (soma das medalhas ativas), famílias e os itens do catálogo com critério, raridade e o que ele obteve, com tier e pontos do momento. Só o dono vê os faltantes (`produto.md` 9.1) |
+| Item restrito | Item restrito a outro curso fica fora da lista, salvo o que o aluno já tem |
+| `GET /v1/eu` | Ganhou `nomeDeExibicao`, para as iniciais do avatar na navegação. Só acréscimo |
+| Navegação | As cinco abas desde o passo 6: Home é o início provisório, Troféus é a tela de verdade, e Busca, Mural e Perfil mostram "Em breve" até os passos 7 e 10. `/turmas` fica fora das abas, como tela interna com voltar |
+| Abas da tela | Troféus (prêmio de participação e conquista) e Medalhas, sublinhadas como na prancheta. "Mostrar não obtidos" vem ligado, para o aluno novo ver o catálogo |
+| Trilhas | Só das famílias em que o aluno já tem algum item, com os passos rotulados pelo tier, como na prancheta. A família que mistura medalha e conquista (Nota 10 em prova) aparece nas duas abas |
+| Lista | Obtidos primeiro, depois os que faltam, cada grupo do maior valor para o menor. "Tier · Raridade · x% dos alunos"; o critério, ou, na medalha obtida, a matéria e o bimestre da mais recente e quantas vezes. O que falta aparece apagado, com o valor do catálogo sem o "+" |
+| Professor na aba Troféus | Vê "Troféus e medalhas são dos alunos.", e a tela não pede os prêmios |
+| Modal de concessão | Folha que sobe de baixo, como as do Instagram, com as medalhas do catálogo vigentes: medalhão, nome, tier e pontos, critério e limite. Recusa e falta de conexão ficam dentro da folha |
+| Mensagens | Todo código de `Codigos*.cs` da Application tem mensagem em `erros.ts`; o teste lê todos esses arquivos |
+| e2e | Cada execução cria uma professora (cadastro e vínculo no Postgres, conta pelo `seed demo`, senha pelo Mailpit) e um aluno matriculado na turma vigente de Banco de Dados; a professora concede pela tela, o aluno vê em Troféus, e o comando de anulação roda no contêiner do seeder. Só no celular |
 
 ## Processo e qualidade
 

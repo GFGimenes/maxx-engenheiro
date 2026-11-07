@@ -165,8 +165,12 @@ Primeiras telas reais, fechando o ciclo entre autenticação e design.
 - Tela de Troféus com o catálogo, o que falta, o critério e a raridade por escassez,
   recalculada no worker.
 - Anulação de medalha pela instituição, por enquanto por comando administrativo.
+- Envio de e-mail migrado da fila em memória do passo 3 para a fila do Postgres, com o
+  token de recuperação emitido no worker.
+- Navegação de cinco abas, com Busca, Mural e Perfil em "Em breve" até os passos 7 e 10.
 
-Fica pendente: a posição no ranking, que chega no passo 11.
+Fica pendente: a posição no ranking, que chega no passo 11. Decisões do passo em
+`decisoes/README.md`, Medalhas, fila e worker (passo 6).
 
 ### Passo 7. Posts, upload e feed
 
@@ -211,7 +215,8 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - Texto com imagem opcional; somente leitura.
 - Registro de leitura e bolinha dourada na aba Mural.
 - Sininho no cabeçalho do feed, com as notificações de medalha, aprovação, reprovação,
-  contestação, decisão e aviso novo.
+  contestação, decisão e aviso novo. A de medalha recebida já é gravada desde o passo 6.
+- Bolinha de prêmio novo na aba Troféus.
 
 ### Passo 11. Rankings
 
@@ -240,7 +245,7 @@ Fica pendente: a posição no ranking, que chega no passo 11.
 - k6 a 2.000 usuários virtuais, p95 medido em feed, perfil e ranking. Micro-cache da
   primeira página do feed só se o número pedir.
 - Verificação de saúde do worker e alerta de fila parada, pelo defeito silencioso
-  descrito no ADR 0005.
+  descrito no ADR 0005, e de trabalho que ficou `falho` na fila.
 - CSP, HSTS e cabeçalhos de segurança; varredura de dependências e de segredos na CI.
 - Backup: `pg_dump` noturno para o bucket e dump manual antes de migration, com
   restauração testada uma vez.
@@ -277,7 +282,7 @@ titular, canal de contato e prazo de guarda dos dados.
 | Fila disputando I/O com o feed no pico | Passo 13, primeiro lugar a olhar se o p95 não bater |
 | Avaliador de conquista é ponto único de falha lógica | Passo 9, teste por forma, por item e por fronteira |
 | Foto pública para quem tem o link | Decisão consciente, ADR 0002, coberta pelo termo de uso no passo 5 |
-| Semestre vigente na avaliação | A demonstração só oferece cursos com turma no semestre vigente, e o e2e dela depende disso: no recesso (2026/2 termina em 05/12/2026), `GET /v1/demo` vem sem cursos. A avaliação acontece antes de 05/12 e não há apresentação presencial, então o semestre vigente cobre. Depois disso, o e2e da demonstração falha até o calendário ganhar o semestre seguinte |
+| Semestre vigente na avaliação | A demonstração só oferece cursos com turma no semestre vigente, e o e2e dela depende disso: no recesso (2026/2 termina em 05/12/2026), `GET /v1/demo` vem sem cursos, e o e2e da medalha não acha turma vigente nem bimestre para conceder. A avaliação acontece antes de 05/12 e não há apresentação presencial, então o semestre vigente cobre. Depois disso, os e2e da demonstração e da medalha falham até o calendário ganhar o semestre seguinte |
 | Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. Acompanhar no passo 13 |
 | Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP |
 | Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest até o Maestro do passo 13. No nativo, o link de senha nova abre no navegador |
