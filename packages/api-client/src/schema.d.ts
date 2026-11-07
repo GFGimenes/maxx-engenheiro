@@ -376,6 +376,7 @@ export interface components {
             id: string;
             papeis: string[];
             arroba: string;
+            nomeDeExibicao: string;
         };
         FamiliaResponse: {
             codigo: string;

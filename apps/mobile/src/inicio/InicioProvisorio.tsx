@@ -20,7 +20,7 @@ export function InicioProvisorio() {
   const eu = useEu();
 
   return (
-    <Screen>
+    <Screen aboveNav>
       <View style={styles.coluna}>
         <Logo largura={160} />
 

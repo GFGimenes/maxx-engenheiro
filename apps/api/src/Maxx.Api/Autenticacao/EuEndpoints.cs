@@ -29,8 +29,9 @@ internal static class EuEndpoints
         }
 
         return TypedResults.Ok(new EuResponse(
-            usuario.Id, JwtAccessTokenIssuer.NomesDosPapeis(usuario.Papeis), usuario.Arroba.ToString()));
+            usuario.Id, JwtAccessTokenIssuer.NomesDosPapeis(usuario.Papeis), usuario.Arroba.ToString(), usuario.NomeDeExibicao));
     }
 }
 
-public sealed record EuResponse(Guid Id, IReadOnlyList<string> Papeis, string Arroba);
+// NomeDeExibicao entrou no passo 6, para as iniciais do avatar na navegação: só acréscimo.
+public sealed record EuResponse(Guid Id, IReadOnlyList<string> Papeis, string Arroba, string NomeDeExibicao);
