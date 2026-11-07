@@ -120,6 +120,217 @@
         }
       }
     },
+    "/api/v1/professor/turmas": {
+      "get": {
+        "tags": [
+          "Professor"
+        ],
+        "operationId": "GetTurmasDoProfessor",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TurmaDoProfessorResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/professor/turmas/{turmaId}/alunos": {
+      "get": {
+        "tags": [
+          "Professor"
+        ],
+        "operationId": "GetAlunosDaTurma",
+        "parameters": [
+          {
+            "name": "turmaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlunoDaTurmaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/professor/medalhas": {
+      "get": {
+        "tags": [
+          "Professor"
+        ],
+        "operationId": "GetMedalhasDoCatalogo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemDeMedalhaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/professor/turmas/{turmaId}/medalhas": {
+      "post": {
+        "tags": [
+          "Professor"
+        ],
+        "operationId": "ConcederMedalha",
+        "parameters": [
+          {
+            "name": "turmaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConcessaoDeMedalhaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedalhaConcedidaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -704,6 +915,33 @@
   },
   "components": {
     "schemas": {
+      "AlunoDaTurmaResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "medalhas"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "medalhas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MedalhaNaTurmaResponse"
+            }
+          }
+        }
+      },
       "CadastroRequest": {
         "required": [
           "ra",
@@ -745,6 +983,24 @@
             "minimum": 1,
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ConcessaoDeMedalhaRequest": {
+        "required": [
+          "alunoId",
+          "item"
+        ],
+        "type": "object",
+        "properties": {
+          "alunoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item": {
+            "maxLength": 16,
+            "minLength": 0,
+            "type": "string"
           }
         }
       },
@@ -943,6 +1199,47 @@
           }
         }
       },
+      "ItemDeMedalhaResponse": {
+        "required": [
+          "codigo",
+          "nome",
+          "descricao",
+          "tier",
+          "pontos",
+          "base",
+          "periodo",
+          "limitePorPeriodo"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "base": {
+            "type": "string"
+          },
+          "periodo": {
+            "type": "string"
+          },
+          "limitePorPeriodo": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "identificador",
@@ -959,6 +1256,67 @@
             "maxLength": 512,
             "minLength": 0,
             "type": "string"
+          }
+        }
+      },
+      "MedalhaConcedidaResponse": {
+        "required": [
+          "id",
+          "item",
+          "tier",
+          "pontos",
+          "ocorrencia",
+          "concedidaEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ocorrencia": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "concedidaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MedalhaNaTurmaResponse": {
+        "required": [
+          "id",
+          "item",
+          "bimestre",
+          "concedidaEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item": {
+            "type": "string"
+          },
+          "bimestre": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "concedidaEm": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1130,6 +1488,35 @@
             "type": "string"
           }
         }
+      },
+      "TurmaDoProfessorResponse": {
+        "required": [
+          "id",
+          "materia",
+          "curso",
+          "semestre",
+          "alunos"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materia": {
+            "type": "string"
+          },
+          "curso": {
+            "type": "string"
+          },
+          "semestre": {
+            "type": "string"
+          },
+          "alunos": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -1147,6 +1534,9 @@
     },
     {
       "name": "Autenticacao"
+    },
+    {
+      "name": "Professor"
     },
     {
       "name": "Demonstracao"

@@ -12,6 +12,7 @@ internal sealed class UnitOfWork(MaxxDbContext db) : IUnitOfWork
     {
         ["ix_usuario_cadastro_elegivel_id"] = Unicidade.ContaPorCadastro,
         ["pk_prefixo_reservado"] = Unicidade.Prefixo,
+        ["ix_medalha_chave_ativa"] = Unicidade.MedalhaAtiva,
     };
 
     public async Task SalvarAsync(CancellationToken cancellationToken)

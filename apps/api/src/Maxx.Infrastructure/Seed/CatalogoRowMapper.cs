@@ -55,6 +55,44 @@ public static class CatalogoRowMapper
         return row;
     }
 
+    // O caminho de volta, para a medalha: a linha de item_catalogo como item do domínio.
+    public static ItemMedalha ParaMedalha(ItemCatalogoRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        if (row.Tipo != NomeJson.De(TipoDeItem.Medalha))
+        {
+            throw new InvalidOperationException($"O item {row.Codigo} é {row.Tipo}, não medalha.");
+        }
+
+        return new ItemMedalha
+        {
+            Codigo = row.Codigo,
+            Nome = row.Nome,
+            Descricao = row.Descricao,
+            Tier = Ler<Tier>(row.Tier, row.Codigo),
+            Pontos = row.Pontos,
+            Familia = row.FamiliaCodigo,
+            OrdemNaFamilia = row.OrdemNaFamilia,
+            RestricaoCurso = row.RestricaoCurso,
+            Vigencia = new Vigencia(row.VigenciaInicio, row.VigenciaFim),
+            Base = Ler<BaseDaMedalha>(row.Base, row.Codigo),
+            PeriodoDeReferencia = Ler<Periodo>(row.Periodo, row.Codigo),
+            Repetivel = row.Repetivel ?? throw Incompleta(row.Codigo, "repetivel"),
+            LimitePorPeriodo = row.LimitePorPeriodo ?? throw Incompleta(row.Codigo, "limitePorPeriodo"),
+            ChaveDeDeduplicacao = [.. (row.ChaveDeDeduplicacao ?? throw Incompleta(row.Codigo, "chaveDeDeduplicacao"))
+                .Select(campo => Ler<CampoDeDeduplicacao>(campo, row.Codigo))],
+        };
+    }
+
+    private static T Ler<T>(string? texto, string codigo)
+        where T : struct, Enum =>
+        NomeJson.TentarLer<T>(texto, out var valor)
+            ? valor
+            : throw new InvalidOperationException($"O item {codigo} tem {typeof(T).Name} desconhecido: {texto}.");
+
+    private static InvalidOperationException Incompleta(string codigo, string campo) =>
+        new($"A medalha {codigo} está sem {campo} no banco.");
+
     public static FamiliaRow ParaRow(Familia familia)
     {
         ArgumentNullException.ThrowIfNull(familia);

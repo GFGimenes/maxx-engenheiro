@@ -4,11 +4,13 @@ using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autorizacao;
 using Maxx.Application.Demonstracao;
 using Maxx.Application.Fila;
+using Maxx.Application.Medalhas;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
 using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Fila;
+using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<IEscopoDeTurma, EscopoDeTurma>();
         services.AddScoped<IRecuperacaoDeSenhaRepository, RecuperacaoDeSenhaRepository>();
         services.AddScoped<IDemonstracaoRepository, DemonstracaoRepository>();
+        services.AddScoped<IMedalhaRepository, MedalhaRepository>();
+        services.AddScoped<IConsultaDoProfessor, ConsultaDoProfessor>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();

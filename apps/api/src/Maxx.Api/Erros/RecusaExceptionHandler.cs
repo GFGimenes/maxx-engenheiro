@@ -22,6 +22,7 @@ internal sealed partial class RecusaExceptionHandler(
             TipoDeRecusa.NaoEncontrado => StatusCodes.Status404NotFound,
             TipoDeRecusa.Conflito => StatusCodes.Status409Conflict,
             TipoDeRecusa.NaoAutorizado => StatusCodes.Status401Unauthorized,
+            TipoDeRecusa.Proibido => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status400BadRequest,
         };
 

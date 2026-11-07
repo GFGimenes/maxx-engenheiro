@@ -333,9 +333,16 @@ visível, sem exibir pontos nem tier.
 
 ### 4.8 Medalha: concessão e anulação
 
-O professor concede pelo perfil do aluno, escolhendo o item do catálogo. A medalha grava
+O professor concede escolhendo o item do catálogo. No passo 6, a concessão entra pela
+lista de alunos da turma do professor; a partir do passo 7, o perfil do aluno passa a ser
+outra entrada para a mesma concessão. A medalha grava
 turma e matéria (do professor que concede) e bimestre (da data). Só nas turmas do
 semestre vigente.
+
+Só recebe medalha o aluno com conta. Quem está na base e matriculado na turma, mas ainda
+não se cadastrou, não aparece na lista de alunos da turma do professor e não recebe
+medalha; o ex-aluno também não aparece nem recebe. A medalha é sempre de uma conta, nunca
+de uma linha do cadastro elegível.
 
 Medalha não é contestável e não é revogável. A instituição pode **anular** uma medalha:
 é ato administrativo, sem motivo público e sem passar por averiguação, para corrigir

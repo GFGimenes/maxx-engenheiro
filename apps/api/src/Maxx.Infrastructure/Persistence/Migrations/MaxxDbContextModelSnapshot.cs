@@ -604,6 +604,119 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aluno_id");
+
+                    b.Property<DateTimeOffset?>("AnuladaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anulada_em");
+
+                    b.Property<Guid?>("AnuladaPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("anulada_por_id");
+
+                    b.Property<Guid>("BimestreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bimestre_id");
+
+                    b.Property<string>("ChaveDeDeduplicacao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave_de_deduplicacao");
+
+                    b.Property<DateTimeOffset>("ConcedidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("concedida_em");
+
+                    b.Property<Guid>("ConcedidaPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("concedida_por_id");
+
+                    b.Property<string>("ItemCodigo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("item_codigo");
+
+                    b.Property<Guid>("MateriaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("materia_id");
+
+                    b.Property<int>("Ocorrencia")
+                        .HasColumnType("integer")
+                        .HasColumnName("ocorrencia");
+
+                    b.Property<int>("Pontos")
+                        .HasColumnType("integer")
+                        .HasColumnName("pontos");
+
+                    b.Property<Guid>("SemestreLetivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("semestre_letivo_id");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
+                    b.Property<Guid>("TurmaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("turma_id");
+
+                    b.Property<int>("VersaoDoItem")
+                        .HasColumnType("integer")
+                        .HasColumnName("versao_do_item");
+
+                    b.HasKey("Id")
+                        .HasName("pk_medalha");
+
+                    b.HasIndex("AnuladaPorId")
+                        .HasDatabaseName("ix_medalha_anulada_por_id");
+
+                    b.HasIndex("BimestreId")
+                        .HasDatabaseName("ix_medalha_bimestre_id");
+
+                    b.HasIndex("ChaveDeDeduplicacao")
+                        .IsUnique()
+                        .HasDatabaseName("ix_medalha_chave_ativa")
+                        .HasFilter("anulada_em IS NULL");
+
+                    b.HasIndex("ConcedidaPorId")
+                        .HasDatabaseName("ix_medalha_concedida_por_id");
+
+                    b.HasIndex("ItemCodigo")
+                        .HasDatabaseName("ix_medalha_item_codigo");
+
+                    b.HasIndex("MateriaId")
+                        .HasDatabaseName("ix_medalha_materia_id");
+
+                    b.HasIndex("SemestreLetivoId")
+                        .HasDatabaseName("ix_medalha_semestre_letivo_id");
+
+                    b.HasIndex("TurmaId")
+                        .HasDatabaseName("ix_medalha_turma_id");
+
+                    b.HasIndex("AlunoId", "ItemCodigo")
+                        .HasDatabaseName("ix_medalha_aluno_id_item_codigo");
+
+                    b.ToTable("medalha", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_medalha_anulacao", "(anulada_em IS NULL) = (anulada_por_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_medalha_ocorrencia", "ocorrencia >= 1");
+
+                            t.HasCheckConstraint("ck_medalha_pontos", "pontos >= 1");
+
+                            t.HasCheckConstraint("ck_medalha_versao_do_item", "versao_do_item >= 1");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Fila.Trabalho", b =>
                 {
                     b.Property<long>("Id")
@@ -970,6 +1083,64 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_usuario_cadastro_elegivel_cadastro_elegivel_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_usuario_aluno_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AnuladaPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_medalha_usuario_anulada_por_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Bimestre", null)
+                        .WithMany()
+                        .HasForeignKey("BimestreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_bimestre_bimestre_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ConcedidaPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_usuario_concedida_por_id");
+
+                    b.HasOne("Maxx.Infrastructure.Persistence.ItemCatalogoRow", null)
+                        .WithMany()
+                        .HasForeignKey("ItemCodigo")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_item_catalogo_item_codigo");
+
+                    b.HasOne("Maxx.Domain.Academico.Materia", null)
+                        .WithMany()
+                        .HasForeignKey("MateriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_materia_materia_id");
+
+                    b.HasOne("Maxx.Domain.Academico.SemestreLetivo", null)
+                        .WithMany()
+                        .HasForeignKey("SemestreLetivoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_semestre_letivo_semestre_letivo_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Turma", null)
+                        .WithMany()
+                        .HasForeignKey("TurmaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medalha_turma_turma_id");
                 });
 
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>

@@ -68,6 +68,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/professor/turmas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetTurmasDoProfessor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/professor/turmas/{turmaId}/alunos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAlunosDaTurma"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/professor/medalhas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMedalhasDoCatalogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/professor/turmas/{turmaId}/medalhas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConcederMedalha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -248,6 +312,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AlunoDaTurmaResponse: {
+            /** Format: uuid */
+            id: string;
+            nomeDeExibicao: string;
+            arroba: string;
+            medalhas: components["schemas"]["MedalhaNaTurmaResponse"][];
+        };
         CadastroRequest: {
             ra: string;
             email: string;
@@ -256,6 +327,11 @@ export interface components {
             senha: string;
             /** Format: int32 */
             versaoDoTermo: number;
+        };
+        ConcessaoDeMedalhaRequest: {
+            /** Format: uuid */
+            alunoId: string;
+            item: string;
         };
         ConfirmacaoRequest: {
             token: string;
@@ -303,9 +379,42 @@ export interface components {
             ra: string;
             email: string;
         };
+        ItemDeMedalhaResponse: {
+            codigo: string;
+            nome: string;
+            descricao: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            base: string;
+            periodo: string;
+            /** Format: int32 */
+            limitePorPeriodo: number;
+        };
         LoginRequest: {
             identificador: string;
             senha: string;
+        };
+        MedalhaConcedidaResponse: {
+            /** Format: uuid */
+            id: string;
+            item: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            /** Format: int32 */
+            ocorrencia: number;
+            /** Format: date-time */
+            concedidaEm: string;
+        };
+        MedalhaNaTurmaResponse: {
+            /** Format: uuid */
+            id: string;
+            item: string;
+            /** Format: int32 */
+            bimestre: number;
+            /** Format: date-time */
+            concedidaEm: string;
         };
         ProblemDetails: {
             type?: null | string;
@@ -348,6 +457,15 @@ export interface components {
             /** Format: int32 */
             versao: number;
             texto: string;
+        };
+        TurmaDoProfessorResponse: {
+            /** Format: uuid */
+            id: string;
+            materia: string;
+            curso: string;
+            semestre: string;
+            /** Format: int32 */
+            alunos: number;
         };
     };
     responses: never;
@@ -456,6 +574,157 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetTurmasDoProfessor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurmaDoProfessorResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAlunosDaTurma: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                turmaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlunoDaTurmaResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetMedalhasDoCatalogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDeMedalhaResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ConcederMedalha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                turmaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConcessaoDeMedalhaRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MedalhaConcedidaResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

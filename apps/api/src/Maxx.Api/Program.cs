@@ -5,6 +5,7 @@ using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
+using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
@@ -71,6 +72,7 @@ builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGenerati
 var demonstracao = builder.AddDemonstracao(servindo: !isMigrate && !isSeed && !isOpenApiGeneration, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
 builder.Services.AddLimitesDeTaxa();
+builder.Services.AddScoped<Maxx.Application.Medalhas.ConcederMedalhaHandler>();
 
 var app = builder.Build();
 
@@ -126,6 +128,7 @@ api.MapHealthEndpoints();
 var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
 v1.MapTermoDeUsoEndpoints();
+v1.MapProfessorEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {
