@@ -1,3 +1,4 @@
+using Maxx.Application.Autenticacao.Termos;
 using Maxx.Domain;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
@@ -12,6 +13,7 @@ public sealed class CadastroHandler(
     ISenhaHasher senhas,
     SessaoService sessoes,
     SugestaoDeArroba sugestoes,
+    TermoDeUsoHandler termos,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
@@ -40,6 +42,7 @@ public sealed class CadastroHandler(
         Validar(() => PrefixoDeArroba.Validar(pedido.Prefixo), CodigosDeRecusa.PrefixoInvalido);
         Validar(() => Usuario.ValidarNomeDeExibicao(pedido.NomeDeExibicao), CodigosDeRecusa.NomeDeExibicaoInvalido);
 
+        var termo = await termos.ConferirAceiteAsync(pedido.VersaoDoTermo, cancellationToken);
         var (cadastro, curso) = await BuscarSemContaAsync(pedido.Ra, pedido.Email, cancellationToken);
         if ((await usuarios.PrefixosOcupadosAsync([pedido.Prefixo], cancellationToken)).Count > 0)
         {
@@ -48,6 +51,7 @@ public sealed class CadastroHandler(
 
         var usuario = Usuario.CadastrarAluno(
             cadastro, curso, pedido.NomeDeExibicao, pedido.Prefixo, senhas.Hash(pedido.Senha), relogio.GetUtcNow());
+        usuario.AceitarTermo(termo, relogio.GetUtcNow());
         usuarios.Adicionar(usuario);
         var sessao = sessoes.Abrir(usuario);
 
@@ -103,7 +107,7 @@ public sealed class CadastroHandler(
 }
 
 // A senha em claro existe só neste pedido, a caminho do hash.
-public sealed record NovoCadastro(string Ra, string Email, string NomeDeExibicao, string Prefixo, string Senha)
+public sealed record NovoCadastro(string Ra, string Email, string NomeDeExibicao, string Prefixo, string Senha, int VersaoDoTermo)
 {
     // Nunca imprimir a senha, nem por acidente num log de objeto.
     public override string ToString() => $"NovoCadastro {{ Ra = {Ra}, Prefixo = {Prefixo} }}";

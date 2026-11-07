@@ -1,3 +1,4 @@
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +10,12 @@ namespace Maxx.Api.IntegrationTests;
 // Postgres devolve, conferida pelo nome da constraint.
 internal static class BancoDeTeste
 {
+    public const int VersaoDoTermo = 1;
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    // A versão vigente do termo, para os testes que criam conta pela API.
+    public static TermoDeUso TermoVigente() => new(VersaoDoTermo, "Termo de teste.", DateTimeOffset.UtcNow);
 
     public static async Task<MaxxApiFactory> MigradoAsync(PostgresFixture postgres, string? diretorioDeDados = null)
     {

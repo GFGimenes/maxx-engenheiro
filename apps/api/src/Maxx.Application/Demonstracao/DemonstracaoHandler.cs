@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Maxx.Application.Autenticacao;
+using Maxx.Application.Autenticacao.Termos;
 using Maxx.Domain;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
@@ -13,6 +14,7 @@ public sealed class DemonstracaoHandler(
     IUsuarioRepository usuarios,
     SugestaoDeArroba sugestoes,
     SessaoService sessoes,
+    TermoDeUsoHandler termos,
     ITokenGenerator tokens,
     IUnitOfWork unitOfWork,
     ConfiguracaoDaDemonstracao configuracao,
@@ -30,7 +32,8 @@ public sealed class DemonstracaoHandler(
     public Task<IReadOnlyList<Curso>> CursosAsync(CancellationToken cancellationToken) =>
         demonstracao.CursosComTurmaVigenteAsync(Hoje, cancellationToken);
 
-    public async Task<RegistroDeDemonstracao> RegistrarAsync(string nome, string siglaDoCurso, CancellationToken cancellationToken)
+    public async Task<RegistroDeDemonstracao> RegistrarAsync(
+        string nome, string siglaDoCurso, int versaoDoTermo, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(nome);
         ArgumentNullException.ThrowIfNull(siglaDoCurso);
@@ -44,6 +47,7 @@ public sealed class DemonstracaoHandler(
             throw new RecusaException(TipoDeRecusa.Invalido, CodigosDeRecusa.NomeDeExibicaoInvalido, excecao.Message);
         }
 
+        var termo = await termos.ConferirAceiteAsync(versaoDoTermo, cancellationToken);
         var (curso, turmas) = await demonstracao.TurmasVigentesAsync(siglaDoCurso.Trim(), Hoje, cancellationToken)
             ?? throw new RecusaException(
                 TipoDeRecusa.NaoEncontrado, CodigosDeRecusa.CursoDeDemonstracaoIndisponivel, $"Sem turma vigente em {siglaDoCurso}.");
@@ -61,6 +65,7 @@ public sealed class DemonstracaoHandler(
                 chave.Hash,
                 configuracao.Lote,
                 relogio.GetUtcNow());
+            usuario.AceitarTermo(termo, relogio.GetUtcNow());
 
             demonstracao.Adicionar(cadastro);
             foreach (var turma in turmas)
