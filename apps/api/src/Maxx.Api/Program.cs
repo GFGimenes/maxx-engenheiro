@@ -7,6 +7,7 @@ using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.OpenApi;
 using Maxx.Infrastructure;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 
@@ -15,6 +16,20 @@ var isMigrate = args is ["migrate", ..];
 
 // `Maxx.Api seed <base|demo>` grava os dados de data/ e sai. Idempotente.
 var isSeed = args is ["seed", ..];
+
+// `Maxx.Api worker` consome a fila de trabalhos do Postgres (ADR 0008), sem servidor HTTP.
+// É o comando do contêiner do worker; as réplicas da API só enfileiram.
+if (args is ["worker", ..])
+{
+    var worker = Host.CreateApplicationBuilder(args[1..]);
+    worker.Services.AddSingleton(TimeProvider.System);
+    worker.Services.AddInfrastructure(
+        worker.Configuration.GetConnectionString("Maxx")
+            ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada."));
+    worker.Services.AddWorker();
+    await worker.Build().RunAsync();
+    return 0;
+}
 
 // A geração do OpenAPI no build sobe a aplicação sem servidor e sem banco.
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";

@@ -1,4 +1,4 @@
-# Maxx: Postgres, migração, duas réplicas de API, Caddy e Mailpit.
+# Maxx: Postgres, migração, duas réplicas de API, worker, Caddy e Mailpit.
 # Uso local: cp .env.example .env && docker compose up --build
 
 name: maxx
@@ -77,6 +77,19 @@ services:
       Email__Smtp__Senha: ${MAXX_SMTP_SENHA:-}
     deploy:
       replicas: 2
+    depends_on:
+      seeder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Consome a fila de trabalhos do Postgres (ADR 0008), com FOR UPDATE SKIP LOCKED. Uma
+  # réplica, sem porta: as réplicas da API só enfileiram.
+  worker:
+    <<: *api-image
+    command: ["worker"]
+    environment:
+      <<: *api-env
+      DOTNET_ENVIRONMENT: Production
     depends_on:
       seeder:
         condition: service_completed_successfully

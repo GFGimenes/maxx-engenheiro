@@ -603,6 +603,64 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Fila.Trabalho", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Carga")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("carga");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<DateTimeOffset>("DisponivelEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("disponivel_em");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tipo");
+
+                    b.Property<string>("UltimoErro")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("ultimo_erro");
+
+                    b.HasKey("Id")
+                        .HasName("pk_trabalho");
+
+                    b.HasIndex("DisponivelEm", "Id")
+                        .HasDatabaseName("ix_trabalho_pendente")
+                        .HasFilter("estado = 'pendente'");
+
+                    b.ToTable("trabalho", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_trabalho_estado", "estado IN ('pendente', 'falho')");
+
+                            t.HasCheckConstraint("ck_trabalho_tentativas", "tentativas BETWEEN 0 AND 5");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.FamiliaRow", b =>
                 {
                     b.Property<string>("Codigo")
