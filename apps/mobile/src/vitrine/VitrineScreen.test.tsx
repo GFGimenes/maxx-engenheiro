@@ -29,7 +29,14 @@ test("mostra a escala tipográfica, os ícones nos dois modos e a troca de tema"
   expect(screen.getByLabelText("Senha")).toBeTruthy();
   expect(screen.getByRole("checkbox", { name: "Todos" })).toBeTruthy();
   expect(screen.getByRole("tab", { name: "Mural, com novidade" })).toBeTruthy();
-  expect(screen.getByRole("alert")).toBeTruthy();
+  expect(screen.getAllByRole("alert")).toHaveLength(2);
+  expect(
+    screen.getByText("A senha precisa ter de 8 a 128 caracteres."),
+  ).toBeTruthy();
+  expect(screen.getByRole("img", { name: "Maxx" })).toBeTruthy();
+  expect(
+    screen.getAllByRole("link", { name: "Esqueci minha senha" }),
+  ).toHaveLength(2);
   expect(screen.getByText("Nenhum aviso por aqui")).toBeTruthy();
   for (const name of iconNames) {
     expect(

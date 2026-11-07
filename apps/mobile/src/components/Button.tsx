@@ -9,7 +9,8 @@ interface ButtonProps {
   label: string;
   onPress: () => void;
   variant?: "primary" | "secondary";
-  // `large` é só o Entrar do login. O discreto ocupa a largura que o pai der.
+  // `large` é só a ação principal das telas de autenticação. O discreto ocupa a largura
+  // que o pai der.
   size?: "compact" | "large";
   disabled?: boolean;
 }

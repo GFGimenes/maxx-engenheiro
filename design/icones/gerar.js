@@ -1,4 +1,5 @@
-// Gera ícone, adaptativo, splash e favicon do app a partir de design/assets/maxx-ouro.svg.
+// Gera ícone, adaptativo, splash e favicon do app a partir de design/assets/maxx-ouro.svg,
+// e o traçado do logo para o componente Logo (logoVetor.js).
 // Rode da raiz, com o npm ci feito: node design/icones/gerar.js
 // Trocar o SVG e rodar de novo basta: nenhum código depende do desenho.
 const fs = require("node:fs");
@@ -9,6 +10,7 @@ const { chromium } = require(
   require.resolve("@playwright/test", { paths: [path.join(raiz, "e2e")] }),
 );
 const tokens = require(path.join(raiz, "design/tokens.json"));
+const { gerarLogoVetor } = require("./logoVetor");
 
 const MARINHO = tokens.cores.claro.hero;
 const saida = path.join(raiz, "apps/mobile/assets");
@@ -60,6 +62,7 @@ const ARQUIVOS = [
 ];
 
 (async () => {
+  gerarLogoVetor();
   const navegador = await chromium.launch();
   for (const { nome, lado, fundo, raio = 0, logo: desenho } of ARQUIVOS) {
     const pagina = await navegador.newPage({

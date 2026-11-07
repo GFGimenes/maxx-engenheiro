@@ -10,6 +10,8 @@ import { Screen } from "../components/Screen";
 import { SegmentedControl } from "../components/SegmentedControl";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { TextField } from "../components/TextField";
+import { TextLink } from "../components/TextLink";
+import { Logo } from "../marca/Logo";
 import { FaixaPremio } from "../premios/FaixaPremio";
 import { Medalhao } from "../premios/Medalhao";
 import { SeloPremio } from "../premios/SeloPremio";
@@ -153,6 +155,20 @@ function Controles() {
           onChangeText={setSenha}
         />
         <TextField label="Curso" value="ADS" disabled />
+        <TextField
+          label="Crie uma senha"
+          password
+          value="curta"
+          error="A senha precisa ter de 8 a 128 caracteres."
+        />
+      </Secao>
+
+      <Secao titulo="Marca e links">
+        <View style={styles.centro}>
+          <Logo largura={245} />
+        </View>
+        <TextLink label="Esqueci minha senha" onPress={nada} />
+        <TextLink label="Esqueci minha senha" onPress={nada} disabled />
       </Secao>
 
       <Secao titulo="Controle segmentado">
@@ -331,6 +347,7 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 const styles = StyleSheet.create({
   coluna: { gap: 24, paddingTop: 16 },
   cabecalho: { gap: 4 },
+  centro: { alignItems: "center" },
   secao: { gap: 12, borderTopWidth: 1, paddingTop: 16 },
   grade: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
   linha: { flexDirection: "row", flexWrap: "wrap", columnGap: 8 },
