@@ -12,7 +12,6 @@ using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
-using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using static Maxx.Api.IntegrationTests.BancoDeTeste;
@@ -279,39 +278,8 @@ public sealed class ConcessaoDeMedalhaTests(PostgresFixture postgres) : IClassFi
             contaDaAna,
             contaDaCarla,
             contaDoDiego,
-            Item(new ItemMedalha
-            {
-                Codigo = "M01",
-                Nome = "Nota 10 em prova",
-                Descricao = "Tirar 10 em uma prova da matéria.",
-                Base = BaseDaMedalha.Nota,
-                Tier = Tier.Bronze,
-                Pontos = 30,
-                PeriodoDeReferencia = Periodo.Bimestre,
-                Repetivel = true,
-                LimitePorPeriodo = 2,
-                ChaveDeDeduplicacao =
-                [
-                    CampoDeDeduplicacao.Aluno, CampoDeDeduplicacao.Item, CampoDeDeduplicacao.Materia,
-                    CampoDeDeduplicacao.Bimestre, CampoDeDeduplicacao.Ocorrencia,
-                ],
-            }),
-            Item(new ItemMedalha
-            {
-                Codigo = "M03",
-                Nome = "Presença integral no bimestre",
-                Descricao = "Não faltar a nenhuma aula da matéria no bimestre.",
-                Base = BaseDaMedalha.Presenca,
-                Tier = Tier.Bronze,
-                Pontos = 25,
-                PeriodoDeReferencia = Periodo.Bimestre,
-                Repetivel = false,
-                LimitePorPeriodo = 1,
-                ChaveDeDeduplicacao =
-                [
-                    CampoDeDeduplicacao.Aluno, CampoDeDeduplicacao.Item, CampoDeDeduplicacao.Materia, CampoDeDeduplicacao.Bimestre,
-                ],
-            }));
+            CatalogoDeMedalhas.M01(),
+            CatalogoDeMedalhas.M03());
 
         return new Mundo(
             factory,
@@ -326,8 +294,6 @@ public sealed class ConcessaoDeMedalhaTests(PostgresFixture postgres) : IClassFi
             contaDoDiego.Id,
             bruno.Id);
     }
-
-    private static ItemCatalogoRow Item(ItemMedalha item) => CatalogoRowMapper.ParaRow(item);
 
     private static Usuario ComSenha(Usuario usuario, string hash)
     {

@@ -669,6 +669,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("turma_id");
 
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<int>("VersaoDoItem")
                         .HasColumnType("integer")
                         .HasColumnName("versao_do_item");

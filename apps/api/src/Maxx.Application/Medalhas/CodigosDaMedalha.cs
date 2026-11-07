@@ -24,4 +24,10 @@ public static class CodigosDaMedalha
     // O aluno já tem, nessa matéria e nesse período, tantas medalhas desse item quanto o
     // limite do catálogo.
     public const string LimiteAtingido = "limite-atingido";
+
+    // Anulação: o id não é de medalha nenhuma.
+    public const string MedalhaNaoEncontrada = "medalha-nao-encontrada";
+
+    // Anulação: o e-mail informado não é de uma conta com o papel de instituição.
+    public const string SemContaDeInstituicao = "sem-conta-de-instituicao";
 }

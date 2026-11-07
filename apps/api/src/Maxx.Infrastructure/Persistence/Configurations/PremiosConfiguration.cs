@@ -52,6 +52,9 @@ internal sealed class MedalhaConfiguration : IEntityTypeConfiguration<Medalha>
         builder.HasOne<SemestreLetivo>().WithMany().HasForeignKey(medalha => medalha.SemestreLetivoId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Bimestre>().WithMany().HasForeignKey(medalha => medalha.BimestreId).OnDelete(DeleteBehavior.Restrict);
 
+        // Duas anulações da mesma medalha ao mesmo tempo: o xmin deixa só a primeira gravar.
+        builder.Property<uint>("Versao").IsRowVersion();
+
         builder.Ignore(medalha => medalha.EstaAtiva);
     }
 }

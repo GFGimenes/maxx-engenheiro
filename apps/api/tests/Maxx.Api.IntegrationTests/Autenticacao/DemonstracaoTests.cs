@@ -9,8 +9,10 @@ using System.Text.RegularExpressions;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Application;
+using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -282,7 +284,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
     // O SQL é o do README das decisões, o que será rodado depois da apresentação.
     [Fact]
-    public async Task A_purga_do_readme_apaga_o_lote_com_os_aceites_e_mantem_o_termo_e_o_que_nao_e_do_lote()
+    public async Task A_purga_do_readme_apaga_o_lote_com_aceites_e_medalhas_e_mantem_o_termo_e_o_que_nao_e_do_lote()
     {
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
@@ -295,6 +297,36 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             await using var mudarLote = dados.CreateCommand(
                 "UPDATE usuario SET lote_da_demonstracao = 'outra-banca' WHERE nome_de_exibicao = 'Carla Dias'");
             await mudarLote.ExecuteNonQueryAsync(Ct);
+        }
+
+        // Uma medalha para um aluno do lote e outra para quem é de outro lote.
+        var renata = CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque");
+        var contaDaRenata = Usuario.CriarPeloSeed(renata, "renataA", DateTimeOffset.UtcNow);
+        Guid turma;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var cadastroDaAna = (await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == "Ana Paula", Ct)).CadastroElegivelId;
+            turma = await banco.Set<Matricula>()
+                .Where(matricula => matricula.AlunoId == cadastroDaAna)
+                .Join(banco.Set<Turma>(), matricula => matricula.TurmaId, linha => linha.Id, (_, linha) => linha)
+                .Where(linha => linha.Materia.Nome == "Banco de Dados")
+                .Select(linha => linha.Id)
+                .SingleAsync(Ct);
+            await SalvarAsync(
+                factory,
+                renata,
+                contaDaRenata,
+                new VinculoProfessor(renata, await banco.Set<Turma>().Include(linha => linha.Materia).SingleAsync(linha => linha.Id == turma, Ct)),
+                Medalhas.CatalogoDeMedalhas.M03());
+        }
+
+        foreach (var nome in new[] { "Ana Paula", "Carla Dias" })
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var aluno = await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Usuario>()
+                .SingleAsync(usuario => usuario.NomeDeExibicao == nome, Ct);
+            await scope.ServiceProvider.GetRequiredService<ConcederMedalhaHandler>().ConcederAsync(contaDaRenata.Id, turma, aluno.Id, "M03", Ct);
         }
 
         var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);
@@ -310,10 +342,11 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
         await using var depois = factory.Services.CreateAsyncScope();
         var db = depois.ServiceProvider.GetRequiredService<MaxxDbContext>();
-        var restante = await db.Set<Usuario>().SingleAsync(Ct);
+        var restante = await db.Set<Usuario>().SingleAsync(usuario => usuario.Papeis == Papeis.Aluno, Ct);
         Assert.Equal("Carla Dias", restante.NomeDeExibicao);
         Assert.Equal(restante.Id, (await db.Set<AceiteDeTermo>().SingleAsync(Ct)).UsuarioId);
-        Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(Ct));
+        Assert.Equal(restante.Id, (await db.Set<Medalha>().SingleAsync(Ct)).AlunoId);
+        Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(cadastro => cadastro.Papeis == Papeis.Aluno, Ct));
         Assert.Equal(1, await db.Set<TermoDeUso>().CountAsync(Ct));
     }
 
