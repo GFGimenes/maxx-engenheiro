@@ -21,6 +21,18 @@ const MENSAGENS = {
   "registro-simultaneo":
     "Muita gente entrou com esse nome agora. Tente de novo em instantes.",
   "chave-invalida": "Essa conta de demonstração não existe mais.",
+  // Medalhas (CodigosDaMedalha.cs)
+  "fora-do-escopo": "Essa turma não é sua neste semestre.",
+  "aluno-fora-da-turma": "Esse aluno não está nesta turma.",
+  "item-nao-encontrado": "Essa medalha não está no catálogo.",
+  "ex-aluno": "Ex-aluno não recebe medalha.",
+  "fora-do-periodo": "Não há bimestre em andamento para esta turma hoje.",
+  "item-fora-de-vigencia": "Essa medalha não está valendo agora.",
+  "item-de-outro-curso": "Essa medalha é de outro curso.",
+  "limite-atingido":
+    "Esse aluno já recebeu essa medalha o máximo de vezes no período.",
+  "medalha-nao-encontrada": "Essa medalha não existe mais.",
+  "sem-conta-de-instituicao": "Só a instituição pode fazer isso.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
   "requisicao-invalida": "Confira os dados e tente de novo.",
   "dados-invalidos": "Confira os dados e tente de novo.",

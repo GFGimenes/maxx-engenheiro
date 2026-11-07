@@ -115,6 +115,14 @@ const ICONES = {
     { d: "M12 8v4", modo: "detalhe" },
     { d: "M12 16h.01", modo: "detalhe" },
   ],
+  // Voltar no cabeçalho, entrar numa linha da lista e fechar a folha: chevron-left,
+  // chevron-right e x do Lucide.
+  voltar: [{ d: "m15 18-6-6 6-6", modo: "aberto" }],
+  avancar: [{ d: "m9 18 6-6-6-6", modo: "aberto" }],
+  fechar: [
+    { d: "M18 6 6 18", modo: "aberto" },
+    { d: "m6 6 12 12", modo: "aberto" },
+  ],
   inbox: [
     {
       d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
