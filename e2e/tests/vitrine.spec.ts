@@ -6,8 +6,9 @@ test(
   async ({ page, request }) => {
     await page.goto("/vitrine");
 
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByTestId("estado-api")).toBeVisible();
+    // Volta para o início, que manda quem não entrou para o login.
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
 
     // O texto da vitrine também não viaja no bundle.
     const scripts = await page

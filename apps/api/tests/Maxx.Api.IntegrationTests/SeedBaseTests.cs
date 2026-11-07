@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,7 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedBase(46, 0, 0, 8, 0, 1, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(46, 0, 0, 8, 0, 1, 0, 1), resultado);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
@@ -56,7 +57,7 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await FotografiaAsync(factory));
     }
 
@@ -69,7 +70,7 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
         AlterarItem("medalhas.json", "M02", item => item["pontos"] = 20);
         var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedBase(0, 1, 45, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(0, 1, 45, 0, 0, 0, 0, 0), resultado);
         var versoes = await VersoesAsync(factory);
         Assert.Equal((2, 20), versoes["M02"]);
         Assert.All(versoes.Where(par => par.Key != "M02"), par => Assert.Equal(1, par.Value.Versao));
@@ -220,6 +221,89 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
         return await db.Set<ItemCatalogoRow>().AsNoTracking()
             .ToDictionaryAsync(item => item.Codigo, item => (item.Versao, item.Pontos), Ct);
+    }
+
+    [Fact]
+    public async Task Versao_nova_do_termo_entra_e_passa_a_ser_a_vigente_sem_mexer_na_antiga()
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
+        var primeira = await TermosAsync(factory);
+
+        await File.WriteAllTextAsync(Path.Combine(Dados, "termos", "termo-de-uso.v2.md"), "Texto novo.\n", Ct);
+        var resultado = await factory.SeedBaseAsync(Ct);
+
+        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0, 1), resultado);
+        var termos = await TermosAsync(factory);
+        Assert.Equal(primeira[1], termos[1]);
+        Assert.Equal("Texto novo.", termos[2]);
+    }
+
+    [Fact]
+    public async Task Texto_de_versao_publicada_nao_muda_e_nada_e_gravado()
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
+        var antes = await TermosAsync(factory);
+
+        await File.AppendAllTextAsync(ArquivoDoTermo, "Frase acrescentada.\n", Ct);
+        await File.WriteAllTextAsync(Path.Combine(Dados, "termos", "termo-de-uso.v2.md"), "Texto novo.\n", Ct);
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
+
+        Assert.Contains("v1", falha.Message, StringComparison.Ordinal);
+        Assert.Equal(antes, await TermosAsync(factory));
+    }
+
+    [Fact]
+    public async Task Versao_publicada_sem_arquivo_e_erro()
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
+
+        File.Delete(ArquivoDoTermo);
+        await File.WriteAllTextAsync(Path.Combine(Dados, "termos", "termo-de-uso.v2.md"), "Texto novo.\n", Ct);
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
+
+        Assert.Contains("v1", falha.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Fim_de_linha_do_checkout_nao_conta_como_mudanca_do_texto()
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+        await factory.SeedBaseAsync(Ct);
+
+        var texto = await File.ReadAllTextAsync(ArquivoDoTermo, Ct);
+        var outro = texto.Contains("\r\n", StringComparison.Ordinal)
+            ? texto.ReplaceLineEndings("\n")
+            : texto.ReplaceLineEndings("\r\n");
+        await File.WriteAllTextAsync(ArquivoDoTermo, outro, Ct);
+
+        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0, 0), await factory.SeedBaseAsync(Ct));
+    }
+
+    [Theory]
+    [InlineData("termo.md")]
+    [InlineData("termo-de-uso.v0.md")]
+    [InlineData("termo-de-uso.vX.md")]
+    public async Task Arquivo_fora_do_padrao_e_recusado_antes_de_tocar_no_banco(string nome)
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+
+        await File.WriteAllTextAsync(Path.Combine(Dados, "termos", nome), "Texto.\n", Ct);
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedBaseAsync(Ct));
+
+        Assert.Contains(nome, falha.Message, StringComparison.Ordinal);
+        Assert.Empty(await TermosAsync(factory));
+    }
+
+    private string ArquivoDoTermo => Path.Combine(Dados, "termos", "termo-de-uso.v1.md");
+
+    private static async Task<Dictionary<int, string>> TermosAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        return await db.Set<TermoDeUso>().ToDictionaryAsync(termo => termo.Versao, termo => termo.Conteudo, Ct);
     }
 
     private static async Task<Guid> IdDoBimestreAsync(MaxxApiFactory factory, int numero)

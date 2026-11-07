@@ -49,6 +49,38 @@ bash design/fontes/gerar.sh
 node design/icones/gerar.js
 ```
 
+## Autenticação (passo 5)
+
+As decisões estão em `docs/decisoes/README.md`, em "Autenticação no cliente (passo 5)".
+
+| Onde                                                                          | O quê                                                                                                     |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `src/app/(publico)/`                                                          | Login, cadastro em três passos, esqueci-senha e demonstração: só para quem não entrou                     |
+| `src/app/(app)/`                                                              | O que exige sessão; por enquanto, o início provisório em `/`                                              |
+| `src/app/status.tsx`, `src/app/redefinir-senha.tsx`                           | Fora dos grupos, com ou sem sessão                                                                        |
+| `src/sessao/`                                                                 | `GerenciadorDeSessao` (access em memória, refresh serializado, fila entre abas na web) e `SessaoProvider` |
+| `src/api/erros.ts`, `src/api/FalhaDaApi.ts`                                   | Código da API para mensagem amigável                                                                      |
+| `src/autenticacao/`, `src/cadastro/`, `src/recuperacao/`, `src/demonstracao/` | As telas e as regras de cada fluxo                                                                        |
+| `src/termo/`                                                                  | O texto do termo vigente, lido da API                                                                     |
+| `src/marca/`                                                                  | O logo em vetor, gerado de `design/assets/maxx-ouro.svg`                                                  |
+
+### e2e
+
+Contra o compose local de pé, com o mundo de demonstração:
+
+```bash
+docker compose run --rm seeder seed demo
+npm test -w @maxx/e2e -- --grep-invert @demo
+
+# A demonstração, com a flag ligada por cima e um lote descartável:
+MAXX_DEMO_LOTE=e2e-local docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
+npm test -w @maxx/e2e -- --grep @demo
+docker compose up -d   # desliga de novo
+```
+
+Os testes criam linhas no cadastro elegível e alunos de demonstração no banco local. Os de
+demonstração saem com a purga de `docs/decisoes/README.md`, com o lote usado.
+
 ## Nativo
 
 O identificador do app é `tech.gimenes.maxx`, no Android e no iOS. `npx expo prebuild` gera

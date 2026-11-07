@@ -8,7 +8,7 @@ internal sealed class CopiaDeDados : IDisposable
     public CopiaDeDados()
     {
         Diretorio = Path.Combine(Path.GetTempPath(), $"maxx-dados-{Guid.NewGuid():N}");
-        foreach (var arquivo in Directory.GetFiles(Repositorio.DiretorioDeDados, "*.json", SearchOption.AllDirectories))
+        foreach (var arquivo in Directory.GetFiles(Repositorio.DiretorioDeDados, "*", SearchOption.AllDirectories))
         {
             var copia = Path.Combine(Diretorio, Path.GetRelativePath(Repositorio.DiretorioDeDados, arquivo));
             Directory.CreateDirectory(Path.GetDirectoryName(copia)!);

@@ -8,6 +8,7 @@ namespace Maxx.Domain.Identidade;
 public sealed class Usuario
 {
     private readonly List<PrefixoReservado> _prefixosReservados = [];
+    private readonly List<AceiteDeTermo> _aceitesDeTermo = [];
 
     // Para o EF Core materializar do banco.
     private Usuario()
@@ -71,6 +72,8 @@ public sealed class Usuario
 
     // Todo prefixo que o usuário já teve, o atual inclusive. Nenhum volta a ser de outro.
     public IReadOnlyCollection<PrefixoReservado> PrefixosReservados => _prefixosReservados.AsReadOnly();
+
+    public IReadOnlyCollection<AceiteDeTermo> AceitesDeTermo => _aceitesDeTermo.AsReadOnly();
 
     public static Usuario CadastrarAluno(
         CadastroElegivel cadastro, Curso curso, string nomeDeExibicao, string prefixo, string hashDaSenha, DateTimeOffset agora)
@@ -147,6 +150,17 @@ public sealed class Usuario
 
     // Primeiro acesso e recuperação de senha. A política já passou sobre a senha em claro.
     public void DefinirSenha(string hashDaSenha) => HashDaSenha = Texto.Obrigatorio(hashDaSenha, "O hash da senha");
+
+    // Uma vez por versão: o primeiro aceite é o que vale como registro.
+    public void AceitarTermo(TermoDeUso termo, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(termo);
+
+        if (_aceitesDeTermo.All(aceite => aceite.Versao != termo.Versao))
+        {
+            _aceitesDeTermo.Add(new AceiteDeTermo(Id, termo.Versao, agora));
+        }
+    }
 
     public bool PossuiPrefixo(string prefixo) =>
         _prefixosReservados.Any(reservado => PrefixoDeArroba.Mesmo(reservado.Prefixo, prefixo));

@@ -171,6 +171,7 @@ public sealed class AutorizacaoTests(PostgresFixture postgres) : IClassFixture<P
                 "/api/v1/auth/recuperacao",
                 "/api/v1/auth/recuperacao/confirmar",
                 "/api/v1/auth/refresh",
+                "/api/v1/termo-de-uso",
             ],
             rotas.Where(rota => rota.Metadata.GetMetadata<IAllowAnonymous>() is not null)
                 .Select(rota => rota.RoutePattern.RawText!.TrimEnd('/'))

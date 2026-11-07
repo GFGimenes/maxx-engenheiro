@@ -10,6 +10,7 @@ using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using static Maxx.Api.IntegrationTests.BancoDeTeste;
 
 namespace Maxx.Api.IntegrationTests.Autenticacao;
@@ -23,10 +24,10 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
     private static readonly Uri _sugestao = new("/api/v1/auth/cadastro/sugestao", UriKind.Relative);
     private static readonly Uri _disponibilidade = new("/api/v1/auth/cadastro/disponibilidade", UriKind.Relative);
     private static readonly Uri _cadastro = new("/api/v1/auth/cadastro", UriKind.Relative);
-    private static readonly CadastroRequest _ana = new("20260101", "ana.souza@al.unieduk.com.br", "Ana", "anaSouza", _senha);
-    private static readonly CadastroRequest _bruno = new("20260102", "bruno.lima@al.unieduk.com.br", "Bruno", "brunoLima", _senha);
-    private static readonly CadastroRequest _maria = new("20260103", "maria.silva@al.unieduk.com.br", "Maria", "mariaS", _senha);
-    private static readonly CadastroRequest _outraMaria = new("20260104", "maria.c.silva@al.unieduk.com.br", "Maria C.", "mariaC", _senha);
+    private static readonly CadastroRequest _ana = new("20260101", "ana.souza@al.unieduk.com.br", "Ana", "anaSouza", _senha, VersaoDoTermo);
+    private static readonly CadastroRequest _bruno = new("20260102", "bruno.lima@al.unieduk.com.br", "Bruno", "brunoLima", _senha, VersaoDoTermo);
+    private static readonly CadastroRequest _maria = new("20260103", "maria.silva@al.unieduk.com.br", "Maria", "mariaS", _senha, VersaoDoTermo);
+    private static readonly CadastroRequest _outraMaria = new("20260104", "maria.c.silva@al.unieduk.com.br", "Maria C.", "mariaC", _senha, VersaoDoTermo);
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -322,6 +323,72 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
         Assert.Equal(1, await db.Set<FamiliaDeSessao>().CountAsync(Ct));
     }
 
+    [Fact]
+    public async Task Cadastro_grava_quem_aceitou_qual_versao_e_quando()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+        var antes = DateTimeOffset.UtcNow;
+
+        await CadastrarAsync(client, _ana);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var usuario = await db.Set<Usuario>().Include(usuario => usuario.AceitesDeTermo).SingleAsync(Ct);
+        var aceite = Assert.Single(usuario.AceitesDeTermo);
+        Assert.Equal(VersaoDoTermo, aceite.Versao);
+        Assert.InRange(aceite.AceitoEm, antes, DateTimeOffset.UtcNow);
+    }
+
+    [Fact]
+    public async Task Cadastro_sem_a_versao_do_termo_e_recusado_na_borda_e_a_conta_nao_nasce()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            _cadastro, new { ra = _ana.Ra, email = _ana.Email, nomeDeExibicao = "Ana", prefixo = "anaSouza", senha = _senha }, Ct);
+
+        await AssertRecusaAsync(response, HttpStatusCode.BadRequest, "dados-invalidos");
+        await AssertSemContaAsync(factory);
+    }
+
+    [Fact]
+    public async Task Aceite_de_versao_que_nao_e_a_vigente_e_recusado_e_a_conta_nao_nasce()
+    {
+        await using var factory = await MundoAsync();
+        await SalvarAsync(factory, new TermoDeUso(VersaoDoTermo + 1, "Texto novo.", DateTimeOffset.UtcNow));
+        using var client = factory.CreateClient();
+
+        var antiga = await client.PostAsJsonAsync(_cadastro, _ana, Ct);
+        var futura = await client.PostAsJsonAsync(_cadastro, _ana with { VersaoDoTermo = VersaoDoTermo + 2 }, Ct);
+
+        await AssertRecusaAsync(antiga, HttpStatusCode.Conflict, "termo-desatualizado");
+        await AssertRecusaAsync(futura, HttpStatusCode.Conflict, "termo-desatualizado");
+        await AssertSemContaAsync(factory);
+    }
+
+    [Fact]
+    public async Task O_banco_recusa_aceite_de_versao_que_nao_existe_e_versao_aceita_nao_sai()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+        await CadastrarAsync(client, _ana);
+
+        AssertChaveEstrangeira(
+            await FalhaNoSqlAsync(factory, "UPDATE aceite_de_termo SET versao = 99"), "fk_aceite_de_termo_termo_de_uso_versao");
+        var apagar = await FalhaNoSqlAsync(factory, "DELETE FROM termo_de_uso");
+        Assert.Equal(PostgresErrorCodes.RestrictViolation, apagar.SqlState);
+        Assert.Equal("fk_aceite_de_termo_termo_de_uso_versao", apagar.ConstraintName);
+    }
+
+    private static async Task AssertSemContaAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        Assert.Equal(0, await db.Set<Usuario>().CountAsync(Ct));
+        Assert.Equal(0, await db.Set<AceiteDeTermo>().CountAsync(Ct));
+    }
 
     private async Task<MaxxApiFactory> MundoAsync()
     {
@@ -329,6 +396,7 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
         var cc = new Curso("Ciência da Computação", "CC", 8);
         await SalvarAsync(
             factory,
+            TermoVigente(),
             cc,
             CadastroElegivel.Aluno(_ana.Ra, _ana.Email, "Ana Souza", cc, 3),
             CadastroElegivel.Aluno(_bruno.Ra, _bruno.Email, "Bruno Lima", cc, 3),

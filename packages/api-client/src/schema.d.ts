@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/termo-de-uso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetTermoDeUso"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -238,6 +254,8 @@ export interface components {
             nomeDeExibicao: string;
             prefixo: string;
             senha: string;
+            /** Format: int32 */
+            versaoDoTermo: number;
         };
         ConfirmacaoRequest: {
             token: string;
@@ -306,6 +324,8 @@ export interface components {
         RegistroDeDemonstracaoRequest: {
             nome: string;
             curso: string;
+            /** Format: int32 */
+            versaoDoTermo: number;
         };
         RegistroDeDemonstracaoResponse: {
             chaveDoDispositivo: string;
@@ -323,6 +343,11 @@ export interface components {
             prefixo: string;
             sufixo: string;
             arroba: string;
+        };
+        TermoDeUsoResponse: {
+            /** Format: int32 */
+            versao: number;
+            texto: string;
         };
     };
     responses: never;
@@ -402,6 +427,35 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetTermoDeUso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TermoDeUsoResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -3,6 +3,7 @@ using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Cadastro;
 using Maxx.Application.Autenticacao.Login;
 using Maxx.Application.Autenticacao.Recuperacao;
+using Maxx.Application.Autenticacao.Termos;
 using Maxx.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +21,7 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         builder.Services.AddScoped<SessaoService>();
         builder.Services.AddScoped<SugestaoDeArroba>();
+        builder.Services.AddScoped<TermoDeUsoHandler>();
         builder.Services.AddScoped<CadastroHandler>();
         builder.Services.AddScoped<LoginHandler>();
         builder.Services.AddScoped<RefreshHandler>();

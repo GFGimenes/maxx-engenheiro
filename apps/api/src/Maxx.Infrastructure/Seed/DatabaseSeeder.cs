@@ -1,4 +1,5 @@
 using Maxx.Domain.Academico;
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,7 @@ public sealed partial class DatabaseSeeder(
         }
 
         var calendario = CalendarioReader.Ler(Path.Combine(Dados, "calendario"));
+        var termos = TermoDeUsoReader.Ler(Path.Combine(Dados, "termos"));
 
         await using var transacao = await AbrirComLockAsync(cancellationToken);
 
@@ -52,12 +54,13 @@ public sealed partial class DatabaseSeeder(
 
         var (itensNovos, itensAtualizados, itensInalterados) = await GravarItensAsync(catalogo.Catalogo!, cancellationToken);
         var (anosNovos, anosAtualizados) = await GravarCalendarioAsync(calendario, cancellationToken);
+        var termosNovos = await GravarTermosAsync(termos, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await transacao.CommitAsync(cancellationToken);
 
         var resultado = new ResultadoDoSeedBase(
-            itensNovos, itensAtualizados, itensInalterados, familiasNovas, familiasAtualizadas, anosNovos, anosAtualizados);
+            itensNovos, itensAtualizados, itensInalterados, familiasNovas, familiasAtualizadas, anosNovos, anosAtualizados, termosNovos);
         LogDone(logger, PerfilDeSeed.Base, resultado);
         return resultado;
     }
@@ -166,6 +169,36 @@ public sealed partial class DatabaseSeeder(
         }
 
         return (novos, atualizados);
+    }
+
+    // Versão publicada não muda nem sai: alguém pode tê-la aceitado. Texto novo é arquivo novo,
+    // com a versão seguinte.
+    private async Task<int> GravarTermosAsync(IReadOnlyDictionary<int, string> termos, CancellationToken cancellationToken)
+    {
+        var existentes = await db.Set<TermoDeUso>().ToDictionaryAsync(termo => termo.Versao, cancellationToken);
+
+        foreach (var (versao, atual) in existentes)
+        {
+            if (!termos.TryGetValue(versao, out var noArquivo))
+            {
+                throw new SeedException($"Termo de uso v{versao} no banco e ausente dos arquivos. Nada foi gravado.");
+            }
+
+            if (noArquivo != atual.Conteudo)
+            {
+                throw new SeedException(
+                    $"O texto do termo de uso v{versao} mudou, e versão publicada não muda. Nada foi gravado. " +
+                    "Publique o texto novo como a versão seguinte.");
+            }
+        }
+
+        var novos = termos.Where(termo => !existentes.ContainsKey(termo.Key)).ToList();
+        foreach (var (versao, conteudo) in novos)
+        {
+            db.Add(new TermoDeUso(versao, conteudo, relogio.GetUtcNow()));
+        }
+
+        return novos.Count;
     }
 
     // O arquivo é a fonte: o que está no banco e sumiu do arquivo é erro, não remoção.

@@ -16,6 +16,13 @@ public static class CodigosDeRecusa
 
     public const string NomeDeExibicaoInvalido = "nome-de-exibicao-invalido";
 
+    // Nenhuma versão do termo de uso publicada: o seed base não rodou.
+    public const string TermoIndisponivel = "termo-indisponivel";
+
+    // O aceite é de uma versão que não é a vigente: o cliente busca o texto novo e pede o
+    // aceite de novo.
+    public const string TermoDesatualizado = "termo-desatualizado";
+
     // Usuário inexistente, conta ainda sem senha, senha errada, professor por RA: a mesma
     // resposta, para não dizer quem tem conta (ADR 0006).
     public const string CredenciaisInvalidas = "credenciais-invalidas";

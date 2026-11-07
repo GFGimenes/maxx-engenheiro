@@ -26,7 +26,7 @@ public sealed class LoginTests(PostgresFixture postgres) : IClassFixture<Postgre
     private static readonly Uri _refresh = new("/api/v1/auth/refresh", UriKind.Relative);
     private static readonly Uri _logout = new("/api/v1/auth/logout", UriKind.Relative);
     private static readonly Uri _eu = new("/api/v1/eu", UriKind.Relative);
-    private static readonly CadastroRequest _ana = new("20260101", "ana.souza@al.unieduk.com.br", "Ana", "anaSouza", _senha);
+    private static readonly CadastroRequest _ana = new("20260101", "ana.souza@al.unieduk.com.br", "Ana", "anaSouza", _senha, VersaoDoTermo);
     private const string _emailDaRenata = "renata@prof.unieduk.com.br";
     private const string _raDaRenata = "PROF-1";
     private const string _emailDaSecretaria = "secretaria@unieduk.com.br";
@@ -346,6 +346,7 @@ public sealed class LoginTests(PostgresFixture postgres) : IClassFixture<Postgre
         contaDaRenata.DefinirSenha(new Argon2idSenhaHasher().Hash(_senhaDaRenata));
         await SalvarAsync(
             factory,
+            TermoVigente(),
             cc,
             CadastroElegivel.Aluno(_ana.Ra, _ana.Email, "Ana Souza", cc, 3),
             renata,

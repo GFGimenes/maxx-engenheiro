@@ -10,6 +10,8 @@ interface FilterChipProps {
   selected: boolean;
   onPress: () => void;
   disabled?: boolean;
+  // `radio` quando o grupo é de escolha única, como o curso da demonstração.
+  role?: "checkbox" | "radio";
 }
 
 export function FilterChip({
@@ -17,6 +19,7 @@ export function FilterChip({
   selected,
   onPress,
   disabled = false,
+  role = "checkbox",
 }: FilterChipProps) {
   const { colors } = useTheme();
   const { focusVisible, focusProps } = useFocusRing();
@@ -33,7 +36,7 @@ export function FilterChip({
 
   return (
     <Pressable
-      role="checkbox"
+      role={role}
       aria-checked={selected}
       aria-label={label}
       disabled={disabled}

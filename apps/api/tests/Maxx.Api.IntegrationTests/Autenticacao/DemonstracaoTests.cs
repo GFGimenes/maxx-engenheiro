@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Application;
@@ -13,6 +14,7 @@ using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using static Maxx.Api.IntegrationTests.BancoDeTeste;
 
 namespace Maxx.Api.IntegrationTests.Autenticacao;
@@ -38,11 +40,11 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
         var inexistenteGet = await DescreverAsync(await client.GetAsync(new Uri("/api/v1/nada-aqui", UriKind.Relative), Ct));
         var inexistentePost = await DescreverAsync(
-            await client.PostAsJsonAsync(new Uri("/api/v1/nada-aqui", UriKind.Relative), new { nome = "Ana", curso = "CC" }, Ct));
+            await client.PostAsJsonAsync(new Uri("/api/v1/nada-aqui", UriKind.Relative), new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct));
 
         Assert.StartsWith("404", inexistenteGet, StringComparison.Ordinal);
         Assert.Equal(inexistenteGet, await DescreverAsync(await client.GetAsync(_demo, Ct)));
-        Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC" }, Ct)));
+        Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
         Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_entrar, new { chaveDoDispositivo = "x" }, Ct)));
     }
 
@@ -92,7 +94,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC" }, Ct);
+        var response = await client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var registro = (await response.Content.ReadFromJsonAsync<RegistroDeDemonstracaoResponse>(Ct))!;
@@ -146,7 +148,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         using var client = factory.CreateClient();
 
         var respostas = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
-            client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC" }, Ct)));
+            client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
 
         Assert.All(respostas, response => Assert.Equal(HttpStatusCode.Created, response.StatusCode));
         await using var scope = factory.Services.CreateAsyncScope();
@@ -163,7 +165,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             provedor => new GravacaoSempreRecusada(provedor.GetRequiredService<MaxxDbContext>(), tentados)));
         using var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC" }, Ct);
+        var response = await client.PostAsJsonAsync(_alunos, new { nome = "Ana Paula", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct);
 
         await AssertRecusaAsync(response, HttpStatusCode.Conflict, "registro-simultaneo");
         Assert.Equal(
@@ -183,7 +185,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
 
-        await AssertRecusaAsync(await client.PostAsJsonAsync(_alunos, new { nome, curso }, Ct), status, codigo);
+        await AssertRecusaAsync(await client.PostAsJsonAsync(_alunos, new { nome, curso, versaoDoTermo = VersaoDoTermo }, Ct), status, codigo);
     }
 
     [Fact]
@@ -191,7 +193,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
     {
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
-        using var pedido = new HttpRequestMessage(HttpMethod.Post, _alunos) { Content = JsonContent.Create(new { nome = "Ana", curso = "CC" }) };
+        using var pedido = new HttpRequestMessage(HttpMethod.Post, _alunos) { Content = JsonContent.Create(new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }) };
         pedido.Headers.Add(SessaoHttp.CabecalhoDoCliente, SessaoHttp.ClienteWeb);
 
         var response = await client.SendAsync(pedido, Ct);
@@ -239,6 +241,82 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             "ck_usuario_demonstracao");
     }
 
+    [Fact]
+    public async Task Registro_grava_o_aceite_da_versao_vigente_e_a_volta_nao_pede_de_novo()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+
+        var registro = await RegistrarAsync(client, "Ana Paula");
+        await SalvarAsync(factory, new TermoDeUso(VersaoDoTermo + 1, "Texto novo.", DateTimeOffset.UtcNow));
+        var volta = await client.PostAsJsonAsync(_entrar, new { chaveDoDispositivo = registro.ChaveDoDispositivo }, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, volta.StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var usuario = await db.Set<Usuario>().Include(usuario => usuario.AceitesDeTermo).SingleAsync(Ct);
+        Assert.Equal(VersaoDoTermo, Assert.Single(usuario.AceitesDeTermo).Versao);
+    }
+
+    [Fact]
+    public async Task Registro_sem_a_versao_ou_com_versao_antiga_nao_cria_aluno()
+    {
+        await using var factory = await MundoAsync();
+        await SalvarAsync(factory, new TermoDeUso(VersaoDoTermo + 1, "Texto novo.", DateTimeOffset.UtcNow));
+        using var client = factory.CreateClient();
+
+        await AssertRecusaAsync(
+            await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC" }, Ct),
+            HttpStatusCode.BadRequest,
+            "dados-invalidos");
+        await AssertRecusaAsync(
+            await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct),
+            HttpStatusCode.Conflict,
+            "termo-desatualizado");
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        Assert.Equal(0, await db.Set<Usuario>().CountAsync(Ct));
+        Assert.Equal(0, await db.Set<CadastroElegivel>().CountAsync(Ct));
+    }
+
+    // O SQL é o do README das decisões, o que será rodado depois da apresentação.
+    [Fact]
+    public async Task A_purga_do_readme_apaga_o_lote_com_os_aceites_e_mantem_o_termo_e_o_que_nao_e_do_lote()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+        await RegistrarAsync(client, "Ana Paula");
+        await RegistrarAsync(client, "Bruno Lima");
+        await RegistrarAsync(client, "Carla Dias");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dados = scope.ServiceProvider.GetRequiredService<NpgsqlDataSource>();
+            await using var mudarLote = dados.CreateCommand(
+                "UPDATE usuario SET lote_da_demonstracao = 'outra-banca' WHERE nome_de_exibicao = 'Carla Dias'");
+            await mudarLote.ExecuteNonQueryAsync(Ct);
+        }
+
+        var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);
+        var purga = Regex.Match(readme, @"```sql\s+(BEGIN;.*?COMMIT;)\s+```", RegexOptions.Singleline, TimeSpan.FromSeconds(5));
+        Assert.True(purga.Success);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dados = scope.ServiceProvider.GetRequiredService<NpgsqlDataSource>();
+            await using var comando = dados.CreateCommand(purga.Groups[1].Value.Replace(":'lote'", $"'{_lote}'", StringComparison.Ordinal));
+            await comando.ExecuteNonQueryAsync(Ct);
+        }
+
+        await using var depois = factory.Services.CreateAsyncScope();
+        var db = depois.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var restante = await db.Set<Usuario>().SingleAsync(Ct);
+        Assert.Equal("Carla Dias", restante.NomeDeExibicao);
+        Assert.Equal(restante.Id, (await db.Set<AceiteDeTermo>().SingleAsync(Ct)).UsuarioId);
+        Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(Ct));
+        Assert.Equal(1, await db.Set<TermoDeUso>().CountAsync(Ct));
+    }
+
     private async Task<MaxxApiFactory> MundoAsync(Action<IServiceCollection>? servicos = null)
     {
         var factory = new MaxxApiFactory(
@@ -257,6 +335,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         var contabilidade = new Materia(adm, "Contabilidade");
         await SalvarAsync(
             factory,
+            TermoVigente(),
             anterior,
             atual,
             cc,
@@ -285,7 +364,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
     private static async Task<RegistroDeDemonstracaoResponse> RegistrarAsync(HttpClient client, string nome)
     {
-        var response = await client.PostAsJsonAsync(_alunos, new { nome, curso = "CC" }, Ct);
+        var response = await client.PostAsJsonAsync(_alunos, new { nome, curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<RegistroDeDemonstracaoResponse>(Ct))!;
     }

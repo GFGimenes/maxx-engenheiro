@@ -114,7 +114,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedBaseAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedBase(0, 0, 46, 0, 0, 0, 0, 0), resultado);
     }
 
     [Fact]
