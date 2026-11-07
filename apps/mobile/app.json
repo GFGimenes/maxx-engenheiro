@@ -39,7 +39,8 @@
             "backgroundColor": "#06142A"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "scheme": "maxx"
   }
