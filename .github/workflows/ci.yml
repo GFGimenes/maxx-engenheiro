@@ -107,7 +107,22 @@ jobs:
       - name: Seed demo
         run: docker compose run --rm seeder seed demo
       - run: npx -w @maxx/e2e playwright install --with-deps chromium
-      - run: npm test -w @maxx/e2e
+      - name: e2e com a demonstração desligada, como em produção
+        run: npm test -w @maxx/e2e -- --grep-invert @demo
+      # A mesma pilha com o docker-compose.demo.yml por cima, como na apresentação: só a
+      # API muda, e o lote é descartável, como a chave.
+      - name: Liga a demonstração
+        run: |
+          sed -i "s|^MAXX_DEMO_LOTE=.*|MAXX_DEMO_LOTE=e2e-ci-${{ github.run_id }}|" .env
+          docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d
+          for i in $(seq 1 60); do
+            curl -sf http://localhost/api/v1/demo > /dev/null && exit 0
+            sleep 2
+          done
+          echo "A demonstração não ficou pronta a tempo."
+          exit 1
+      - name: e2e da demonstração
+        run: npm test -w @maxx/e2e -- --grep @demo
       - name: Logs do compose
         if: failure()
         run: docker compose logs --no-color

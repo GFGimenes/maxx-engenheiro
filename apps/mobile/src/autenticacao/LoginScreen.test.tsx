@@ -26,12 +26,24 @@ function json(status: number, corpo: unknown) {
   });
 }
 
+// A API simulada: o login responde o que cada teste mandar; a demonstração, 404 (flag
+// desligada), salvo quando o teste a liga.
+let login: jest.Mock<Promise<Response>, [Request]>;
+let demo: jest.Mock<Promise<Response>, [Request]>;
 let api: jest.Mock<Promise<Response>, [Request]>;
 let gerenciador: GerenciadorDeSessao;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  api = jest.fn();
+  login = jest.fn();
+  demo = jest.fn(
+    async (_pedido: Request) => new Response(null, { status: 404 }),
+  );
+  api = jest.fn((pedido: Request) =>
+    new URL(pedido.url).pathname === "/api/v1/demo"
+      ? demo(pedido)
+      : login(pedido),
+  );
   gerenciador = new GerenciadorDeSessao({
     baseUrl: BASE,
     web: false,
@@ -106,16 +118,16 @@ test("campos vazios são apontados no próprio campo, sem ir à API", async () =
 
   expect(screen.getByText("Informe o RA ou o e-mail.")).toBeTruthy();
   expect(screen.getByText("Informe a senha.")).toBeTruthy();
-  expect(api).not.toHaveBeenCalled();
+  expect(login).not.toHaveBeenCalled();
 });
 
 test("entra com o identificador sem espaços e abre a sessão", async () => {
-  api.mockResolvedValue(json(200, sessao));
+  login.mockResolvedValue(json(200, sessao));
   await renderizar();
 
   await preencherEEntrar(" 2023001 ", "senha-boa-123");
 
-  const pedido = api.mock.calls[0]![0];
+  const pedido = login.mock.calls[0]![0];
   expect(new URL(pedido.url).pathname).toBe("/api/v1/auth/login");
   expect(await pedido.json()).toEqual({
     identificador: "2023001",
@@ -125,7 +137,7 @@ test("entra com o identificador sem espaços e abre a sessão", async () => {
 });
 
 test("credencial errada aparece no campo da senha, com a mensagem amigável", async () => {
-  api.mockResolvedValue(json(401, { codigo: "credenciais-invalidas" }));
+  login.mockResolvedValue(json(401, { codigo: "credenciais-invalidas" }));
   await renderizar();
 
   await preencherEEntrar("2023001", "senha-errada");
@@ -136,7 +148,7 @@ test("credencial errada aparece no campo da senha, com a mensagem amigável", as
 });
 
 test("muitas tentativas aparecem abaixo do botão", async () => {
-  api.mockResolvedValue(json(429, { codigo: "limite-de-taxa" }));
+  login.mockResolvedValue(json(429, { codigo: "limite-de-taxa" }));
   await renderizar();
 
   await preencherEEntrar("2023001", "senha-boa-123");
@@ -148,7 +160,7 @@ test("muitas tentativas aparecem abaixo do botão", async () => {
 });
 
 test("sem rede, diz que está sem conexão em vez de travar", async () => {
-  api.mockRejectedValue(new TypeError("Network request failed"));
+  login.mockRejectedValue(new TypeError("Network request failed"));
   await renderizar();
 
   await preencherEEntrar("2023001", "senha-boa-123");
@@ -169,4 +181,26 @@ test("Cadastrar e Esqueci minha senha levam às rotas deles", async () => {
 
   expect(mockRoteador.replace).toHaveBeenCalledWith("/cadastro");
   expect(mockRoteador.push).toHaveBeenCalledWith("/esqueci-senha");
+});
+
+test("com a demonstração desligada, o botão dela não aparece", async () => {
+  await renderizar();
+
+  expect(demo).toHaveBeenCalled();
+  expect(
+    screen.queryByRole("button", { name: "Entrar na demonstração" }),
+  ).toBeNull();
+});
+
+test("com a demonstração ligada, o botão aparece e leva a ela", async () => {
+  demo.mockResolvedValue(
+    json(200, { cursos: [{ sigla: "CC", nome: "Ciência da Computação" }] }),
+  );
+  await renderizar();
+
+  await fireEvent.press(
+    await screen.findByRole("button", { name: "Entrar na demonstração" }),
+  );
+
+  expect(mockRoteador.push).toHaveBeenCalledWith("/demonstracao");
 });

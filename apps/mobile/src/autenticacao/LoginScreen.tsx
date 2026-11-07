@@ -8,6 +8,7 @@ import { codigoDoErro, mensagemDaFalha, mensagemDeErro } from "../api/erros";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
 import { TextLink } from "../components/TextLink";
+import { useDemonstracao } from "../demonstracao/useDemonstracao";
 import { useSessao } from "../sessao/SessaoProvider";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
@@ -35,6 +36,8 @@ export function LoginScreen() {
   const [senha, setSenha] = useState("");
   const [vazios, setVazios] = useState({ identificador: false, senha: false });
   const [falha, setFalha] = useState<Falha | null>(null);
+  // Só com a flag ligada a API responde, e só então o botão aparece.
+  const demonstracao = useDemonstracao();
 
   const entrar = useMutation({
     mutationFn: async () => {
@@ -124,6 +127,14 @@ export function LoginScreen() {
           Primeiro acesso? Aluno cria a conta em Cadastrar. Professor define a
           senha em Esqueci minha senha.
         </Text>
+
+        {demonstracao.data && (
+          <Button
+            label="Entrar na demonstração"
+            variant="secondary"
+            onPress={() => router.push("/demonstracao")}
+          />
+        )}
       </View>
     </TelaDeAutenticacao>
   );
