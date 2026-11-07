@@ -83,5 +83,18 @@ export async function novaConta(request: APIRequestContext): Promise<Aluno> {
   return aluno;
 }
 
+// As versões do termo que o aluno aceitou, lidas do banco.
+export function versoesAceitas(aluno: Aluno): number[] {
+  return sql(
+    `SELECT a.versao FROM aceite_de_termo a
+     JOIN usuario u ON u.id = a.usuario_id
+     JOIN cadastro_elegivel c ON c.id = u.cadastro_elegivel_id
+     WHERE c.ra = '${aluno.ra}' ORDER BY a.versao;`,
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map(Number);
+}
+
 // Como o arroba aparece: o sufixo é o do curso.
 export const arroba = (aluno: Aluno) => `@${aluno.prefixo}-CC`;
