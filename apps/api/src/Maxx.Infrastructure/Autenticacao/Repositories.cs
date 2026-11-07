@@ -91,6 +91,9 @@ internal sealed class RecuperacaoDeSenhaRepository(MaxxDbContext db) : IRecupera
 {
     public void Adicionar(RecuperacaoDeSenha recuperacao) => db.Add(recuperacao);
 
+    public Task<RecuperacaoDeSenha?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<RecuperacaoDeSenha>().SingleOrDefaultAsync(recuperacao => recuperacao.Id == id, cancellationToken);
+
     public Task<RecuperacaoDeSenha?> BuscarPorHashAsync(string hash, CancellationToken cancellationToken) =>
         db.Set<RecuperacaoDeSenha>().SingleOrDefaultAsync(recuperacao => recuperacao.Hash == hash, cancellationToken);
 

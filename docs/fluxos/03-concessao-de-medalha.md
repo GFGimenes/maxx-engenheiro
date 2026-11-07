@@ -2,7 +2,8 @@
 
 Medalha é concessão humana do professor, sobre fato de nota ou presença. A concessão é
 síncrona; as conquistas que ela pode fechar são avaliadas depois, no worker. A
-concessão chega no passo 6; o avaliador de conquistas, no passo 9.
+concessão chega no passo 6; o avaliador de conquistas, no passo 9. A seção "No passo 6", no
+fim, diz o que já roda e o que ainda é desenho.
 
 ```mermaid
 sequenceDiagram
@@ -94,3 +95,23 @@ sequenceDiagram
 As conquistas de gatilho `fechamentoDePeriodo` não disparam pela concessão: elas rodam
 no fechamento da instância e são reavaliadas quando um fato do período chega depois do
 fechamento, até o congelamento do ranking do semestre (`regras-conquista.md` 5).
+
+## No passo 6
+
+O que já roda: a concessão pela lista da turma, a anulação por comando administrativo, a
+notificação de medalha recebida e o recálculo de raridade no worker. Ainda é desenho: a
+reavaliação de conquistas (passo 9) e o recálculo do ranking (passo 11). Por isso a
+concessão e a anulação enfileiram hoje só `notificar-medalha-recebida` (a concessão) e
+`recalcular-raridade` (as duas). Decisões em `decisoes/README.md`, Medalhas, fila e
+worker (passo 6).
+
+| Rota | Sucesso | Recusa |
+|---|---|---|
+| `GET /api/v1/professor/turmas` | 200, as turmas do semestre vigente do professor | 403 `sem-permissao` para quem não é professor |
+| `GET /api/v1/professor/turmas/{turmaId}/alunos` | 200, os alunos com conta e não ex-alunos, com as medalhas ativas na turma | 403 `fora-do-escopo` |
+| `GET /api/v1/professor/medalhas` | 200, as medalhas do catálogo vigentes hoje | 403 `sem-permissao` |
+| `POST /api/v1/professor/turmas/{turmaId}/medalhas` `{alunoId, item}` | 201, com tier, pontos e ocorrência | 403 `fora-do-escopo`; 404 `aluno-fora-da-turma`, `item-nao-encontrado`; 409 `ex-aluno`, `fora-do-periodo`, `item-fora-de-vigencia`, `item-de-outro-curso`, `limite-atingido`; 400 `dados-invalidos` |
+| `GET /api/v1/eu/premios` | 200, o catálogo do próprio aluno com critério, raridade e o que ele obteve | 403 para quem não é aluno |
+
+A anulação é o comando `Maxx.Api anular-medalha <id> --instituicao <e-mail>`, que sai com 0
+quando a medalha fica anulada ou já estava, 1 quando recusa e 2 quando o uso está errado.

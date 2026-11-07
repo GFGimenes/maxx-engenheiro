@@ -5,7 +5,7 @@ Status: aceito · 01/11/2026
 ## Contexto
 
 O cliente Expo exportado como web estático é o acesso principal da fase 1: na
-apresentação, a banca escaneia um QR code e abre o aplicativo no navegador. A API é
+avaliação remota, cada avaliador abre o aplicativo no navegador, pela própria conexão. A API é
 ASP.NET Core, e na web o refresh token vive em cookie `HttpOnly` emitido pela API. Duas
 topologias eram possíveis, e a escolha determina CORS, cookie e CSP de uma vez.
 

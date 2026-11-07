@@ -7,15 +7,10 @@ public sealed record MensagemDeEmail(string Para, string Assunto, string Texto)
     public override string ToString() => $"MensagemDeEmail {{ Assunto = {Assunto} }}";
 }
 
-// Entrega um e-mail ao servidor SMTP. Chamado só pelo envio em segundo plano.
+// Entrega um e-mail ao servidor SMTP. Chamado só por handler de trabalho, no worker: quem
+// pede o e-mail enfileira um trabalho na fila do Postgres e responde (decisoes/README.md,
+// Envio de e-mail). Falha lança, e o trabalho volta com recuo.
 public interface IEmailSender
 {
     Task EnviarAsync(MensagemDeEmail mensagem, CancellationToken cancellationToken);
-}
-
-// Envio fora da requisição: quem pede só enfileira e responde. Fila em memória até a fila
-// do Postgres do passo 6; perder um e-mail num restart é aceito (decisoes/README.md).
-public interface IFilaDeEmail
-{
-    void Enfileirar(MensagemDeEmail mensagem);
 }

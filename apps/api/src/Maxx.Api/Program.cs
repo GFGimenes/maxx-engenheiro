@@ -5,8 +5,11 @@ using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
+using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
+using Maxx.Api.Premios;
 using Maxx.Infrastructure;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 
@@ -16,11 +19,33 @@ var isMigrate = args is ["migrate", ..];
 // `Maxx.Api seed <base|demo>` grava os dados de data/ e sai. Idempotente.
 var isSeed = args is ["seed", ..];
 
+// `Maxx.Api anular-medalha <id> --instituicao <e-mail>` anula uma medalha e sai: a anulação
+// da fase 1, por comando administrativo (ComandoDeAnulacao).
+var isAnulacao = args is [ComandoDeAnulacao.Nome, ..];
+
+// `Maxx.Api worker` consome a fila de trabalhos do Postgres (ADR 0008), sem servidor HTTP.
+// É o comando do contêiner do worker; as réplicas da API só enfileiram.
+if (args is ["worker", ..])
+{
+    var worker = Host.CreateApplicationBuilder(args[1..]);
+    worker.Services.AddSingleton(TimeProvider.System);
+    worker.Services.AddInfrastructure(
+        worker.Configuration.GetConnectionString("Maxx")
+            ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada."));
+    worker.AddEnvioDeEmail(exigirUrl: true);
+    worker.Services.AddWorker();
+    await worker.Build().RunAsync();
+    return 0;
+}
+
 // A geração do OpenAPI no build sobe a aplicação sem servidor e sem banco.
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
 var builder = WebApplication.CreateBuilder(
-    isMigrate ? args[1..] : isSeed ? args[Math.Min(2, args.Length)..] : args);
+    isMigrate ? args[1..]
+    : isSeed ? args[Math.Min(2, args.Length)..]
+    : isAnulacao ? args[Math.Min(ComandoDeAnulacao.Argumentos, args.Length)..]
+    : args);
 
 var connectionString = builder.Configuration.GetConnectionString("Maxx")
     ?? (isOpenApiGeneration ? "Host=openapi-generation" : null)
@@ -51,10 +76,13 @@ builder.Services.AddValidation();
 builder.Services.AddExceptionHandler<RecusaExceptionHandler>();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
-builder.AddAutenticacao(exigirChave: !isMigrate && !isSeed && !isOpenApiGeneration);
-var demonstracao = builder.AddDemonstracao(servindo: !isMigrate && !isSeed && !isOpenApiGeneration, gerandoOpenApi: isOpenApiGeneration);
+var servindo = !isMigrate && !isSeed && !isAnulacao && !isOpenApiGeneration;
+builder.AddAutenticacao(exigirChave: servindo);
+var demonstracao = builder.AddDemonstracao(servindo: servindo, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
 builder.Services.AddLimitesDeTaxa();
+builder.Services.AddScoped<Maxx.Application.Medalhas.ConcederMedalhaHandler>();
+builder.Services.AddScoped<Maxx.Application.Medalhas.AnularMedalhaHandler>();
 
 var app = builder.Build();
 
@@ -89,6 +117,12 @@ if (isSeed)
     return 0;
 }
 
+if (isAnulacao)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    return await ComandoDeAnulacao.ExecutarAsync(scope.ServiceProvider, args, Console.Out, Console.Error, CancellationToken.None);
+}
+
 // Primeiro de tudo: o IP e o esquema reais vêm do Caddy, e só dele.
 app.UseForwardedHeaders();
 
@@ -110,6 +144,8 @@ api.MapHealthEndpoints();
 var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
 v1.MapTermoDeUsoEndpoints();
+v1.MapProfessorEndpoints();
+v1.MapPremiosEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

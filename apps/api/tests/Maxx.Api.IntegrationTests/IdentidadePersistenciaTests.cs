@@ -255,8 +255,8 @@ public sealed class IdentidadePersistenciaTests(PostgresFixture postgres) : ICla
         await SalvarAsync(
             factory,
             FamiliaDeSessao.Abrir(ana.Id, "C1", _agora),
-            RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _agora),
-            RecuperacaoDeSenha.Solicitar(ana.Id, "T2", _agora.AddMinutes(1)));
+            ComToken(ana.Id, "T1", _agora),
+            ComToken(ana.Id, "T2", _agora.AddMinutes(1)));
 
         await using (var scope = factory.Services.CreateAsyncScope())
         {
@@ -291,7 +291,7 @@ public sealed class IdentidadePersistenciaTests(PostgresFixture postgres) : ICla
     {
         await using var factory = await MigradoAsync(postgres);
         var (_, ana) = await AnaGravadaAsync(factory);
-        await SalvarAsync(factory, RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _agora));
+        await SalvarAsync(factory, ComToken(ana.Id, "T1", _agora));
 
         await using var scopeA = factory.Services.CreateAsyncScope();
         await using var scopeB = factory.Services.CreateAsyncScope();
@@ -348,6 +348,13 @@ public sealed class IdentidadePersistenciaTests(PostgresFixture postgres) : ICla
     }
 
     // Dois alunos de CC e uma professora, ainda sem conta.
+    private static RecuperacaoDeSenha ComToken(Guid usuarioId, string hash, DateTimeOffset agora)
+    {
+        var recuperacao = RecuperacaoDeSenha.Solicitar(usuarioId, agora);
+        recuperacao.EmitirToken(hash, agora);
+        return recuperacao;
+    }
+
     private sealed class Mundo
     {
         public Curso Computacao { get; } = new("Ciência da Computação", "CC", 8);

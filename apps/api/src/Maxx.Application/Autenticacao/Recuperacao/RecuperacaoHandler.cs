@@ -1,3 +1,4 @@
+using Maxx.Application.Fila;
 using Maxx.Domain;
 using Maxx.Domain.Identidade;
 
@@ -7,13 +8,11 @@ namespace Maxx.Application.Autenticacao.Recuperacao;
 // (fluxos/06-recuperacao-de-senha.md).
 public sealed class RecuperacaoHandler(
     IUsuarioRepository usuarios,
-    ICadastroElegivelRepository cadastros,
     IRecuperacaoDeSenhaRepository recuperacoes,
     IFamiliaDeSessaoRepository familias,
     ITokenGenerator tokens,
     ISenhaHasher senhas,
-    ILinkDoApp links,
-    IFilaDeEmail emails,
+    IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
@@ -31,13 +30,12 @@ public sealed class RecuperacaoHandler(
             return;
         }
 
-        var token = tokens.Generate();
-        recuperacoes.Adicionar(RecuperacaoDeSenha.Solicitar(usuario.Id, token.Hash, relogio.GetUtcNow()));
+        // O pedido e o trabalho do e-mail gravam juntos. O token só nasce no worker, na hora
+        // do envio: a fila leva o id do pedido, nunca um segredo.
+        var recuperacao = RecuperacaoDeSenha.Solicitar(usuario.Id, relogio.GetUtcNow());
+        recuperacoes.Adicionar(recuperacao);
+        fila.Enfileirar(new EmailDeRecuperacao(recuperacao.Id));
         await unitOfWork.SalvarAsync(cancellationToken);
-
-        // Só depois de gravado: o link do e-mail sempre tem um pedido no banco.
-        var para = await cadastros.EmailAsync(usuario.CadastroElegivelId, cancellationToken);
-        emails.Enfileirar(MensagemDeRecuperacao(para, usuario, links.RedefinicaoDeSenha(token.Valor)));
     }
 
     public async Task ConfirmarAsync(NovaSenha pedido, CancellationToken cancellationToken)
@@ -92,9 +90,52 @@ public sealed class RecuperacaoHandler(
 
     private static RecusaException Invalida(string motivo) =>
         new(TipoDeRecusa.Invalido, CodigosDeRecusa.RecuperacaoInvalida, $"Recuperação recusada: {motivo}.");
+}
+
+// O trabalho de mandar o link de um pedido de recuperação.
+public sealed record EmailDeRecuperacao(Guid RecuperacaoId) : ICargaDeTrabalho
+{
+    public static string Tipo => "email-de-recuperacao";
+}
+
+// No worker: emite o token do pedido, grava o hash e manda o e-mail, na transação do
+// trabalho. Falha no envio desfaz o hash e volta com recuo; a retentativa emite outro token.
+// Se o envio sai e a transação não fecha, o link que chegou não vale: o usuário pede outro.
+public sealed class EmailDeRecuperacaoHandler(
+    IUsuarioRepository usuarios,
+    ICadastroElegivelRepository cadastros,
+    IRecuperacaoDeSenhaRepository recuperacoes,
+    ITokenGenerator tokens,
+    ILinkDoApp links,
+    IEmailSender emails,
+    IUnitOfWork unitOfWork,
+    TimeProvider relogio) : ITrabalhoHandler<EmailDeRecuperacao>
+{
+    public async Task ExecutarAsync(EmailDeRecuperacao carga, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(carga);
+
+        // Pedido encerrado antes do envio (outro link já trocou a senha) ou apagado com o
+        // usuário: não há o que mandar.
+        var recuperacao = await recuperacoes.BuscarAsync(carga.RecuperacaoId, cancellationToken);
+        if (recuperacao is null || !recuperacao.EstaAberta)
+        {
+            return;
+        }
+
+        var usuario = await usuarios.BuscarAsync(recuperacao.UsuarioId, cancellationToken)
+            ?? throw new InvalidOperationException($"A recuperação {recuperacao.Id} cita um usuário que não existe.");
+        var para = await cadastros.EmailAsync(usuario.CadastroElegivelId, cancellationToken);
+
+        var token = tokens.Generate();
+        recuperacao.EmitirToken(token.Hash, relogio.GetUtcNow());
+        await unitOfWork.SalvarAsync(cancellationToken);
+
+        await emails.EnviarAsync(Mensagem(para, usuario, links.RedefinicaoDeSenha(token.Valor)), cancellationToken);
+    }
 
     // O mesmo texto serve ao esquecimento e ao primeiro acesso.
-    private static MensagemDeEmail MensagemDeRecuperacao(string para, Usuario usuario, Uri link) => new(
+    private static MensagemDeEmail Mensagem(string para, Usuario usuario, Uri link) => new(
         para,
         "Maxx: defina sua senha",
         $"""

@@ -38,6 +38,9 @@ public enum TipoDeRecusa
     NaoEncontrado,
     Conflito,
     NaoAutorizado,
+
+    // Autenticado, mas sem direito sobre o recurso: o escopo de turma do professor.
+    Proibido,
 }
 
 // Gravação recusada por uma unicidade do banco: a corrida que a checagem prévia não
@@ -70,6 +73,9 @@ public enum Unicidade
     Outra,
     ContaPorCadastro,
     Prefixo,
+
+    // Duas medalhas ativas com a mesma chave de deduplicação: a mesma vaga do período.
+    MedalhaAtiva,
 }
 
 // Gravação recusada porque a linha mudou desde a leitura (xmin): outro pedido chegou

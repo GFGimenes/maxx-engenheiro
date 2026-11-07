@@ -40,7 +40,7 @@ graph LR
 ## Consequências
 
 - Uma peça de infraestrutura a menos para instalar, monitorar, fazer backup e explicar na
-  banca.
+  avaliação.
 - Transacionalidade de graça: se a escrita falha, o trabalho não existe.
 - **Negativa:** o banco acumula a função de fila. Um pico de enfileiramento disputa I/O
   com as leituras do feed exatamente no evento, que é quando os dois acontecem juntos. É o

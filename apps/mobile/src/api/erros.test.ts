@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 
 import {
@@ -10,12 +10,21 @@ import {
 
 const API = join(__dirname, "../../../api/src");
 
+// Os arquivos de códigos de recusa da Application (CodigosDeRecusa.cs,
+// CodigosDaMedalha.cs, ...), onde quer que estejam: código novo num arquivo novo também
+// precisa de mensagem.
+function arquivosDeCodigos(): string[] {
+  const raiz = join(API, "Maxx.Application");
+  return readdirSync(raiz, { recursive: true, encoding: "utf8" })
+    .filter((caminho) => /(^|[\\/])Codigos\w*\.cs$/.test(caminho))
+    .map((caminho) => join(raiz, caminho));
+}
+
 // Os códigos que a API pode mandar, lidos do próprio código dela.
 function codigosDaApi(): string[] {
-  const recusas = readFileSync(
-    join(API, "Maxx.Application/Autenticacao/CodigosDeRecusa.cs"),
-    "utf8",
-  );
+  const recusas = arquivosDeCodigos()
+    .map((arquivo) => readFileSync(arquivo, "utf8"))
+    .join("\n");
   const erros = readFileSync(
     join(API, "Maxx.Api/Erros/DomainExceptionHandler.cs"),
     "utf8",
@@ -33,8 +42,13 @@ describe("mensagens de erro", () => {
   it("todo código que a API manda tem mensagem própria", () => {
     const daApi = codigosDaApi();
 
+    expect(arquivosDeCodigos()).toHaveLength(2);
     expect(daApi).toEqual(
-      expect.arrayContaining(["registro-simultaneo", "dados-invalidos"]),
+      expect.arrayContaining([
+        "registro-simultaneo",
+        "limite-atingido",
+        "dados-invalidos",
+      ]),
     );
     for (const codigo of daApi) {
       expect(codigosConhecidos).toContain(codigo);

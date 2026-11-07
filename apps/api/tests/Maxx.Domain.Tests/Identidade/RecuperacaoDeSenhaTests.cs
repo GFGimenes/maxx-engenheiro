@@ -17,17 +17,56 @@ public class RecuperacaoDeSenhaTests
         _pedido.AddDays(-60));
 
     [Fact]
-    public void Pedido_vale_30_minutos()
+    public void Pedido_nasce_aberto_e_sem_token()
     {
         var ana = Ana();
 
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, _pedido);
 
         Assert.Equal(ana.Id, recuperacao.UsuarioId);
+        Assert.Null(recuperacao.Hash);
+        Assert.True(recuperacao.EstaAberta);
+        Assert.Equal(_pedido, recuperacao.SolicitadaEm);
+        Assert.Null(recuperacao.UsadaEm);
+    }
+
+    [Fact]
+    public void Token_vale_30_minutos_contados_do_envio()
+    {
+        var recuperacao = RecuperacaoDeSenha.Solicitar(Ana().Id, _pedido);
+        var envio = _pedido.AddMinutes(2);
+
+        recuperacao.EmitirToken("T", envio);
+
         Assert.Equal("T", recuperacao.Hash);
         Assert.Equal(_pedido, recuperacao.SolicitadaEm);
-        Assert.Equal(_pedido.AddMinutes(30), recuperacao.ExpiraEm);
-        Assert.Null(recuperacao.UsadaEm);
+        Assert.Equal(envio.AddMinutes(30), recuperacao.ExpiraEm);
+    }
+
+    [Fact]
+    public void Nova_emissao_troca_o_token_e_o_prazo()
+    {
+        var recuperacao = ComToken(Ana().Id, "T1", _pedido);
+
+        recuperacao.EmitirToken("T2", _pedido.AddMinutes(1));
+
+        Assert.Equal("T2", recuperacao.Hash);
+        Assert.Equal(_pedido.AddMinutes(31), recuperacao.ExpiraEm);
+    }
+
+    [Fact]
+    public void Pedido_encerrado_nao_recebe_token()
+    {
+        var ana = Ana();
+        var usado = ComToken(ana.Id, "T1", _pedido);
+        var invalidado = RecuperacaoDeSenha.Solicitar(ana.Id, _pedido);
+        usado.Concluir(ana, "hash-novo", [], [invalidado], _pedido.AddMinutes(1));
+
+        Assert.False(usado.EstaAberta);
+        Assert.False(invalidado.EstaAberta);
+        Assert.Throws<InvalidOperationException>(() => usado.EmitirToken("T2", _pedido.AddMinutes(2)));
+        Assert.Throws<InvalidOperationException>(() => invalidado.EmitirToken("T3", _pedido.AddMinutes(2)));
+        Assert.Null(invalidado.Hash);
     }
 
     [Fact]
@@ -36,7 +75,7 @@ public class RecuperacaoDeSenhaTests
         var ana = Ana();
         var celular = FamiliaDeSessao.Abrir(ana.Id, "C1", _pedido.AddDays(-5));
         var notebook = FamiliaDeSessao.Abrir(ana.Id, "N1", _pedido.AddDays(-1));
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
         var conclusao = _pedido.AddMinutes(10);
 
         var resultado = recuperacao.Concluir(ana, "hash-novo", [celular, notebook], [], conclusao);
@@ -58,7 +97,7 @@ public class RecuperacaoDeSenhaTests
         var ana = Ana();
         var antiga = FamiliaDeSessao.Abrir(ana.Id, "A1", _pedido.AddDays(-5));
         antiga.Revogar(MotivoDaRevogacao.Logout, _pedido.AddDays(-4));
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
 
         recuperacao.Concluir(ana, "hash-novo", [antiga], [], _pedido.AddMinutes(1));
 
@@ -70,7 +109,7 @@ public class RecuperacaoDeSenhaTests
     {
         var renata = Usuario.CriarPeloSeed(
             CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque"), "renataAlbuquerque", _pedido.AddDays(-30));
-        var recuperacao = RecuperacaoDeSenha.Solicitar(renata.Id, "T", _pedido);
+        var recuperacao = ComToken(renata.Id, "T", _pedido);
 
         var resultado = recuperacao.Concluir(renata, "primeira-senha", [], [], _pedido.AddMinutes(5));
 
@@ -83,7 +122,7 @@ public class RecuperacaoDeSenhaTests
     {
         var ana = Ana();
         var familia = FamiliaDeSessao.Abrir(ana.Id, "C1", _pedido.AddDays(-5));
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
 
         var resultado = recuperacao.Concluir(ana, "hash-novo", [familia], [], _pedido.AddMinutes(30).AddSeconds(1));
 
@@ -97,7 +136,7 @@ public class RecuperacaoDeSenhaTests
     public void Token_no_ultimo_instante_da_validade_ainda_conclui()
     {
         var ana = Ana();
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
 
         Assert.Equal(ResultadoDaRecuperacao.Concluida, recuperacao.Concluir(ana, "hash-novo", [], [], _pedido.AddMinutes(30)));
     }
@@ -106,7 +145,7 @@ public class RecuperacaoDeSenhaTests
     public void Token_usado_nao_conclui_de_novo()
     {
         var ana = Ana();
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
         recuperacao.Concluir(ana, "hash-novo", [], [], _pedido.AddMinutes(1));
         var depois = FamiliaDeSessao.Abrir(ana.Id, "D1", _pedido.AddMinutes(2));
 
@@ -122,7 +161,7 @@ public class RecuperacaoDeSenhaTests
     public void Recuperacao_de_outro_usuario_e_erro_de_quem_chama()
     {
         var ana = Ana();
-        var recuperacao = RecuperacaoDeSenha.Solicitar(Guid.CreateVersion7(), "T", _pedido);
+        var recuperacao = ComToken(Guid.CreateVersion7(), "T", _pedido);
 
         Assert.Throws<ArgumentException>(() => recuperacao.Concluir(ana, "hash-novo", [], [], _pedido));
     }
@@ -132,7 +171,7 @@ public class RecuperacaoDeSenhaTests
     {
         var ana = Ana();
         var deOutro = FamiliaDeSessao.Abrir(Guid.CreateVersion7(), "O1", _pedido);
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
 
         Assert.Throws<ArgumentException>(() => recuperacao.Concluir(ana, "hash-novo", [deOutro], [], _pedido));
         Assert.Equal("hash-antigo", ana.HashDaSenha);
@@ -143,9 +182,9 @@ public class RecuperacaoDeSenhaTests
     public void Concluir_invalida_os_outros_pedidos_pendentes_do_usuario()
     {
         var ana = Ana();
-        var primeiro = RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _pedido);
-        var segundo = RecuperacaoDeSenha.Solicitar(ana.Id, "T2", _pedido.AddMinutes(2));
-        var terceiro = RecuperacaoDeSenha.Solicitar(ana.Id, "T3", _pedido.AddMinutes(4));
+        var primeiro = ComToken(ana.Id, "T1", _pedido);
+        var segundo = ComToken(ana.Id, "T2", _pedido.AddMinutes(2));
+        var terceiro = ComToken(ana.Id, "T3", _pedido.AddMinutes(4));
         var conclusao = _pedido.AddMinutes(5);
 
         segundo.Concluir(ana, "hash-novo", [], [primeiro, segundo, terceiro], conclusao);
@@ -160,8 +199,8 @@ public class RecuperacaoDeSenhaTests
     public void Link_antigo_invalidado_nao_redefine_a_senha_de_novo()
     {
         var ana = Ana();
-        var antigo = RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _pedido);
-        var novo = RecuperacaoDeSenha.Solicitar(ana.Id, "T2", _pedido.AddMinutes(1));
+        var antigo = ComToken(ana.Id, "T1", _pedido);
+        var novo = ComToken(ana.Id, "T2", _pedido.AddMinutes(1));
         novo.Concluir(ana, "hash-novo", [], [antigo], _pedido.AddMinutes(2));
         var sessaoNova = FamiliaDeSessao.Abrir(ana.Id, "S1", _pedido.AddMinutes(3));
 
@@ -177,9 +216,9 @@ public class RecuperacaoDeSenhaTests
     public void Pedido_ja_usado_nao_vira_invalidado()
     {
         var ana = Ana();
-        var usado = RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _pedido);
+        var usado = ComToken(ana.Id, "T1", _pedido);
         usado.Concluir(ana, "hash-1", [], [], _pedido.AddMinutes(1));
-        var depois = RecuperacaoDeSenha.Solicitar(ana.Id, "T2", _pedido.AddMinutes(10));
+        var depois = ComToken(ana.Id, "T2", _pedido.AddMinutes(10));
 
         depois.Concluir(ana, "hash-2", [], [usado], _pedido.AddMinutes(11));
 
@@ -191,8 +230,8 @@ public class RecuperacaoDeSenhaTests
     public void Pedido_expirado_nao_invalida_ninguem()
     {
         var ana = Ana();
-        var expirado = RecuperacaoDeSenha.Solicitar(ana.Id, "T1", _pedido);
-        var aberto = RecuperacaoDeSenha.Solicitar(ana.Id, "T2", _pedido.AddMinutes(25));
+        var expirado = ComToken(ana.Id, "T1", _pedido);
+        var aberto = ComToken(ana.Id, "T2", _pedido.AddMinutes(25));
 
         var resultado = expirado.Concluir(ana, "hash-novo", [], [aberto], _pedido.AddMinutes(31));
 
@@ -204,10 +243,18 @@ public class RecuperacaoDeSenhaTests
     public void Pedido_de_outro_usuario_entre_os_pendentes_e_erro_de_quem_chama()
     {
         var ana = Ana();
-        var deOutro = RecuperacaoDeSenha.Solicitar(Guid.CreateVersion7(), "O1", _pedido);
-        var recuperacao = RecuperacaoDeSenha.Solicitar(ana.Id, "T", _pedido);
+        var deOutro = ComToken(Guid.CreateVersion7(), "O1", _pedido);
+        var recuperacao = ComToken(ana.Id, "T", _pedido);
 
         Assert.Throws<ArgumentException>(() => recuperacao.Concluir(ana, "hash-novo", [], [deOutro], _pedido));
         Assert.Equal("hash-antigo", ana.HashDaSenha);
+    }
+
+    // Pedido com o token já emitido, no mesmo instante do pedido.
+    private static RecuperacaoDeSenha ComToken(Guid usuarioId, string hash, DateTimeOffset agora)
+    {
+        var recuperacao = RecuperacaoDeSenha.Solicitar(usuarioId, agora);
+        recuperacao.EmitirToken(hash, agora);
+        return recuperacao;
     }
 }
