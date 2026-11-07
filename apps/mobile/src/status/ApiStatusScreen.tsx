@@ -6,7 +6,8 @@ import { textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
 
-// Tela provisória do passo 1: prova que a web fala com a API. Sai quando chegar o login.
+// Tela de status, em /status: prova que a web fala com a API. Nasceu no passo 1 como
+// a página inicial e saiu de lá quando o login chegou, no passo 5.
 export function ApiStatusScreen() {
   const { colors } = useTheme();
   const health = useHealth();

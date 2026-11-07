@@ -4,14 +4,14 @@ public sealed class SeedOptions
 {
     public const string Section = "Seed";
 
-    // Onde estão catalogo/ e calendario/. Relativo ao diretório de trabalho: "data" na
+    // Onde estão catalogo/, calendario/ e termos/. Relativo ao diretório de trabalho: "data" na
     // raiz do repositório e em /app/data na imagem.
     public string DiretorioDeDados { get; set; } = "data";
 }
 
 public enum PerfilDeSeed
 {
-    // Estrutura: catálogo e calendário.
+    // Estrutura: catálogo, calendário e termo de uso.
     Base,
 
     // O mundo fictício: cursos, matérias, turmas e pessoas. Exige o base.
@@ -25,7 +25,8 @@ public sealed record ResultadoDoSeedBase(
     int FamiliasNovas,
     int FamiliasAtualizadas,
     int AnosNovos,
-    int AnosAtualizados);
+    int AnosAtualizados,
+    int TermosNovos);
 
 // Demo só acrescenta: o que já existe e bate com o arquivo fica como está.
 public sealed record ResultadoDoSeedDemo(

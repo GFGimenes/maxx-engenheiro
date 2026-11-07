@@ -5,8 +5,12 @@ import type { paths } from "./schema";
 
 export type { components, paths } from "./schema";
 
-export function createApiClient(baseUrl: string) {
-  return createClient<paths>({ baseUrl });
+// `fetch` troca o fetch global: é por onde o app põe o access token e renova a sessão.
+export function createApiClient(
+  baseUrl: string,
+  options: { fetch?: (request: Request) => Promise<Response> } = {},
+) {
+  return createClient<paths>({ baseUrl, fetch: options.fetch });
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

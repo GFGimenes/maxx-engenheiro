@@ -32,6 +32,12 @@ public interface IUsuarioRepository
     Task<Usuario?> BuscarAlunoPorRaAsync(string ra, CancellationToken cancellationToken);
 }
 
+public interface ITermoDeUsoRepository
+{
+    // A versão de número mais alto. Nula se nenhuma foi publicada.
+    Task<TermoDeUso?> VigenteAsync(CancellationToken cancellationToken);
+}
+
 public interface IFamiliaDeSessaoRepository
 {
     void Adicionar(FamiliaDeSessao familia);

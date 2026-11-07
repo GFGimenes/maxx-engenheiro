@@ -1,7 +1,8 @@
 # Login, refresh rotativo e logout
 
 Login próprio, sem cadastro público nem login social. O aluno entra por RA ou por
-e-mail; professor e instituição, por e-mail. Implementado no passo 3.
+e-mail; professor e instituição, por e-mail. A API é do passo 3; as telas e a sessão no
+cliente, do passo 5.
 
 ```mermaid
 sequenceDiagram
@@ -75,3 +76,19 @@ mensagem amigável (`decisoes/README.md`, Formato de erro).
   revogada não mudam a resposta. Na web, o refresh recusado e o logout apagam o cookie.
 - **Limites:** login, 5 por minuto por identificador e 30 por minuto por IP; o 429 traz
   `Retry-After` (`decisoes/README.md`, Autenticação).
+
+## No cliente (passo 5)
+
+- **Access token só em memória.** Renovado antes de vencer, com 30 segundos de folga, e
+  uma vez depois de um 401, com o pedido repetido uma vez só.
+- **Um refresh por vez.** Quem chega durante a renovação espera o resultado dela. Na web,
+  a Web Locks API põe as abas em fila: todas mandam o mesmo cookie, e duas renovações
+  juntas seriam reuso.
+- **Abertura do app.** Na web, a sessão é restaurada pelo cookie; no nativo, pelo refresh
+  do secure store. `sessao-invalida` leva ao login; falha de rede mostra "Sem conexão",
+  sem apagar a sessão guardada.
+- **Telas.** `/login`, com o segmentado para `/cadastro` e o link para
+  `/esqueci-senha`. Credencial errada aparece no campo da senha; limite de taxa e falta
+  de rede, abaixo do botão.
+
+Detalhes em `decisoes/README.md`, Autenticação no cliente.

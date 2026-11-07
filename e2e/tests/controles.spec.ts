@@ -13,7 +13,7 @@ test(
   async ({ page }, testInfo) => {
     const tema =
       testInfo.project.use.colorScheme === "dark" ? "escuro" : "claro";
-    await page.goto("/");
+    await page.goto("/status");
     const sistema = page.getByRole("radio", { name: "Sistema" });
     await expect(sistema).toBeVisible();
 

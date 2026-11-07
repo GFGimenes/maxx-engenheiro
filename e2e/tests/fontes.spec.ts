@@ -26,7 +26,7 @@ test(
       }
     });
 
-    await page.goto("/");
+    await page.goto("/status");
     const detalhe = page.getByText("A API respondeu 200.");
     await expect(detalhe).toBeVisible();
     await page.evaluate(() => document.fonts.ready);

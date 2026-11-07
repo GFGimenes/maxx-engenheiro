@@ -61,6 +61,12 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(usuario => usuario.PrefixosReservados).HasField("_prefixosReservados");
 
+        builder.HasMany(usuario => usuario.AceitesDeTermo)
+            .WithOne()
+            .HasForeignKey(aceite => aceite.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(usuario => usuario.AceitesDeTermo).HasField("_aceitesDeTermo");
+
         builder.Ignore(usuario => usuario.Arroba);
         builder.Ignore(usuario => usuario.TemSenha);
         builder.Ignore(usuario => usuario.EhExAluno);
@@ -80,6 +86,34 @@ internal sealed class PrefixoReservadoConfiguration : IEntityTypeConfiguration<P
         builder.HasKey(reservado => reservado.Prefixo);
         builder.Property(reservado => reservado.Prefixo).HasColumnType("citext");
         builder.HasIndex(reservado => reservado.UsuarioId);
+    }
+}
+
+internal sealed class TermoDeUsoConfiguration : IEntityTypeConfiguration<TermoDeUso>
+{
+    public void Configure(EntityTypeBuilder<TermoDeUso> builder)
+    {
+        builder.ToTable("termo_de_uso", table => table.HasCheckConstraint("ck_termo_de_uso_versao", "versao >= 1"));
+        builder.HasKey(termo => termo.Versao);
+
+        // A versão vem do nome do arquivo, nunca de uma sequência do banco.
+        builder.Property(termo => termo.Versao).ValueGeneratedNever();
+        builder.Property(termo => termo.Conteudo).IsRequired();
+    }
+}
+
+internal sealed class AceiteDeTermoConfiguration : IEntityTypeConfiguration<AceiteDeTermo>
+{
+    public void Configure(EntityTypeBuilder<AceiteDeTermo> builder)
+    {
+        builder.ToTable("aceite_de_termo");
+        builder.HasKey(aceite => new { aceite.UsuarioId, aceite.Versao });
+
+        // Uma versão aceita por alguém não sai do banco.
+        builder.HasOne<TermoDeUso>()
+            .WithMany()
+            .HasForeignKey(aceite => aceite.Versao)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

@@ -32,7 +32,7 @@ export function Screen({
       <ScrollView
         testID="tela"
         style={styles.fill}
-        contentContainerStyle={padding}
+        contentContainerStyle={[padding, styles.cheio]}
       >
         {children}
       </ScrollView>
@@ -48,4 +48,6 @@ export function Screen({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  // O conteúdo ocupa ao menos a altura da tela: um pé de página fica no fim quando cabe.
+  cheio: { flexGrow: 1 },
 });

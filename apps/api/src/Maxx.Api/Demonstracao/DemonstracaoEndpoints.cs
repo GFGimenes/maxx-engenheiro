@@ -68,7 +68,7 @@ internal static class DemonstracaoEndpoints
     private static async Task<Created<RegistroDeDemonstracaoResponse>> RegistrarAsync(
         RegistroDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var registro = await handler.RegistrarAsync(pedido.Nome, pedido.Curso, cancellationToken);
+        var registro = await handler.RegistrarAsync(pedido.Nome, pedido.Curso, pedido.VersaoDoTermo, cancellationToken);
         return TypedResults.Created(
             (string?)null,
             new RegistroDeDemonstracaoResponse(registro.ChaveDoDispositivo, SessaoHttp.Escrever(httpContext, registro.Sessao)));
@@ -89,7 +89,8 @@ public sealed record CursoDeDemonstracao(string Sigla, string Nome);
 // O nome tem a forma do nome de exibição, conferida no domínio.
 public sealed record RegistroDeDemonstracaoRequest(
     [property: Required(AllowEmptyStrings = true), StringLength(240)] string Nome,
-    [property: Required, StringLength(16)] string Curso);
+    [property: Required, StringLength(16)] string Curso,
+    [property: Range(1, int.MaxValue)] int VersaoDoTermo);
 
 public sealed record EntradaDeDemonstracaoRequest([property: Required, StringLength(128)] string ChaveDoDispositivo)
 {

@@ -1,0 +1,64 @@
+// Todo erro em tela vira mensagem amigável (CLAUDE.md, Interface). A API manda o código
+// estável em `codigo` (decisoes/README.md, Formato de erro); aqui ele vira texto.
+
+const MENSAGENS = {
+  // Autenticação (CodigosDeRecusa.cs)
+  "cadastro-nao-encontrado":
+    "Não achamos esse RA com esse e-mail. Confira os dois.",
+  "conta-existente":
+    "Esse RA já tem conta. Use Esqueci minha senha para entrar.",
+  "prefixo-invalido": "Use de 3 a 30 letras ou números, começando por letra.",
+  "prefixo-indisponivel": "Esse arroba já tem dono. Tente outro.",
+  "senha-fora-da-politica": "A senha precisa ter de 8 a 128 caracteres.",
+  "nome-de-exibicao-invalido": "O nome precisa ter de 1 a 60 caracteres.",
+  "termo-indisponivel": "Não deu para carregar o termo de uso agora.",
+  "termo-desatualizado":
+    "O termo de uso mudou. Leia a versão nova para continuar.",
+  "credenciais-invalidas": "RA, e-mail ou senha não conferem.",
+  "sessao-invalida": "Sua sessão terminou. Entre de novo.",
+  "recuperacao-invalida": "Esse link não vale mais. Peça um link novo.",
+  "curso-indisponivel": "Esse curso não está disponível agora. Escolha outro.",
+  "registro-simultaneo":
+    "Muita gente entrou com esse nome agora. Tente de novo em instantes.",
+  "chave-invalida": "Essa conta de demonstração não existe mais.",
+  // Genéricos, pelo status (DomainExceptionHandler.cs)
+  "requisicao-invalida": "Confira os dados e tente de novo.",
+  "dados-invalidos": "Confira os dados e tente de novo.",
+  "nao-autenticado": "Sua sessão terminou. Entre de novo.",
+  "sem-permissao": "Você não tem acesso a isso.",
+  "nao-encontrado": "Não encontramos o que você procurou.",
+  "limite-de-taxa":
+    "Muitas tentativas seguidas. Espere um pouco e tente de novo.",
+  indisponivel: "O Maxx está fora do ar agora. Tente de novo em instantes.",
+  "erro-interno": "Não deu certo agora. Tente de novo em instantes.",
+  // Do cliente: o pedido nem chegou à API.
+  "sem-conexao": "Sem conexão. Confira a internet e tente de novo.",
+} as const;
+
+export type CodigoDeErro = keyof typeof MENSAGENS;
+
+export const codigosConhecidos = Object.keys(MENSAGENS) as CodigoDeErro[];
+
+const PADRAO = MENSAGENS["erro-interno"];
+
+// O `codigo` de um ProblemDetails, se o corpo for um.
+export function codigoDoErro(corpo: unknown): string | undefined {
+  if (typeof corpo === "object" && corpo !== null && "codigo" in corpo) {
+    const codigo = (corpo as { codigo: unknown }).codigo;
+    return typeof codigo === "string" ? codigo : undefined;
+  }
+  return undefined;
+}
+
+// Código desconhecido (API mais nova que o app instalado) cai na mensagem padrão.
+export function mensagemDeErro(codigo: string | undefined): string {
+  return codigo !== undefined && Object.hasOwn(MENSAGENS, codigo)
+    ? MENSAGENS[codigo as CodigoDeErro]
+    : PADRAO;
+}
+
+// Para o catch de uma chamada: falha de rede vira "sem-conexao", o resto, a mensagem
+// padrão. Nunca o erro cru.
+export function mensagemDaFalha(erro: unknown): string {
+  return erro instanceof TypeError ? MENSAGENS["sem-conexao"] : PADRAO;
+}

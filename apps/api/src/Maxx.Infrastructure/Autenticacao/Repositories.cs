@@ -28,6 +28,12 @@ internal sealed class CadastroElegivelRepository(MaxxDbContext db) : ICadastroEl
             .SingleAsync(cancellationToken);
 }
 
+internal sealed class TermoDeUsoRepository(MaxxDbContext db) : ITermoDeUsoRepository
+{
+    public Task<TermoDeUso?> VigenteAsync(CancellationToken cancellationToken) =>
+        db.Set<TermoDeUso>().AsNoTracking().OrderByDescending(termo => termo.Versao).FirstOrDefaultAsync(cancellationToken);
+}
+
 internal sealed class UsuarioRepository(MaxxDbContext db) : IUsuarioRepository
 {
     public Task<bool> ExisteParaCadastroAsync(Guid cadastroElegivelId, CancellationToken cancellationToken) =>

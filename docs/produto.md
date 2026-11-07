@@ -141,6 +141,10 @@ versionado: fica registrado qual versão o usuário aceitou e quando. O termo co
 exposição pública de nome, arroba, curso, prêmios e posição no ranking, e o fato de que
 a foto é pública para quem tem o link (seção 9.2).
 
+Aceitam o termo o aluno, no cadastro, e quem entra pela demonstração, no registro.
+Professor e instituição não aceitam no primeiro acesso, e uma versão nova do termo não
+pede novo aceite na fase 1.
+
 ---
 
 ## 3. Estrutura acadêmica e calendário
@@ -562,8 +566,7 @@ Como isso se traduz no sistema:
 - **Lote:** valor de configuração, gravado em cada usuário de demonstração criado
   enquanto ele vale. É a chave da purga.
 - **Foto opcional:** chega com o upload, no passo 7. Até lá, o registro é nome e curso.
-- O registro de demonstração não pede aceite do termo de uso enquanto o aceite não
-  existir, no passo 5.
+- O registro de demonstração pede o aceite do termo de uso, como o cadastro.
 
 ---
 
@@ -589,6 +592,9 @@ propósito":
 Aprovação e concessão em lote por evento, importação CSV, integração com o sistema de
 chamada, push nativo, denúncia de post pelo usuário, salvos, sub-papéis de coordenação e
 secretaria, verificação de e-mail no cadastro, publicação nas lojas.
+
+No termo de uso, ficam pendentes a base legal da LGPD e os direitos do titular, o canal
+de contato e o prazo de guarda dos dados.
 
 A `Comprovacao` já nasce filtrável por evento, porque a aprovação em lote é a primeira
 coisa que o uso real vai exigir.

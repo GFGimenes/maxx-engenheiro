@@ -53,7 +53,7 @@ internal static class CadastroEndpoints
         CadastroRequest pedido, CadastroHandler handler, HttpContext httpContext, CancellationToken cancellationToken)
     {
         var sessao = await handler.CadastrarAsync(
-            new NovoCadastro(pedido.Ra, pedido.Email, pedido.NomeDeExibicao, pedido.Prefixo, pedido.Senha), cancellationToken);
+            new NovoCadastro(pedido.Ra, pedido.Email, pedido.NomeDeExibicao, pedido.Prefixo, pedido.Senha, pedido.VersaoDoTermo), cancellationToken);
         return TypedResults.Created((string?)null, SessaoHttp.Escrever(httpContext, sessao));
     }
 }
@@ -74,7 +74,8 @@ public sealed record CadastroRequest(
     [property: Required, StringLength(254)] string Email,
     [property: Required(AllowEmptyStrings = true), StringLength(240)] string NomeDeExibicao,
     [property: Required(AllowEmptyStrings = true), StringLength(64)] string Prefixo,
-    [property: Required(AllowEmptyStrings = true), StringLength(512)] string Senha)
+    [property: Required(AllowEmptyStrings = true), StringLength(512)] string Senha,
+    [property: Range(1, int.MaxValue)] int VersaoDoTermo)
 {
     public override string ToString() => $"CadastroRequest {{ Ra = {Ra}, Prefixo = {Prefixo} }}";
 }

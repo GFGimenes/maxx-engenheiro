@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ICadastroElegivelRepository, CadastroElegivelRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<ITermoDeUsoRepository, TermoDeUsoRepository>();
         services.AddScoped<IFamiliaDeSessaoRepository, FamiliaDeSessaoRepository>();
         services.AddScoped<IEscopoDeTurma, EscopoDeTurma>();
         services.AddScoped<IRecuperacaoDeSenhaRepository, RecuperacaoDeSenhaRepository>();

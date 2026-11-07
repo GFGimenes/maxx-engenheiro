@@ -8,7 +8,7 @@ import {
   type TextInputProps,
 } from "react-native";
 
-import { fontFamily } from "../theme/fonts";
+import { fontFamily, textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
 import { interacao, raios, tamanhos } from "../theme/tokens";
 import { focusRingStyle, noOutline, useFocusRing } from "./focusRing";
@@ -22,14 +22,18 @@ interface TextFieldProps extends Omit<
   // Esconde o texto e oferece o botão de mostrar.
   password?: boolean;
   disabled?: boolean;
+  // O que está errado neste campo, em frase curta. Sem isso, o campo está bom.
+  error?: string;
 }
 
 const RECUO = 14;
+const ICONE_DO_ERRO = 16;
 
 export function TextField({
   label,
   password = false,
   disabled = false,
+  error,
   onFocus,
   onBlur,
   ...input
@@ -38,6 +42,15 @@ export function TextField({
   const [focused, setFocused] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const borda = focused ? interacao.bordaDeCampoEmFoco : interacao.bordaDeCampo;
+  const comErro = !!error;
+
+  // Exceção registrada à regra do `like` só em ícone: a borda do campo com erro também é
+  // `like`, para o erro aparecer no próprio campo. O texto do erro fica em `ink`.
+  const corDaBorda = comErro
+    ? colors.like
+    : focused
+      ? colors.focus
+      : colors.fieldLine;
 
   return (
     <View style={styles.coluna}>
@@ -48,7 +61,7 @@ export function TextField({
           styles.caixa,
           {
             borderWidth: borda,
-            borderColor: focused ? colors.focus : colors.fieldLine,
+            borderColor: corDaBorda,
             backgroundColor: disabled ? colors.surface2 : colors.fieldBg,
             // A borda mais grossa do foco não pode empurrar o texto.
             paddingLeft: RECUO - borda,
@@ -60,6 +73,9 @@ export function TextField({
           autoCorrect={password ? false : undefined}
           {...input}
           aria-label={label}
+          aria-invalid={comErro}
+          // No nativo, o leitor de tela lê o erro junto do campo.
+          accessibilityHint={error}
           editable={!disabled}
           secureTextEntry={password && !revealed}
           placeholderTextColor={colors.ink3}
@@ -85,6 +101,27 @@ export function TextField({
           />
         )}
       </View>
+      {comErro && (
+        // Anunciado quando aparece; ícone e texto juntos, nunca só a cor.
+        <View
+          testID="campo-erro"
+          role="alert"
+          aria-live="polite"
+          accessible
+          style={styles.erro}
+        >
+          <Icon name="alert" color={colors.like} size={ICONE_DO_ERRO} />
+          <Text
+            style={[
+              textStyles.legenda,
+              styles.textoDoErro,
+              { color: colors.ink },
+            ]}
+          >
+            {error}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -153,4 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  erro: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  // Legenda tem linha de 16, a altura do ícone.
+  textoDoErro: { flex: 1 },
 });

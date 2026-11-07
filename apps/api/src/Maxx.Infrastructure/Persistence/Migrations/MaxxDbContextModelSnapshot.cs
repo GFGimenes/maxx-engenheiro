@@ -311,6 +311,29 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("vinculo_professor", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Identidade.AceiteDeTermo", b =>
+                {
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<int>("Versao")
+                        .HasColumnType("integer")
+                        .HasColumnName("versao");
+
+                    b.Property<DateTimeOffset>("AceitoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aceito_em");
+
+                    b.HasKey("UsuarioId", "Versao")
+                        .HasName("pk_aceite_de_termo");
+
+                    b.HasIndex("Versao")
+                        .HasDatabaseName("ix_aceite_de_termo_versao");
+
+                    b.ToTable("aceite_de_termo", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -474,6 +497,30 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("refresh_token", null, t =>
                         {
                             t.HasCheckConstraint("ck_refresh_token_validade", "expira_em > emitido_em");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.TermoDeUso", b =>
+                {
+                    b.Property<int>("Versao")
+                        .HasColumnType("integer")
+                        .HasColumnName("versao");
+
+                    b.Property<string>("Conteudo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("conteudo");
+
+                    b.Property<DateTimeOffset>("PublicadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("publicado_em");
+
+                    b.HasKey("Versao")
+                        .HasName("pk_termo_de_uso");
+
+                    b.ToTable("termo_de_uso", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_termo_de_uso_versao", "versao >= 1");
                         });
                 });
 
@@ -799,6 +846,23 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_vinculo_professor_turma_turma_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Identidade.AceiteDeTermo", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany("AceitesDeTermo")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_aceite_de_termo_usuario_usuario_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.TermoDeUso", null)
+                        .WithMany()
+                        .HasForeignKey("Versao")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aceite_de_termo_termo_de_uso_versao");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -875,6 +939,8 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Maxx.Domain.Identidade.Usuario", b =>
                 {
+                    b.Navigation("AceitesDeTermo");
+
                     b.Navigation("PrefixosReservados");
                 });
 #pragma warning restore 612, 618

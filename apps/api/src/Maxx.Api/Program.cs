@@ -109,6 +109,7 @@ api.MapHealthEndpoints();
 // continuar 404 (as rotas da demonstração desligada respondem igual a ela).
 var v1 = api.MapGroup("/v1").RequireAuthorization();
 v1.MapEuEndpoints();
+v1.MapTermoDeUsoEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

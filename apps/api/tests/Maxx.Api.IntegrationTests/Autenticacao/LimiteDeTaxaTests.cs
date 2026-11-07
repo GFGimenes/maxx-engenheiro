@@ -93,7 +93,7 @@ public sealed class LimiteDeTaxaTests(PostgresFixture postgres) : IClassFixture<
     {
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
-        var pedido = new { ra = "20260102", email = "bruno.lima@al.unieduk.com.br", nomeDeExibicao = "Bruno", prefixo = "brunoLima", senha = "curta" };
+        var pedido = new { ra = "20260102", email = "bruno.lima@al.unieduk.com.br", nomeDeExibicao = "Bruno", prefixo = "brunoLima", senha = "curta", versaoDoTermo = VersaoDoTermo };
 
         for (var tentativa = 0; tentativa < 3; tentativa++)
         {
@@ -160,12 +160,12 @@ public sealed class LimiteDeTaxaTests(PostgresFixture postgres) : IClassFixture<
 
         for (var pessoa = 0; pessoa < 60; pessoa++)
         {
-            var response = await PostAsync(client, _demo, new { nome = $"Banca {pessoa}", curso = "CC" }, _caddy, "203.0.113.50");
+            var response = await PostAsync(client, _demo, new { nome = $"Banca {pessoa}", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.50");
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
 
         await Assert429Async(
-            await PostAsync(client, _demo, new { nome = "Banca 61", curso = "CC" }, _caddy, "203.0.113.50"), TimeSpan.FromHours(1));
+            await PostAsync(client, _demo, new { nome = "Banca 61", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.50"), TimeSpan.FromHours(1));
     }
 
     [Fact]
@@ -211,6 +211,7 @@ public sealed class LimiteDeTaxaTests(PostgresFixture postgres) : IClassFixture<
         var ana = CadastroElegivel.Aluno("20260101", _ana, "Ana Souza", cc, 3);
         await SalvarAsync(
             factory,
+            TermoVigente(),
             ano,
             cc,
             bd,
