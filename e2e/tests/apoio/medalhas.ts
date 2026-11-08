@@ -60,11 +60,7 @@ export async function novaProfessora(
      INSERT INTO vinculo_professor (id, professor_id, turma_id)
      SELECT gen_random_uuid(), id, '${professora.turmaId}' FROM cadastro;`,
   );
-  execFileSync(
-    "docker",
-    ["compose", "run", "--rm", "-T", "seeder", "seed", "demo"],
-    { cwd: RAIZ, encoding: "utf8" },
-  );
+  comandoDaApi(["seed", "demo"]);
 
   // Primeiro acesso: o link chega ao e-mail institucional.
   expect(
@@ -104,7 +100,7 @@ export function medalhaAtiva(aluno: Aluno): string {
   );
 }
 
-// O comando administrativo da fase 1, no mesmo contêiner que roda o seed, com a primeira
+// O comando administrativo da fase 1, dentro do worker (comandoDaApi), com a primeira
 // conta da instituição do seed demo.
 export function anularMedalha(medalhaId: string): string {
   const instituicao = sql(
@@ -112,18 +108,29 @@ export function anularMedalha(medalhaId: string): string {
      JOIN usuario u ON u.cadastro_elegivel_id = c.id
      WHERE c.papeis & 4 = 4 ORDER BY c.email LIMIT 1;`,
   );
+  return comandoDaApi([
+    "anular-medalha",
+    medalhaId,
+    "--instituicao",
+    instituicao,
+  ]);
+}
+
+// Um subcomando da API (seed, anulação) dentro do worker, que já está de pé com a mesma
+// imagem e a mesma conexão. O `compose run` do seeder refazia também o migrator a cada
+// chamada (4,6 s contra 1,9 s com a pilha parada, bem mais com a suíte em paralelo), e o
+// caso da medalha passava dos 30 s (passo 7, etapa 11).
+function comandoDaApi(argumentos: string[]): string {
   return execFileSync(
     "docker",
     [
       "compose",
-      "run",
-      "--rm",
+      "exec",
       "-T",
-      "seeder",
-      "anular-medalha",
-      medalhaId,
-      "--instituicao",
-      instituicao,
+      "worker",
+      "dotnet",
+      "Maxx.Api.dll",
+      ...argumentos,
     ],
     { cwd: RAIZ, encoding: "utf8" },
   );

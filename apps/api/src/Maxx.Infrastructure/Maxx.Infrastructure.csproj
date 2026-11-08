@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     <PackageReference Include="MailKit" />

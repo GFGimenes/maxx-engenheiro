@@ -339,8 +339,11 @@ describe("regras da interface no código", () => {
       .map((f) => f.replace(/^.*[\\/]/, ""))
       .sort();
 
+  // A célula da grade do perfil pinta o fundo do post de prêmio com o metal do tier
+  // (`fundoGrade` dos tokens, como na prancheta do perfil).
   test("gradiente só no metal dos prêmios", () => {
     expect(usam(/(Radial|Linear)Gradient/)).toEqual([
+      "CelulaDaGrade.tsx",
       "Medalhao.tsx",
       "SeloPremio.tsx",
     ]);

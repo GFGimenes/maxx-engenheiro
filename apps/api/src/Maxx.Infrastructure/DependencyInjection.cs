@@ -3,21 +3,31 @@ using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autorizacao;
 using Maxx.Application.Demonstracao;
+using Maxx.Application.Feed;
 using Maxx.Application.Fila;
+using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
+using Maxx.Application.Perfil;
+using Maxx.Application.Posts;
 using Maxx.Application.Premios;
+using Maxx.Application.Social;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
 using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
+using Maxx.Infrastructure.Feed;
 using Maxx.Infrastructure.Fila;
+using Maxx.Infrastructure.Fotos;
 using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Notificacoes;
+using Maxx.Infrastructure.Perfil;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Posts;
 using Maxx.Infrastructure.Premios;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
+using Maxx.Infrastructure.Social;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -54,6 +64,19 @@ public static class DependencyInjection
         services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
         services.AddScoped<IConsultaDePremios, ConsultaDePremios>();
 
+        // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
+        // fora de desenvolvimento.
+        services.AddSingleton<IArmazenamentoDeFotos, ArmazenamentoS3>();
+        services.AddScoped<IUploadPendenteRepository, UploadPendenteRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IConsultaDePosts, ConsultaDePosts>();
+        services.AddScoped<ICurtidaRepository, CurtidaRepository>();
+        services.AddScoped<IComentarioRepository, ComentarioRepository>();
+        services.AddScoped<ISeguimentoRepository, SeguimentoRepository>();
+        services.AddScoped<IConsultaSocial, ConsultaSocial>();
+        services.AddScoped<IConsultaDoFeed, ConsultaDoFeed>();
+        services.AddScoped<IConsultaDePerfil, ConsultaDePerfil>();
+
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
         services.AddScoped<IFilaDeTrabalhos, FilaDeTrabalhos>();
@@ -66,6 +89,8 @@ public static class DependencyInjection
         services.AddTrabalho<EmailDeRecuperacao, EmailDeRecuperacaoHandler>();
         services.AddTrabalho<NotificarMedalhaRecebida, NotificarMedalhaRecebidaHandler>();
         services.AddTrabalho<RecalcularRaridade, RecalculoDeRaridade>();
+        services.AddTrabalho<LimparUploadAbandonado, LimparUploadAbandonadoHandler>();
+        services.AddTrabalho<RemoverFotos, RemoverFotosHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

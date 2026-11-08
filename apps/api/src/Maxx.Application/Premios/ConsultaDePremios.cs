@@ -37,4 +37,5 @@ public sealed record RaridadeAtual(Raridade Nivel, int AlunosComItem, int Alunos
 }
 
 // Tier e pontos do momento da concessão (ADR 0007), que podem diferir do catálogo de hoje.
-public sealed record PremioObtido(Guid Id, Tier Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm);
+// PostId: o post não removido que o prêmio rendeu, se houver (um prêmio rende um post).
+public sealed record PremioObtido(Guid Id, Tier Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm, Guid? PostId);

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { arroba, novaConta, novoElegivel } from "./apoio/contas";
+import { abrirPerfil } from "./apoio/navegacao";
 import { linkDeRecuperacao, quantosEmails } from "./apoio/mailpit";
 
 // O fluxo inteiro passa pelo e-mail que chega ao Mailpit do compose. Só no celular, claro
@@ -48,6 +49,7 @@ test(
     ).toBeVisible();
 
     await entrar(page, aluno.ra, senhaNova);
+    await abrirPerfil(page);
     await expect(page.getByTestId("arroba")).toHaveText(arroba(aluno));
   },
 );

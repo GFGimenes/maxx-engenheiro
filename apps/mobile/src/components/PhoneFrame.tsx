@@ -52,3 +52,13 @@ const styles = StyleSheet.create({
   // Sem sombra: separação só pela borda de 1 px em `line`.
   frame: { width: FRAME_WIDTH, borderWidth: 1, overflow: "hidden" },
 });
+
+// A largura em que o app desenha: a da moldura no navegador de desktop (sem a borda de 1 px
+// de cada lado), a da janela no resto. É o que a grade do perfil divide em três colunas,
+// sem esperar o primeiro onLayout.
+export function useLarguraDoApp(): number {
+  const { width } = useWindowDimensions();
+  return Platform.OS === "web" && width >= FRAME_MIN_WINDOW_WIDTH
+    ? FRAME_WIDTH - 2
+    : width;
+}

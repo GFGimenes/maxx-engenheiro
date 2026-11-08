@@ -1,6 +1,5 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
-import { InicioProvisorio } from "../inicio/InicioProvisorio";
 import { caminhos, json, renderComApi } from "../test/renderComApi";
 import { TurmaScreen } from "./TurmaScreen";
 import { TurmasScreen } from "./TurmasScreen";
@@ -258,28 +257,5 @@ describe("turma e concessão", () => {
     expect(
       await screen.findByText("Nenhum aluno com conta nesta turma."),
     ).toBeOnTheScreen();
-  });
-});
-
-describe("entrada pelo início", () => {
-  it("o professor vê Minhas turmas; o aluno, não", async () => {
-    const comPapeis = (papeis: string[]) =>
-      jest.fn(async (pedido: Request) =>
-        new URL(pedido.url).pathname === "/api/v1/eu"
-          ? json(200, { id: ANA, papeis, arroba: "@renataA-PROF" })
-          : new Response(null, { status: 404 }),
-      );
-
-    const professor = await renderComApi(
-      <InicioProvisorio />,
-      comPapeis(["professor"]),
-    );
-    await apertarBotao("Minhas turmas");
-    expect(mockRoteador.push).toHaveBeenCalledWith("/turmas");
-    professor.unmount();
-
-    await renderComApi(<InicioProvisorio />, comPapeis(["aluno"]));
-    expect(await screen.findByTestId("arroba")).toBeOnTheScreen();
-    expect(screen.queryByRole("button", { name: "Minhas turmas" })).toBeNull();
   });
 });

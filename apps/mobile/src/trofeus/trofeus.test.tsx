@@ -40,6 +40,7 @@ const obtido = (pontos: number, materia = "Banco de Dados", bimestre = 4) => ({
   materia,
   bimestre,
   obtidoEm: "2026-11-10T13:00:00Z",
+  postId: null,
 });
 
 const PREMIOS: PremiosDoAluno = {

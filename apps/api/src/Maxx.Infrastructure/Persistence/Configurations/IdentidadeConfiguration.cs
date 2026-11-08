@@ -71,6 +71,11 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Ignore(usuario => usuario.TemSenha);
         builder.Ignore(usuario => usuario.EhExAluno);
         builder.Ignore(usuario => usuario.EhDemonstracao);
+        builder.Ignore(usuario => usuario.TemFoto);
+
+        // A foto de perfil são sempre as duas derivadas, ou nenhuma.
+        builder.ToTable(table => table.HasCheckConstraint(
+            "ck_usuario_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)"));
     }
 }
 

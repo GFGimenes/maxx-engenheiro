@@ -1,3 +1,3 @@
-import { BuscaEmBreve } from "../../../navegacao/EmBreve";
+import { BuscaScreen } from "../../../busca/BuscaScreen";
 
-export default BuscaEmBreve;
+export default BuscaScreen;

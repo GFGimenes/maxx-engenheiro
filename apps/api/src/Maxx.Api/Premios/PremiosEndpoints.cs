@@ -30,10 +30,16 @@ internal static class PremiosEndpoints
             return TypedResults.Forbid();
         }
 
-        return TypedResults.Ok(new PremiosDoAlunoResponse(
+        return TypedResults.Ok(Mapear(premios));
+    }
+
+    // Também o perfil público usa esta forma, com só os itens obtidos: faltantes e
+    // progresso são só do próprio aluno (produto.md 9.1).
+    internal static PremiosDoAlunoResponse Mapear(PremiosDoAluno premios, bool soObtidos = false) =>
+        new(
             premios.Pontos,
             [.. premios.Familias.Select(familia => new FamiliaResponse(familia.Codigo, familia.Nome, familia.Descricao, familia.Passos))],
-            [.. premios.Itens.Select(item => new ItemDoAlunoResponse(
+            [.. premios.Itens.Where(item => !soObtidos || item.Obtidos.Count > 0).Select(item => new ItemDoAlunoResponse(
                 item.Codigo,
                 ProfessorEndpoints.Nome(item.Tipo),
                 item.Nome,
@@ -46,8 +52,13 @@ internal static class PremiosEndpoints
                     ? new RaridadeResponse(ProfessorEndpoints.Nome(raridade.Nivel), raridade.Percentual)
                     : null,
                 [.. item.Obtidos.Select(obtido => new PremioObtidoResponse(
-                    obtido.Id, ProfessorEndpoints.Nome(obtido.Tier), obtido.Pontos, obtido.Materia, obtido.Bimestre, obtido.ObtidoEm))]))]));
-    }
+                    obtido.Id,
+                    ProfessorEndpoints.Nome(obtido.Tier),
+                    obtido.Pontos,
+                    obtido.Materia,
+                    obtido.Bimestre,
+                    obtido.ObtidoEm,
+                    obtido.PostId))]))]);
 }
 
 public sealed record PremiosDoAlunoResponse(int Pontos, IReadOnlyList<FamiliaResponse> Familias, IReadOnlyList<ItemDoAlunoResponse> Itens);
@@ -71,4 +82,5 @@ public sealed record ItemDoAlunoResponse(
 // Percentual dos alunos que têm o item, com uma casa: "x% dos alunos".
 public sealed record RaridadeResponse(string Nivel, double Percentual);
 
-public sealed record PremioObtidoResponse(Guid Id, string Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm);
+// PostId entrou no passo 7: o post que o prêmio rendeu, para o app não oferecer de novo.
+public sealed record PremioObtidoResponse(Guid Id, string Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm, Guid? PostId);

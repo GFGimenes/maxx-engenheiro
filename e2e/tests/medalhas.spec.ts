@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { novaConta } from "./apoio/contas";
+import { abrirMenu } from "./apoio/navegacao";
 import {
   anularMedalha,
   matricular,
@@ -51,6 +52,7 @@ test(
     // A professora, pela lista da turma e pelo modal do catálogo.
     const daProfessora = await novaPagina(browser);
     await entrar(daProfessora, professora.email, professora.senha);
+    await abrirMenu(daProfessora);
     await daProfessora.getByRole("button", { name: "Minhas turmas" }).click();
     await daProfessora.getByRole("button", { name: /^Banco de Dados/ }).click();
     await daProfessora

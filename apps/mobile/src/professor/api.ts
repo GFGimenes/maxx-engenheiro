@@ -6,11 +6,13 @@ import { FalhaDaApi } from "../api/FalhaDaApi";
 // As consultas e a concessão do professor (passo 6). O escopo de turma é conferido pela
 // API no banco: uma turma que não é dele responde 403 com `fora-do-escopo`.
 
-export function useTurmasDoProfessor() {
+// `ativo` falso para quem não é professor: a rota responderia 403.
+export function useTurmasDoProfessor(ativo = true) {
   const client = useApiClient();
 
   return useQuery({
     queryKey: ["professor", "turmas"],
+    enabled: ativo,
     queryFn: async () => {
       const { data, error } = await client.GET("/api/v1/professor/turmas");
       if (!data) {

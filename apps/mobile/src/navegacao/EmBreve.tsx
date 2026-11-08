@@ -23,27 +23,11 @@ export function EmBreve({
   );
 }
 
-export const BuscaEmBreve = () => (
-  <EmBreve
-    icone="search"
-    titulo="Busca em breve."
-    mensagem="Aqui você vai encontrar alunos pelo nome e pelo arroba."
-  />
-);
-
 export const MuralEmBreve = () => (
   <EmBreve
     icone="newspaper"
     titulo="Mural em breve."
     mensagem="Os avisos da faculdade, do curso e das turmas vão aparecer aqui."
-  />
-);
-
-export const PerfilEmBreve = () => (
-  <EmBreve
-    icone="user"
-    titulo="Perfil em breve."
-    mensagem="Seus posts, pontos e prêmios vão aparecer aqui."
   />
 );
 

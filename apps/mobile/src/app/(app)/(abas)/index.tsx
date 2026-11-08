@@ -1,3 +1,3 @@
-import { InicioProvisorio } from "../../../inicio/InicioProvisorio";
+import { FeedScreen } from "../../../feed/FeedScreen";
 
-export default InicioProvisorio;
+export default FeedScreen;

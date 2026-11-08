@@ -18,11 +18,13 @@ sequenceDiagram
   Aluno->>API: pedido de upload (tipo e tamanho das duas)
   API->>API: valida tipo e tamanho
   API->>DB: registra upload pendente com chaves aleatorias
-  API-->>Aluno: duas URLs assinadas, content-type preso na assinatura
+  API->>Fila: limpeza do upload abandonado, adiada 24 horas
+  API-->>Aluno: duas URLs assinadas, content-type e tamanho presos na assinatura
   Aluno->>R2: PUT das duas derivadas, direto no bucket
 
-  Aluno->>API: cria o post de reivindicacao (item, evento, chaves das fotos)
+  Aluno->>API: cria o post de reivindicacao (item, evento, id do upload)
   API->>DB: confere a deduplicacao do premio
+  API->>R2: HEAD das duas derivadas
   API->>DB: confirma o upload pendente
   API->>DB: grava o post e o premio Reivindicado, com a Comprovacao
   Note over DB: post publico com marca pendente<br/>o premio ainda nao pontua
@@ -53,9 +55,9 @@ sequenceDiagram
 | Passo | Fonte |
 |---|---|
 | Duas derivadas geradas no cliente (feed ~1080², grade ~320²), sem metadado de localização | ADR 0003 |
-| API valida tipo e tamanho antes de assinar; assinatura prende o `content-type`; foto nunca passa pela API | ADR 0002; `CLAUDE.md` (Segurança) |
+| API valida tipo e tamanho antes de assinar; assinatura prende o `content-type` e o tamanho exato; foto nunca passa pela API | ADR 0002; `CLAUDE.md` (Segurança); `decisoes/README.md` (passo 7) |
 | Chave de objeto aleatória, porque a leitura é pública para quem tem o link | ADR 0002; `produto.md` 9.2 |
-| Upload pendente registrado e confirmado ao criar o post; limpeza do abandonado na fila | ADR 0002; `plano-mestre.md` passo 7 |
+| Upload pendente registrado e confirmado ao criar o post, depois de o HEAD achar as duas derivadas; limpeza do abandonado na fila, 24 horas depois da assinatura | ADR 0002; `decisoes/README.md` (passo 7) |
 | Um prêmio por evento; evento em texto livre bloqueia o mesmo item na mesma data; apresentação em sala deduplica por item, data e matéria | `produto.md` 4.6 |
 | Post público desde o envio, com marca "pendente", sem pontuar | `produto.md` 4.7 e 9.1 |
 | Aprovam o professor de qualquer turma do aluno no semestre vigente ou a instituição; vale quem chega primeiro | `produto.md` 4.7 |
