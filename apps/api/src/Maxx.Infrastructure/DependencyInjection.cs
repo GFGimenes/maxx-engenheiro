@@ -2,6 +2,7 @@ using Maxx.Application;
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autorizacao;
+using Maxx.Application.Conquistas;
 using Maxx.Application.Demonstracao;
 using Maxx.Application.Feed;
 using Maxx.Application.Fila;
@@ -13,8 +14,10 @@ using Maxx.Application.Posts;
 using Maxx.Application.Premios;
 using Maxx.Application.PremiosParticipacao;
 using Maxx.Application.Social;
+using Maxx.Domain.Conquistas;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
+using Maxx.Infrastructure.Conquistas;
 using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Feed;
@@ -69,6 +72,11 @@ public static class DependencyInjection
         services.AddScoped<IPremioParticipacaoRepository, PremioParticipacaoRepository>();
         services.AddScoped<IConsultaDeComprovacoes, ConsultaDeComprovacoes>();
         services.AddScoped<IConsultaDeContestacoes, ConsultaDeContestacoes>();
+        services.AddScoped<IConquistaRepository, ConquistaRepository>();
+
+        // O avaliador único das conquistas (ADR 0004), com as regras customizadas registradas.
+        // Nenhuma conquista da fase 1 usa o escape, e nenhuma está registrada.
+        services.AddSingleton(servicos => new AvaliadorDeConquista(servicos.GetServices<IRegraCustomizada>()));
 
         // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
         // fora de desenvolvimento.
@@ -103,6 +111,7 @@ public static class DependencyInjection
         services.AddTrabalho<NotificarContestacaoAberta, NotificarContestacaoHandler>();
         services.AddTrabalho<NotificarDecisaoDeContestacao, NotificarContestacaoHandler>();
         services.AddTrabalho<NotificarPremioRevogado, NotificarContestacaoHandler>();
+        services.AddTrabalho<ReavaliarConquistas, ReavaliarConquistasHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

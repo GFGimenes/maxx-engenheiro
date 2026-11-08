@@ -1,5 +1,6 @@
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autorizacao;
+using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
@@ -83,6 +84,7 @@ public sealed class ContestacaoHandler(
         }
 
         fila.Enfileirar(new NotificarDecisaoDeContestacao(premio.Id));
+        fila.Enfileirar(ReavaliarConquistas.PeloPremio(premio.AlunoId, premio.Id));
         fila.Enfileirar(new RecalcularRaridade());
         await SalvarDecisaoAsync(contestacaoId, cancellationToken);
     }

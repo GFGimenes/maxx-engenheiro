@@ -12,11 +12,14 @@ using Maxx.Api.IntegrationTests.PremiosParticipacao;
 using Maxx.Application;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Catalogo;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Fotos;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Notificacoes;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
+using Maxx.Infrastructure.Conquistas;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
@@ -417,6 +420,52 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         {
         }
 
+        // Uma conquista de cada um, com a medalha como evidência e o progresso gravado: a
+        // conquista segura o aluno, e a evidência, a medalha.
+        var c90 = new ItemConquista
+        {
+            Codigo = "C90",
+            Nome = "Uma presença no curso",
+            Descricao = "Receber uma medalha de presença integral.",
+            Tier = Tier.Bronze,
+            Pontos = 5,
+            Periodo = Periodo.Curso,
+            Gatilho = Gatilho.PorFato,
+            Regra = new() { Forma = FormaDeContagem.Contagem, Fonte = FonteDeContagem.Medalha, FiltroItens = ["M03"], Alvo = AlvoDeConquista.De(1) },
+        };
+        await SalvarAsync(factory, CatalogoRowMapper.ParaRow(c90));
+        foreach (var nome in new[] { "Ana Paula", "Carla Dias" })
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var aluno = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == nome, Ct);
+            var medalha = await banco.Set<Medalha>().SingleAsync(linha => linha.AlunoId == aluno.Id, Ct);
+            var fato = new FatoContavel
+            {
+                Origem = OrigemDoFato.Medalha,
+                Id = medalha.Id,
+                ItemCodigo = medalha.ItemCodigo,
+                MateriaId = medalha.MateriaId,
+                BimestreId = medalha.BimestreId,
+                SemestreLetivoId = medalha.SemestreLetivoId,
+                AnoLetivoId = Guid.CreateVersion7(),
+            };
+            var instancia = new InstanciaDePeriodo(Periodo.Curso, aluno.Id);
+            await SalvarAsync(
+                factory,
+                Conquista.Conceder(c90, 1, aluno.Id, instancia, Avaliacao.De(1, 1, [fato]), DateTimeOffset.UtcNow),
+                new ProgressoDeConquistaRow
+                {
+                    AlunoId = aluno.Id,
+                    ItemCodigo = c90.Codigo,
+                    TipoDePeriodo = "curso",
+                    ReferenciaDoPeriodo = aluno.Id,
+                    Contagem = 1,
+                    Alvo = 1,
+                    AtualizadoEm = DateTimeOffset.UtcNow,
+                });
+        }
+
         var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);
         var purga = Regex.Match(readme, @"```sql\s+(BEGIN;.*?COMMIT;)\s+```", RegexOptions.Singleline, TimeSpan.FromSeconds(5));
         Assert.True(purga.Success);
@@ -434,6 +483,10 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal("Carla Dias", restante.NomeDeExibicao);
         Assert.Equal(restante.Id, (await db.Set<AceiteDeTermo>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<Medalha>().SingleAsync(Ct)).AlunoId);
+        var conquistaQueFica = await db.Set<Conquista>().Include(conquista => conquista.Evidencias).SingleAsync(Ct);
+        Assert.Equal(restante.Id, conquistaQueFica.AlunoId);
+        Assert.Equal(1, await db.Set<EvidenciaDaConquista>().CountAsync(Ct));
+        Assert.Equal(restante.Id, (await db.Set<ProgressoDeConquistaRow>().SingleAsync(Ct)).AlunoId);
         Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
         Assert.All(await db.Set<UploadPendente>().ToListAsync(Ct), upload => Assert.Equal(restante.Id, upload.UsuarioId));
         Assert.Equal(2, await db.Set<UploadPendente>().CountAsync(Ct));

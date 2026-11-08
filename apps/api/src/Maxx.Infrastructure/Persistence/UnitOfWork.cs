@@ -17,6 +17,7 @@ internal sealed class UnitOfWork(MaxxDbContext db) : IUnitOfWork
         ["ix_post_premio_participacao_ativo"] = Unicidade.PostPorPremio,
         ["ix_premio_participacao_chave_ativa"] = Unicidade.PremioParticipacaoAtivo,
         ["ix_contestacao_premio_participacao_id"] = Unicidade.ContestacaoPorPremio,
+        ["ix_conquista_instancia_ativa"] = Unicidade.ConquistaAtiva,
         ["pk_curtida"] = Unicidade.Curtida,
         ["pk_seguimento"] = Unicidade.Seguimento,
     };

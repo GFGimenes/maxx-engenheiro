@@ -1,3 +1,4 @@
+using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 
 namespace Maxx.Domain.Conquistas;
@@ -27,4 +28,36 @@ public sealed record InstanciaDePeriodo
     public Periodo Tipo { get; }
 
     public Guid Referencia { get; }
+
+    // O último dia da instância, em America/Sao_Paulo. Nulo no período curso, que não tem
+    // fronteira de data, e na referência que o calendário não conhece.
+    public DateOnly? Fim(Calendario calendario)
+    {
+        ArgumentNullException.ThrowIfNull(calendario);
+
+        return Tipo switch
+        {
+            Periodo.Bimestre => calendario.Anos.SelectMany(ano => ano.Bimestres).FirstOrDefault(b => b.Id == Referencia)?.Fim,
+            Periodo.Semestre => calendario.Anos.SelectMany(ano => ano.Semestres).FirstOrDefault(s => s.Id == Referencia)?.Fim,
+            Periodo.Ano => calendario.Anos.FirstOrDefault(ano => ano.Id == Referencia)?.Fim,
+            _ => null,
+        };
+    }
+
+    // Os semestres letivos que a instância cobre: é neles que se procuram as matrículas do
+    // alvo dinâmico. O bimestre está num semestre só; o ano, nos dois. O período curso não
+    // tem alvo dinâmico, e a lista sai vazia.
+    public IReadOnlyList<SemestreLetivo> Semestres(Calendario calendario)
+    {
+        ArgumentNullException.ThrowIfNull(calendario);
+
+        var semestres = calendario.Anos.SelectMany(ano => ano.Semestres);
+        return Tipo switch
+        {
+            Periodo.Bimestre => [.. semestres.Where(semestre => semestre.Bimestres.Any(b => b.Id == Referencia))],
+            Periodo.Semestre => [.. semestres.Where(semestre => semestre.Id == Referencia)],
+            Periodo.Ano => [.. calendario.Anos.Where(ano => ano.Id == Referencia).SelectMany(ano => ano.Semestres)],
+            _ => [],
+        };
+    }
 }

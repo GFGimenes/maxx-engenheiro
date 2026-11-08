@@ -1,6 +1,7 @@
 using Maxx.Application.Premios;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
@@ -77,13 +78,19 @@ internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
                 premio.Id, premio.Tier, premio.Pontos, premio.Materia, null, premio.AprovadoEm!.Value, premio.PostId))))
             .ToLookup(par => par.ItemCodigo, par => par.Obtido);
 
+        // A conquista não removida pontua (produto.md 4.9: tudo soma). O que ela mostra como
+        // obtido na tela chega com a leitura de Troféus (passo 9, etapa 5).
+        var pontosDeConquistas = await db.Set<Conquista>()
+            .Where(conquista => conquista.AlunoId == alunoId && conquista.RemovidaEm == null)
+            .SumAsync(conquista => conquista.Pontos, cancellationToken);
+
         var raridades = await db.Set<RaridadeDoItemRow>().AsNoTracking()
             .ToDictionaryAsync(linha => linha.ItemCodigo, cancellationToken);
         var itens = await db.Set<ItemCatalogoRow>().AsNoTracking().OrderBy(item => item.Codigo).ToListAsync(cancellationToken);
         var familias = await db.Set<FamiliaRow>().AsNoTracking().OrderBy(familia => familia.Codigo).ToListAsync(cancellationToken);
 
         return new PremiosDoAluno(
-            medalhas.Sum(medalha => medalha.Pontos) + participacoes.Sum(premio => premio.Pontos),
+            medalhas.Sum(medalha => medalha.Pontos) + participacoes.Sum(premio => premio.Pontos) + pontosDeConquistas,
             [.. familias.Select(familia => new FamiliaDoCatalogo(familia.Codigo, familia.Nome, familia.Descricao, familia.Passos))],
             [.. itens
                 .Where(item => item.RestricaoCurso is null

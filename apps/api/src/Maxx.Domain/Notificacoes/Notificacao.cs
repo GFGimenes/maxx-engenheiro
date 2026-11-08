@@ -1,3 +1,4 @@
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Premios;
 
 namespace Maxx.Domain.Notificacoes;
@@ -106,6 +107,31 @@ public sealed class Notificacao
 
         return new Notificacao(premio.AlunoId, TipoDeNotificacao.PremioRevogado, premio.Id, agora);
     }
+
+    // Conquista obtida (passo 9, fluxos/03-concessao-de-medalha.md): o sistema a concedeu.
+    public static Notificacao ConquistaObtida(Conquista conquista, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(conquista);
+        if (!conquista.EstaAtiva)
+        {
+            throw new DomainException($"A conquista {conquista.Id} foi removida e não notifica como obtida.");
+        }
+
+        return new Notificacao(conquista.AlunoId, TipoDeNotificacao.ConquistaObtida, conquista.Id, agora);
+    }
+
+    // Conquista removida pelo recálculo depois de uma anulação (regras-conquista.md 6): os
+    // pontos saíram, e o aluno fica sabendo.
+    public static Notificacao ConquistaRemovida(Conquista conquista, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(conquista);
+        if (conquista.EstaAtiva)
+        {
+            throw new DomainException($"A conquista {conquista.Id} não foi removida.");
+        }
+
+        return new Notificacao(conquista.AlunoId, TipoDeNotificacao.ConquistaRemovida, conquista.Id, agora);
+    }
 }
 
 public enum TipoDeNotificacao
@@ -116,4 +142,6 @@ public enum TipoDeNotificacao
     ContestacaoAberta,
     DecisaoDeContestacao,
     PremioRevogado,
+    ConquistaObtida,
+    ConquistaRemovida,
 }

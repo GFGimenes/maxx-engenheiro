@@ -12,7 +12,7 @@ public interface IConsultaDePremios
 }
 
 // Pontos: a soma do que pontua hoje: as medalhas ativas e os prêmios de participação
-// válidos e definitivos.
+// válidos e definitivos, e as conquistas não removidas.
 public sealed record PremiosDoAluno(int Pontos, IReadOnlyList<FamiliaDoCatalogo> Familias, IReadOnlyList<ItemDoAluno> Itens);
 
 public sealed record FamiliaDoCatalogo(string Codigo, string Nome, string Descricao, int Passos);
