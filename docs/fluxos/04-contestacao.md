@@ -74,3 +74,14 @@ sequenceDiagram
 Prêmio revogado nunca chega a ser evidência de conquista, porque só conta depois de
 definitivo e, depois de definitivo, não pode mais ser contestado
 (`regras-conquista.md` 6).
+
+## Como ficou no passo 8
+
+- A contestação e a decisão enfileiram a notificação e o recálculo de raridade. O recálculo
+  de ranking chega no passo 11, e a reavaliação de conquistas, que o trabalho do fim da
+  janela e a confirmação devem disparar, no passo 9.
+- A instituição também revoga sem contestação, quando remove o post de um prêmio válido; em
+  averiguação, remover o post decide a contestação revogando. O motivo é "Removido pela
+  instituição." (`produto.md` 4.7).
+- Em averiguação, o post aparece sem o prêmio para quem não é o aluno nem a instituição.
+- Rotas, códigos e decisões em `decisoes/README.md`, Prêmios de participação (passo 8).

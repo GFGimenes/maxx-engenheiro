@@ -25,6 +25,14 @@ public static class CodigosDoPost
 
     public const string PremioAnulado = "premio-anulado";
 
+    // A reivindicação de prêmio de participação sem foto: a foto é a comprovação.
+    public const string FotoObrigatoria = "foto-obrigatoria";
+
+    // O post é a comprovação de um prêmio que ainda pode ser decidido (pendente, válido ou em
+    // averiguação): o autor não o apaga até o prêmio ficar definitivo. A instituição remove,
+    // resolvendo o prêmio no mesmo ato.
+    public const string ComprovacaoEmAndamento = "comprovacao-em-andamento";
+
     // Um prêmio rende um post.
     public const string PremioJaPostado = "premio-ja-postado";
 

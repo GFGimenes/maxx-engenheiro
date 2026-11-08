@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Maxx.Domain.Catalogo;
+using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Seed;
 
 namespace Maxx.Api.IntegrationTests;
@@ -53,6 +54,23 @@ public sealed class CatalogoArquivosTests : IDisposable
         Assert.True(conquistas["C03"].Regra.Alvo?.EhTodasAsMatriculasDoPeriodo);
         Assert.Equal(Agrupamento.Materia, conquistas["C03"].Regra.AgruparPor);
         Assert.Equal(Gatilho.FechamentoDePeriodo, conquistas["C03"].Gatilho);
+    }
+
+    // Os eventos semeados contra o catálogo, sem banco: todo item aceito é prêmio de
+    // participação, e cada evento passa pelas regras do domínio (datas, código, P17).
+    [Fact]
+    public void Eventos_do_repositorio_aceitam_so_premios_de_participacao_do_catalogo()
+    {
+        var itens = CatalogoReader.Ler(_diretorioReal).Catalogo!.Itens.OfType<ItemPremioParticipacao>()
+            .ToDictionary(item => item.Codigo, StringComparer.Ordinal);
+        var eventos = EventosDemoReader.Ler(Path.Combine(Repositorio.DiretorioDeDados, "demo")).Eventos;
+
+        Assert.NotEmpty(eventos);
+        Assert.All(eventos, evento =>
+        {
+            Assert.All(evento.Itens, codigo => Assert.True(itens.ContainsKey(codigo), $"{evento.Codigo}: {codigo} não é prêmio de participação."));
+            Evento.Semeado(evento.Codigo, evento.Nome, evento.Inicio, evento.Fim, [.. evento.Itens.Select(codigo => itens[codigo])], null);
+        });
     }
 
     [Fact]

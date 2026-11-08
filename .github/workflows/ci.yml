@@ -26,16 +26,16 @@ jobs:
         run: dotnet format Maxx.sln --verify-no-changes --no-restore
       - name: Build (aviso vira erro)
         run: dotnet build Maxx.sln --no-restore -c Release
-      # Catálogo e calendário são dados da API, então a formatação deles é conferida aqui. Sem `npm ci`:
+      # Catálogo, calendário e demonstração são dados da API, então a formatação deles é conferida aqui. Sem `npm ci`:
       # só o Prettier, na versão travada no package-lock.json.
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - name: Formatação de data/ (catálogo e calendário)
+      - name: Formatação de data/ (catálogo, calendário e demonstração)
         run: npx --yes "prettier@$(node -p "require('./package-lock.json').packages['node_modules/prettier'].version")" --check data
       # Passo próprio para a falha de catálogo ficar legível sem abrir o log dos testes.
       # Os mesmos testes rodam de novo no passo seguinte; sem banco, levam segundos.
-      - name: Catálogo válido
+      - name: Catálogo e eventos válidos
         run: >-
           dotnet test --project apps/api/tests/Maxx.Api.IntegrationTests --no-build -c Release
           --filter-class Maxx.Api.IntegrationTests.CatalogoArquivosTests

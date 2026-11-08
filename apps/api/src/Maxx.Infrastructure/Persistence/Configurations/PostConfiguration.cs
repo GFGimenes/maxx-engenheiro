@@ -16,7 +16,10 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.ToTable("post", table =>
         {
             table.HasCheckConstraint(
-                "ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL");
+                "ck_post_nao_vazio",
+                "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL");
+            table.HasCheckConstraint(
+                "ck_post_um_premio", "medalha_id IS NULL OR premio_participacao_id IS NULL");
             table.HasCheckConstraint(
                 "ck_post_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
             table.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
@@ -30,6 +33,10 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
             .HasDatabaseName("ix_post_medalha_ativa")
             .IsUnique()
             .HasFilter("medalha_id IS NOT NULL AND removido_em IS NULL");
+        builder.HasIndex(post => post.PremioParticipacaoId)
+            .HasDatabaseName("ix_post_premio_participacao_ativo")
+            .IsUnique()
+            .HasFilter("premio_participacao_id IS NOT NULL AND removido_em IS NULL");
 
         // Os posts de um autor, do mais novo ao mais antigo: o perfil e o trecho de seguidos
         // do feed (passo 7, etapas 5 e 6) andam por este índice.
@@ -39,6 +46,7 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.HasOne<Usuario>().WithMany().HasForeignKey(post => post.AutorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Usuario>().WithMany().HasForeignKey(post => post.RemovidoPorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Medalha>().WithMany().HasForeignKey(post => post.MedalhaId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<PremioParticipacao>().WithMany().HasForeignKey(post => post.PremioParticipacaoId).OnDelete(DeleteBehavior.Restrict);
 
         // Duas remoções, ou remoção e anulação, ao mesmo tempo: o xmin deixa só a primeira
         // gravar.

@@ -29,6 +29,7 @@ function item(
     ordemNaFamilia: null,
     raridade: { nivel: "lendario", percentual: 0 },
     obtidos: [],
+    exigeMateria: false,
     ...parcial,
   };
 }

@@ -12,6 +12,7 @@ using Maxx.Api.OpenApi;
 using Maxx.Api.Perfil;
 using Maxx.Api.Posts;
 using Maxx.Api.Premios;
+using Maxx.Api.PremiosParticipacao;
 using Maxx.Api.Social;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
@@ -98,6 +99,12 @@ builder.Services.AddScoped<Maxx.Application.Social.ComentarioHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.SeguimentoHandler>();
 builder.Services.AddScoped<Maxx.Application.Feed.FeedHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.EditarPerfilHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.EventosHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.MateriasDoAlunoHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ReivindicarHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.DecidirComprovacaoHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.FilaDeComprovacoesHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ContestacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 
 var app = builder.Build();
@@ -167,6 +174,9 @@ v1.MapPostEndpoints();
 v1.MapSocialEndpoints();
 v1.MapFeedEndpoints();
 v1.MapPerfilEndpoints();
+v1.MapEventoEndpoints();
+v1.MapComprovacaoEndpoints();
+v1.MapContestacaoEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

@@ -84,6 +84,38 @@ public static class CatalogoRowMapper
         };
     }
 
+    // O mesmo caminho, para o prêmio de participação.
+    public static ItemPremioParticipacao ParaPremioParticipacao(ItemCatalogoRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        if (row.Tipo != NomeJson.De(TipoDeItem.PremioParticipacao))
+        {
+            throw new InvalidOperationException($"O item {row.Codigo} é {row.Tipo}, não prêmio de participação.");
+        }
+
+        return new ItemPremioParticipacao
+        {
+            Codigo = row.Codigo,
+            Nome = row.Nome,
+            Descricao = row.Descricao,
+            Tier = Ler<Tier>(row.Tier, row.Codigo),
+            Pontos = row.Pontos,
+            Familia = row.FamiliaCodigo,
+            OrdemNaFamilia = row.OrdemNaFamilia,
+            RestricaoCurso = row.RestricaoCurso,
+            Vigencia = new Vigencia(row.VigenciaInicio, row.VigenciaFim),
+            TipoDeEvento = row.TipoDeEvento ?? throw Incompleto(row.Codigo, "tipoDeEvento"),
+            FormaDoEvento = Ler<FormaDoEvento>(row.FormaDoEvento, row.Codigo),
+            ExigeFoto = row.ExigeFoto ?? throw Incompleto(row.Codigo, "exigeFoto"),
+            PeriodoDeReferencia = Ler<Periodo>(row.Periodo, row.Codigo),
+            ChaveDeDeduplicacao = [.. (row.ChaveDeDeduplicacao ?? throw Incompleto(row.Codigo, "chaveDeDeduplicacao"))
+                .Select(campo => Ler<CampoDeDeduplicacao>(campo, row.Codigo))],
+        };
+    }
+
+    private static InvalidOperationException Incompleto(string codigo, string campo) =>
+        new($"O prêmio de participação {codigo} está sem {campo} no banco.");
+
     private static T Ler<T>(string? texto, string codigo)
         where T : struct, Enum =>
         NomeJson.TentarLer<T>(texto, out var valor)
