@@ -46,15 +46,19 @@ internal static class PostEndpoints
         CancellationToken cancellationToken)
     {
         var post = await handler.PublicarAsync(UsuarioId(principal), pedido.Legenda, pedido.UploadId, pedido.MedalhaId, cancellationToken);
-        var lido = await consulta.PostAsync(post.Id, cancellationToken)
+        var lido = await consulta.PostAsync(post.Id, UsuarioId(principal), cancellationToken)
             ?? throw new InvalidOperationException($"O post {post.Id} acabou de ser gravado e não foi lido.");
         return TypedResults.Created($"/api/v1/posts/{post.Id}", PostResponse.De(lido, armazenamento));
     }
 
     private static async Task<Ok<PostResponse>> LerAsync(
-        Guid postId, IConsultaDePosts consulta, IArmazenamentoDeFotos armazenamento, CancellationToken cancellationToken)
+        Guid postId,
+        ClaimsPrincipal principal,
+        IConsultaDePosts consulta,
+        IArmazenamentoDeFotos armazenamento,
+        CancellationToken cancellationToken)
     {
-        var lido = await consulta.PostAsync(postId, cancellationToken)
+        var lido = await consulta.PostAsync(postId, UsuarioId(principal), cancellationToken)
             ?? throw new RecusaException(TipoDeRecusa.NaoEncontrado, CodigosDoPost.PostNaoEncontrado, $"Post {postId} não existe.");
         return TypedResults.Ok(PostResponse.De(lido, armazenamento));
     }
@@ -67,7 +71,7 @@ internal static class PostEndpoints
     }
 
     // O sub do token; o grupo /v1 já exigiu um usuário autenticado.
-    private static Guid UsuarioId(ClaimsPrincipal principal) =>
+    internal static Guid UsuarioId(ClaimsPrincipal principal) =>
         Guid.TryParse(principal.FindFirstValue(MaxxClaims.Sub), out var id)
             ? id
             : throw new InvalidOperationException("Token autenticado sem sub.");
@@ -83,7 +87,10 @@ public sealed record PostResponse(
     string? Legenda,
     FotoDoPostResponse? Foto,
     PremioDoPostResponse? Premio,
-    DateTimeOffset CriadoEm)
+    DateTimeOffset CriadoEm,
+    int Curtidas,
+    int Comentarios,
+    bool Curtiu)
 {
     public static PostResponse De(PostLido post, IArmazenamentoDeFotos armazenamento) => new(
         post.Id,
@@ -104,7 +111,10 @@ public sealed record PostResponse(
                 premio.Materia,
                 premio.Bimestre)
             : null,
-        post.CriadoEm);
+        post.CriadoEm,
+        post.Curtidas,
+        post.Comentarios,
+        post.Curtiu);
 }
 
 // Curso pela sigla e semestre do aluno (1º ao 8º), como na linha do autor no feed.

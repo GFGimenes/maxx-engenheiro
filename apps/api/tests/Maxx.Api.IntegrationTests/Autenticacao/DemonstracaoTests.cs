@@ -301,7 +301,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
     // O SQL é o do README das decisões, o que será rodado depois da apresentação.
     [Fact]
-    public async Task A_purga_do_readme_apaga_o_lote_com_aceites_medalhas_uploads_e_posts_e_mantem_o_termo_e_o_que_nao_e_do_lote()
+    public async Task A_purga_do_readme_apaga_o_lote_com_aceites_medalhas_uploads_posts_e_interacoes_e_mantem_o_termo_e_o_que_nao_e_do_lote()
     {
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
@@ -368,6 +368,26 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             await SalvarAsync(factory, Post.Publicar(aluno, "Nota 10!", null, medalha, DateTimeOffset.UtcNow).Post!);
         }
 
+        // Entre os dois: a Ana curte e comenta o post da Carla, a Carla curte o da Ana e
+        // comenta o próprio, e cada uma segue a outra. Do lado da Carla fica só o comentário
+        // dela no post dela; o resto toca a Ana e sai com ela.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var ana = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == "Ana Paula", Ct);
+            var carla = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == "Carla Dias", Ct);
+            var doPost = await banco.Set<Post>().ToDictionaryAsync(post => post.AutorId, Ct);
+            var agora = DateTimeOffset.UtcNow;
+            await SalvarAsync(
+                factory,
+                Curtida.Curtir(ana, doPost[carla.Id], agora)!,
+                Curtida.Curtir(carla, doPost[ana.Id], agora)!,
+                Comentario.Escrever(ana, doPost[carla.Id], "Parabéns!", agora).Comentario!,
+                Comentario.Escrever(carla, doPost[carla.Id], "Valeu!", agora).Comentario!,
+                Seguimento.Seguir(ana, carla, professorDoSeguido: false, agora)!,
+                Seguimento.Seguir(carla, ana, professorDoSeguido: false, agora)!);
+        }
+
         // O worker grava as notificações de medalha recebida, que a purga também leva.
         var consumidor = factory.Services.GetRequiredService<ConsumidorDeTrabalhos>();
         while (await consumidor.ProcessarProximoAsync(Ct))
@@ -394,6 +414,9 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<UploadPendente>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<Post>().SingleAsync(Ct)).AutorId);
+        Assert.Empty(await db.Set<Curtida>().ToListAsync(Ct));
+        Assert.Empty(await db.Set<Seguimento>().ToListAsync(Ct));
+        Assert.Equal("Valeu!", (await db.Set<Comentario>().SingleAsync(Ct)).Texto);
         Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(cadastro => cadastro.Papeis == Papeis.Aluno, Ct));
         Assert.Equal(1, await db.Set<TermoDeUso>().CountAsync(Ct));
     }

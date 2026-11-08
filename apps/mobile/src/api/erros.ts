@@ -49,6 +49,17 @@ const MENSAGENS = {
   "premio-ja-postado": "Esse prêmio já tem um post.",
   "post-nao-encontrado": "Esse post não existe mais.",
   "remocao-nao-permitida": "Você não pode apagar este post.",
+  // Curtida, comentário e seguir (CodigosSociais.cs)
+  "interacao-nao-permitida": "A instituição não curte nem comenta.",
+  "comentario-vazio": "Escreva alguma coisa antes de enviar.",
+  "comentario-longo": "O comentário passou de 500 caracteres.",
+  "comentario-nao-encontrado": "Esse comentário não existe mais.",
+  "remocao-de-comentario-nao-permitida":
+    "Você não pode apagar este comentário.",
+  "usuario-nao-encontrado": "Essa pessoa não está mais no Maxx.",
+  "seguir-nao-permitido": "Não dá para seguir este perfil.",
+  // Paginação (CodigosDaPaginacao.cs)
+  "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
   "requisicao-invalida": "Confira os dados e tente de novo.",
   "dados-invalidos": "Confira os dados e tente de novo.",

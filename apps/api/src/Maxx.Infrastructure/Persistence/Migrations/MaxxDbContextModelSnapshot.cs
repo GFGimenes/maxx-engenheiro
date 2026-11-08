@@ -841,6 +841,86 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Social.Comentario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("autor_id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("post_id");
+
+                    b.Property<DateTimeOffset?>("RemovidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removido_em");
+
+                    b.Property<Guid?>("RemovidoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("removido_por_id");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_comentario");
+
+                    b.HasIndex("AutorId")
+                        .HasDatabaseName("ix_comentario_autor_id");
+
+                    b.HasIndex("RemovidoPorId")
+                        .HasDatabaseName("ix_comentario_removido_por_id");
+
+                    b.HasIndex("PostId", "CriadoEm", "Id")
+                        .HasDatabaseName("ix_comentario_post_id_criado_em_id");
+
+                    b.ToTable("comentario", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_comentario_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
+
+                            t.HasCheckConstraint("ck_comentario_texto", "length(texto) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Social.Curtida", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("post_id");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.HasKey("PostId", "UsuarioId")
+                        .HasName("pk_curtida");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_curtida_usuario_id");
+
+                    b.ToTable("curtida", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Social.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -907,6 +987,32 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL");
 
                             t.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Social.Seguimento", b =>
+                {
+                    b.Property<Guid>("SeguidorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seguidor_id");
+
+                    b.Property<Guid>("SeguidoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seguido_id");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.HasKey("SeguidorId", "SeguidoId")
+                        .HasName("pk_seguimento");
+
+                    b.HasIndex("SeguidoId")
+                        .HasDatabaseName("ix_seguimento_seguido_id");
+
+                    b.ToTable("seguimento", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_seguimento_outro", "seguidor_id <> seguido_id");
                         });
                 });
 
@@ -1407,6 +1513,46 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_medalha_turma_turma_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Social.Comentario", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_comentario_usuario_autor_id");
+
+                    b.HasOne("Maxx.Domain.Social.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_comentario_post_post_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("RemovidoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_comentario_usuario_removido_por_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Social.Curtida", b =>
+                {
+                    b.HasOne("Maxx.Domain.Social.Post", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_curtida_post_post_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_curtida_usuario_usuario_id");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Social.Post", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -1427,6 +1573,23 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasForeignKey("RemovidoPorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_post_usuario_removido_por_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Social.Seguimento", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("SeguidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_seguimento_usuario_seguido_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("SeguidorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_seguimento_usuario_seguidor_id");
                 });
 
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>

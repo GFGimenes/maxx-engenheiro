@@ -30,7 +30,7 @@ internal sealed class PostRepository(MaxxDbContext db) : IPostRepository
 
 internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
 {
-    public async Task<PostLido?> PostAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<PostLido?> PostAsync(Guid id, Guid leitorId, CancellationToken cancellationToken)
     {
         var linha = await (
                 from post in db.Set<Post>()
@@ -53,6 +53,9 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     autor.Sufixo,
                     Curso = curso == null ? null : curso.Sigla,
                     cadastro.Semestre,
+                    Curtidas = db.Set<Curtida>().Count(curtida => curtida.PostId == post.Id),
+                    Comentarios = db.Set<Comentario>().Count(comentario => comentario.PostId == post.Id && comentario.RemovidoEm == null),
+                    Curtiu = db.Set<Curtida>().Any(curtida => curtida.PostId == post.Id && curtida.UsuarioId == leitorId),
                 })
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
@@ -68,7 +71,10 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
             linha.ChaveDaFotoDoFeed,
             linha.ChaveDaFotoDaGrade,
             linha.MedalhaId is { } medalhaId ? await MedalhaAsync(medalhaId, cancellationToken) : null,
-            linha.CriadoEm);
+            linha.CriadoEm,
+            linha.Curtidas,
+            linha.Comentarios,
+            linha.Curtiu);
     }
 
     private async Task<PremioDoPost?> MedalhaAsync(Guid medalhaId, CancellationToken cancellationToken)

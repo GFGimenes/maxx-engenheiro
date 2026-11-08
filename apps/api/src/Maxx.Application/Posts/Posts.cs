@@ -30,8 +30,9 @@ public interface IPostRepository
 // do momento e raridade atual. Só consulta, sem regra.
 public interface IConsultaDePosts
 {
-    // Nulo para o que não existe e para o removido pela instituição.
-    Task<PostLido?> PostAsync(Guid id, CancellationToken cancellationToken);
+    // Nulo para o que não existe e para o removido pela instituição. Com as curtidas e os
+    // comentários contados, e se o leitor curtiu.
+    Task<PostLido?> PostAsync(Guid id, Guid leitorId, CancellationToken cancellationToken);
 }
 
 public sealed record PostLido(
@@ -41,7 +42,10 @@ public sealed record PostLido(
     string? ChaveDaFotoDoFeed,
     string? ChaveDaFotoDaGrade,
     PremioDoPost? Premio,
-    DateTimeOffset CriadoEm);
+    DateTimeOffset CriadoEm,
+    int Curtidas,
+    int Comentarios,
+    bool Curtiu);
 
 // Curso e semestre do aluno são perfil (produto.md 3); o RA nunca sai daqui.
 public sealed record AutorDoPost(Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre);
