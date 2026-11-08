@@ -7,6 +7,7 @@ import { NovoPostScreen } from "./NovoPostScreen";
 const mockRoteador = {
   push: jest.fn(),
   replace: jest.fn(),
+  dismissTo: jest.fn(),
   back: jest.fn(),
   canGoBack: jest.fn(() => true),
 };
@@ -190,7 +191,7 @@ describe("novo post", () => {
       medalhaId: null,
     });
     expect(uploads).not.toHaveBeenCalled();
-    expect(mockRoteador.replace).toHaveBeenCalledWith("/");
+    expect(mockRoteador.dismissTo).toHaveBeenCalledWith("/");
   });
 
   it("com foto, pede a assinatura com os tamanhos, envia as duas derivadas ao bucket e publica com o upload", async () => {

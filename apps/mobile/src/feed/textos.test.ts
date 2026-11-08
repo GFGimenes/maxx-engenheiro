@@ -1,4 +1,10 @@
-import { destinoSeguro, loginVoltandoPara } from "../navegacao/voltar";
+import { renderHook } from "@testing-library/react-native";
+
+import {
+  destinoSeguro,
+  loginVoltandoPara,
+  useDestinoDepoisDoLogin,
+} from "../navegacao/voltar";
 import {
   descreverAutor,
   descreverComentarios,
@@ -79,5 +85,29 @@ describe("voltar depois do login", () => {
   it("monta o login com o destino, ou o login puro", () => {
     expect(loginVoltandoPara("/post/abc")).toBe("/login?voltar=%2Fpost%2Fabc");
     expect(loginVoltandoPara("/")).toBe("/login");
+  });
+
+  it("guarda o destino quando a URL perde o voltar ao entrar", async () => {
+    const { result, rerender } = await renderHook(
+      ({ autenticado, voltar }: { autenticado: boolean; voltar?: string }) =>
+        useDestinoDepoisDoLogin(autenticado, voltar),
+      { initialProps: { autenticado: false, voltar: "/post/abc" } },
+    );
+    expect(result.current).toBe("/post/abc");
+
+    // Na web, a URL do login fica sem o voltar logo que a sessão abre.
+    await rerender({ autenticado: true, voltar: undefined });
+    expect(result.current).toBe("/post/abc");
+  });
+
+  it("sem voltar, ou com um voltar que não é post, não há destino", async () => {
+    const { result, rerender } = await renderHook(
+      ({ autenticado, voltar }: { autenticado: boolean; voltar?: string }) =>
+        useDestinoDepoisDoLogin(autenticado, voltar),
+      { initialProps: { autenticado: false, voltar: "//maligno.example" } },
+    );
+    expect(result.current).toBeNull();
+    await rerender({ autenticado: true, voltar: undefined });
+    expect(result.current).toBeNull();
   });
 });

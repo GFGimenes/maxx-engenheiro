@@ -9,6 +9,7 @@ import { FeedScreen } from "./FeedScreen";
 const mockRoteador = {
   push: jest.fn(),
   replace: jest.fn(),
+  dismissTo: jest.fn(),
   back: jest.fn(),
   canGoBack: jest.fn(() => true),
 };

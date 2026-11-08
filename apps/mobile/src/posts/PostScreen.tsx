@@ -45,7 +45,7 @@ export function PostScreen() {
             message="Ele pode ter sido apagado por quem publicou."
             action={{
               label: "Ir para o início",
-              onPress: () => router.replace("/"),
+              onPress: () => router.dismissTo("/"),
             }}
           />
         </View>
@@ -62,7 +62,7 @@ export function PostScreen() {
         <CartaoDePost
           post={post.data}
           leitor={eu.data}
-          onRemovido={() => router.replace("/")}
+          onRemovido={() => router.dismissTo("/")}
         />
       )}
     </ScrollView>

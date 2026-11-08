@@ -1,6 +1,6 @@
 import { Redirect, Slot, useGlobalSearchParams, type Href } from "expo-router";
 
-import { destinoSeguro } from "../../navegacao/voltar";
+import { useDestinoDepoisDoLogin } from "../../navegacao/voltar";
 import { EsperaDaSessao } from "../../sessao/EsperaDaSessao";
 import { useSessao } from "../../sessao/SessaoProvider";
 
@@ -11,13 +11,14 @@ import { useSessao } from "../../sessao/SessaoProvider";
 export default function PublicoLayout() {
   const { estado } = useSessao();
   const { voltar } = useGlobalSearchParams<{ voltar?: string }>();
+  const destino = useDestinoDepoisDoLogin(estado === "autenticado", voltar);
 
   if (estado === "restaurando") {
     return <EsperaDaSessao />;
   }
 
   if (estado === "autenticado") {
-    return <Redirect href={(destinoSeguro(voltar) ?? "/") as Href} />;
+    return <Redirect href={(destino ?? "/") as Href} />;
   }
 
   return <Slot />;

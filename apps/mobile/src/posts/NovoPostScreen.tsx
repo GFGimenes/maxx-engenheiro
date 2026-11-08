@@ -84,7 +84,7 @@ export function NovoPostScreen() {
   const enviar = () =>
     publicar.mutate(
       { legenda, derivadas, medalhaId },
-      { onSuccess: () => router.replace("/") },
+      { onSuccess: () => router.dismissTo("/") },
     );
 
   if (eu.isSuccess && !ehAluno) {
