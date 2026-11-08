@@ -44,9 +44,76 @@ public sealed class Notificacao
 
         return new Notificacao(medalha.AlunoId, TipoDeNotificacao.MedalhaRecebida, medalha.Id, agora);
     }
+
+    // Comprovação aprovada (passo 8): o prêmio foi aprovado, mesmo que depois contestado.
+    public static Notificacao ComprovacaoAprovada(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.AprovadoEm is null)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi aprovado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.ComprovacaoAprovada, premio.Id, agora);
+    }
+
+    // Comprovação reprovada: o motivo o app lê do prêmio.
+    public static Notificacao ComprovacaoReprovada(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.Estado != EstadoDoPremioParticipacao.Reprovado)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi reprovado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.ComprovacaoReprovada, premio.Id, agora);
+    }
+
+    // Contestação aberta sobre um prêmio do aluno (produto.md 8). A referência é o prêmio:
+    // uma contestação por prêmio.
+    public static Notificacao ContestacaoAberta(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.ContestadoEm is null)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi contestado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.ContestacaoAberta, premio.Id, agora);
+    }
+
+    // A instituição decidiu a contestação: confirmou ou revogou. O app lê qual no prêmio.
+    public static Notificacao DecisaoDeContestacao(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.ContestadoEm is null
+            || premio.Estado is not (EstadoDoPremioParticipacao.Definitivo or EstadoDoPremioParticipacao.Revogado))
+        {
+            throw new DomainException($"O prêmio {premio.Id} não tem contestação decidida.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.DecisaoDeContestacao, premio.Id, agora);
+    }
+
+    // Prêmio válido revogado sem contestação: só pela remoção do post pela instituição.
+    public static Notificacao PremioRevogado(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.Estado != EstadoDoPremioParticipacao.Revogado)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi revogado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.PremioRevogado, premio.Id, agora);
+    }
 }
 
 public enum TipoDeNotificacao
 {
     MedalhaRecebida,
+    ComprovacaoAprovada,
+    ComprovacaoReprovada,
+    ContestacaoAberta,
+    DecisaoDeContestacao,
+    PremioRevogado,
 }

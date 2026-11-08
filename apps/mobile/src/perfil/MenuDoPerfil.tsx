@@ -16,7 +16,8 @@ interface MenuDoPerfilProps {
 
 // O menu do próprio perfil (o "≡" da prancheta): o lugar definitivo do tema (decisoes,
 // Design system: o controle saiu da tela de status para cá no passo 7), as turmas do
-// professor e a saída. Folha que sobe de baixo, como as do Instagram.
+// professor, as comprovações dos alunos dele (passo 8, D8) e a saída. Folha que sobe de
+// baixo, como as do Instagram.
 export function MenuDoPerfil({
   aberto,
   professor,
@@ -61,6 +62,16 @@ export function MenuDoPerfil({
               onPress={() => {
                 onFechar();
                 router.push("/turmas");
+              }}
+            />
+          )}
+          {professor && (
+            <Button
+              label="Comprovações"
+              variant="secondary"
+              onPress={() => {
+                onFechar();
+                router.push("/comprovacoes");
               }}
             />
           )}

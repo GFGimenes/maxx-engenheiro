@@ -40,7 +40,11 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
                     Seguidores = db.Set<Seguimento>().Count(seguimento => seguimento.SeguidoId == usuario.Id),
                     Seguindo = db.Set<Seguimento>().Count(seguimento => seguimento.SeguidorId == usuario.Id),
                     EuSigo = db.Set<Seguimento>().Any(seguimento => seguimento.SeguidorId == leitorId && seguimento.SeguidoId == usuario.Id),
-                    Pontos = db.Set<Medalha>().Where(medalha => medalha.AlunoId == usuario.Id && medalha.AnuladaEm == null).Sum(medalha => medalha.Pontos),
+                    Pontos = db.Set<Medalha>().Where(medalha => medalha.AlunoId == usuario.Id && medalha.AnuladaEm == null).Sum(medalha => medalha.Pontos)
+                        + db.Set<PremioParticipacao>()
+                            .Where(premio => premio.AlunoId == usuario.Id
+                                && (premio.Estado == EstadoDoPremioParticipacao.Valido || premio.Estado == EstadoDoPremioParticipacao.Definitivo))
+                            .Sum(premio => premio.Pontos),
                     MedalhasConcedidas = db.Set<Medalha>().Count(medalha => medalha.ConcedidaPorId == usuario.Id && medalha.AnuladaEm == null),
                 })
             .AsNoTracking()

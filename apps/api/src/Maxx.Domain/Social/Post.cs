@@ -9,8 +9,8 @@ namespace Maxx.Domain.Social;
 // rende um post. Só aluno ativo publica; o ex-aluno mantém os que já tinha. A foto são as
 // duas derivadas de um upload confirmado na publicação (ADR 0002 e 0003).
 //
-// No passo 7 o prêmio é a medalha; o prêmio de participação e a conquista entram como
-// outras referências nos passos 8 e 9, nunca mais de uma por post.
+// O prêmio é a medalha (passo 7) ou o prêmio de participação reivindicado (passo 8); a
+// conquista entra no passo 9. Nunca mais de um por post.
 public sealed class Post
 {
     // Em caracteres, contando um emoji como um, como no nome de exibição.
@@ -21,7 +21,8 @@ public sealed class Post
     {
     }
 
-    private Post(Guid autorId, string? legenda, UploadPendente? upload, Medalha? medalha, DateTimeOffset agora)
+    private Post(
+        Guid autorId, string? legenda, UploadPendente? upload, Medalha? medalha, PremioParticipacao? premio, DateTimeOffset agora)
     {
         Id = Guid.CreateVersion7();
         AutorId = autorId;
@@ -29,6 +30,7 @@ public sealed class Post
         ChaveDaFotoDoFeed = upload?.ChaveDoFeed;
         ChaveDaFotoDaGrade = upload?.ChaveDaGrade;
         MedalhaId = medalha?.Id;
+        PremioParticipacaoId = premio?.Id;
         CriadoEm = agora;
     }
 
@@ -44,6 +46,9 @@ public sealed class Post
 
     public Guid? MedalhaId { get; private set; }
 
+    // O prêmio de participação do post de reivindicação (passo 8). Nunca junto da medalha.
+    public Guid? PremioParticipacaoId { get; private set; }
+
     public DateTimeOffset CriadoEm { get; private set; }
 
     // Remoção pela instituição (produto.md 2.1): o post some para todos, e fica quem
@@ -56,7 +61,7 @@ public sealed class Post
 
     public bool TemLegenda => Legenda is not null;
 
-    public bool TemPremio => MedalhaId is not null;
+    public bool TemPremio => MedalhaId is not null || PremioParticipacaoId is not null;
 
     public bool EstaRemovido => RemovidoEm is not null;
 
@@ -70,28 +75,9 @@ public sealed class Post
     {
         ArgumentNullException.ThrowIfNull(autor);
 
-        if (autor.Papeis != Papeis.Aluno || autor.EhExAluno)
+        if (Conferir(autor, ref legenda, upload) is { } recusa)
         {
-            return Recusa(RecusaDaPublicacao.AutorNaoPublica);
-        }
-
-        legenda = string.IsNullOrWhiteSpace(legenda) ? null : legenda.Trim();
-        if (legenda is not null && legenda.EnumerateRunes().Count() > TamanhoMaximoDaLegenda)
-        {
-            return Recusa(RecusaDaPublicacao.LegendaLonga);
-        }
-
-        if (upload is not null)
-        {
-            if (upload.UsuarioId != autor.Id || upload.Finalidade != FinalidadeDoUpload.Post)
-            {
-                return Recusa(RecusaDaPublicacao.UploadNaoEncontrado);
-            }
-
-            if (upload.EstaConfirmado)
-            {
-                return Recusa(RecusaDaPublicacao.UploadJaUsado);
-            }
+            return Recusa(recusa);
         }
 
         if (medalha is not null)
@@ -113,7 +99,71 @@ public sealed class Post
         }
 
         upload?.Confirmar(agora);
-        return new(new Post(autor.Id, legenda, upload, medalha, agora), null);
+        return new(new Post(autor.Id, legenda, upload, medalha, null, agora), null);
+    }
+
+    // O post de reivindicação (produto.md 4.7): a foto é obrigatória, porque é a
+    // comprovação, e o prêmio acabou de ser reivindicado pelo próprio autor. Cada
+    // reivindicação tem um post e uma foto só.
+    public static ResultadoDaPublicacao Reivindicar(
+        Usuario autor, string? legenda, UploadPendente? upload, PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(autor);
+        ArgumentNullException.ThrowIfNull(premio);
+
+        if (premio.Estado != EstadoDoPremioParticipacao.Reivindicado)
+        {
+            throw new DomainException($"O post de reivindicação nasce com o prêmio; o {premio.Id} está {premio.Estado}.");
+        }
+
+        if (Conferir(autor, ref legenda, upload) is { } recusa)
+        {
+            return Recusa(recusa);
+        }
+
+        if (premio.AlunoId != autor.Id)
+        {
+            return Recusa(RecusaDaPublicacao.PremioNaoEncontrado);
+        }
+
+        if (upload is null)
+        {
+            return Recusa(RecusaDaPublicacao.FotoObrigatoria);
+        }
+
+        upload.Confirmar(agora);
+        return new(new Post(autor.Id, legenda, upload, null, premio, agora), null);
+    }
+
+    // O que vale para todo post: só aluno ativo publica, a legenda cabe, e o upload é do
+    // autor, de post e ainda não usado. A legenda volta aparada, ou nula se vazia.
+    private static RecusaDaPublicacao? Conferir(Usuario autor, ref string? legenda, UploadPendente? upload)
+    {
+        if (autor.Papeis != Papeis.Aluno || autor.EhExAluno)
+        {
+            return RecusaDaPublicacao.AutorNaoPublica;
+        }
+
+        legenda = string.IsNullOrWhiteSpace(legenda) ? null : legenda.Trim();
+        if (legenda is not null && legenda.EnumerateRunes().Count() > TamanhoMaximoDaLegenda)
+        {
+            return RecusaDaPublicacao.LegendaLonga;
+        }
+
+        if (upload is not null)
+        {
+            if (upload.UsuarioId != autor.Id || upload.Finalidade != FinalidadeDoUpload.Post)
+            {
+                return RecusaDaPublicacao.UploadNaoEncontrado;
+            }
+
+            if (upload.EstaConfirmado)
+            {
+                return RecusaDaPublicacao.UploadJaUsado;
+            }
+        }
+
+        return null;
     }
 
     // Quem pede a remoção decide o modo: o autor apaga, a instituição remove. Ninguém mais,
@@ -160,6 +210,7 @@ public sealed class Post
         }
 
         MedalhaId = null;
+        PremioParticipacaoId = null;
     }
 
     private static ResultadoDaPublicacao Recusa(RecusaDaPublicacao recusa) => new(null, recusa);
@@ -176,6 +227,9 @@ public enum RecusaDaPublicacao
     UploadJaUsado,
     PremioNaoEncontrado,
     PremioAnulado,
+
+    // A reivindicação sem foto: a foto é a comprovação.
+    FotoObrigatoria,
 }
 
 public enum ModoDeRemocao

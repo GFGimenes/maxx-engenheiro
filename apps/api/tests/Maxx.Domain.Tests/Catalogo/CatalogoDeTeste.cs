@@ -75,6 +75,30 @@ internal static class CatalogoDeTeste
         ChaveDeDeduplicacao = [CampoDeDeduplicacao.Aluno, CampoDeDeduplicacao.Evento],
     };
 
+    // Fora do catálogo de Valido(): só os testes de evento usam.
+    public static ItemPremioParticipacao P06 { get; } = P01 with
+    {
+        Codigo = "P06",
+        Nome = "Semana acadêmica",
+        Descricao = "Participar da semana acadêmica do curso do começo ao fim.",
+        TipoDeEvento = "semanaAcademica",
+        FormaDoEvento = FormaDoEvento.Periodo,
+        Pontos = 30,
+    };
+
+    public static ItemPremioParticipacao P17 { get; } = P01 with
+    {
+        Codigo = "P17",
+        Nome = "Apresentação de trabalho em sala",
+        Descricao = "Apresentar um trabalho em sala, na frente da turma.",
+        TipoDeEvento = "apresentacaoSala",
+        Pontos = 20,
+        ChaveDeDeduplicacao =
+        [
+            CampoDeDeduplicacao.Aluno, CampoDeDeduplicacao.Item, CampoDeDeduplicacao.DataDoEvento, CampoDeDeduplicacao.Materia,
+        ],
+    };
+
     public static ItemConquista C02 { get; } = new()
     {
         Codigo = "C02",

@@ -39,10 +39,10 @@ public sealed class RecalculoRow
 // conta lê o estado de agora; e se a última execução foi há menos de dez segundos, este não
 // calcula e deixa um pedido só para quando os dez segundos fecharem.
 //
-// O numerador são os alunos distintos com ao menos uma medalha ativa do item, ativos ou
-// ex-alunos. O divisor são os alunos com conta, ativos e ex-alunos, os de demonstração
-// inclusive: o campus inteiro para item aberto, o curso atual para item restrito. Prêmio de
-// participação e conquista entram no numerador quando nascerem (passos 8 e 9).
+// O numerador são os alunos distintos com ao menos uma medalha ativa ou um prêmio de
+// participação válido ou definitivo do item (passo 8), ativos ou ex-alunos; a conquista entra
+// no passo 9. O divisor são os alunos com conta, ativos e ex-alunos, os de demonstração
+// inclusive: o campus inteiro para item aberto, o curso atual para item restrito.
 internal sealed partial class RecalculoDeRaridade(
     MaxxDbContext db, IFilaDeTrabalhos fila, TimeProvider relogio, ILogger<RecalculoDeRaridade> logger)
     : ITrabalhoHandler<RecalcularRaridade>
@@ -101,6 +101,19 @@ internal sealed partial class RecalculoDeRaridade(
             .GroupBy(medalha => medalha.ItemCodigo)
             .Select(item => new { Codigo = item.Key, Alunos = item.Select(medalha => medalha.AlunoId).Distinct().Count() })
             .ToDictionaryAsync(item => item.Codigo, item => item.Alunos, cancellationToken);
+
+        // Prêmio de participação conta quando pontua, válido ou definitivo (D6 do passo 8): o
+        // reivindicado ainda não foi aprovado, e o em averiguação só o aluno e a instituição
+        // veem. Os códigos não se repetem entre os tipos, então os dois somam sem colidir.
+        var comParticipacao = await db.Set<PremioParticipacao>()
+            .Where(premio => premio.Estado == EstadoDoPremioParticipacao.Valido || premio.Estado == EstadoDoPremioParticipacao.Definitivo)
+            .GroupBy(premio => premio.ItemCodigo)
+            .Select(item => new { Codigo = item.Key, Alunos = item.Select(premio => premio.AlunoId).Distinct().Count() })
+            .ToListAsync(cancellationToken);
+        foreach (var item in comParticipacao)
+        {
+            comItem[item.Codigo] = item.Alunos;
+        }
 
         var itens = await db.Set<ItemCatalogoRow>().AsNoTracking()
             .Select(item => new { item.Codigo, item.RestricaoCurso })

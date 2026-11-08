@@ -13,6 +13,7 @@ import { Screen } from "../components/Screen";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { Logo } from "../marca/Logo";
 import { TrilhaFamilia } from "../premios/TrilhaFamilia";
+import { SecaoDeReivindicacoes } from "../premiosParticipacao/SecaoDeReivindicacoes";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
 import { cores } from "../theme/tokens";
@@ -102,6 +103,8 @@ export function TrofeusScreen() {
               {...{ activeThumbColor: POLEGAR }}
             />
           </View>
+
+          {aba === "trofeus" && <SecaoDeReivindicacoes ativo={ehAluno} />}
 
           {trilhas.map((trilha) => (
             <View key={trilha.codigo} style={styles.trilha}>

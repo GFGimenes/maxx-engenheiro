@@ -14,7 +14,7 @@ public enum PerfilDeSeed
     // Estrutura: catálogo, calendário e termo de uso.
     Base,
 
-    // O mundo fictício: cursos, matérias, turmas e pessoas. Exige o base.
+    // O mundo fictício: cursos, matérias, turmas, pessoas e eventos. Exige o base.
     Demo,
 }
 
@@ -36,4 +36,5 @@ public sealed record ResultadoDoSeedDemo(
     int CadastrosNovos,
     int MatriculasNovas,
     int VinculosNovos,
-    int ContasNovas);
+    int ContasNovas,
+    int EventosNovos);

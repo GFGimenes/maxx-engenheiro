@@ -128,7 +128,11 @@ DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM curtida WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM comprovacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM post WHERE autor_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM contestacao WHERE premio_participacao_id IN (SELECT id FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo));
+DELETE FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM evento WHERE criado_por_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM medalha WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM upload_pendente WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM usuario WHERE id IN (SELECT usuario_id FROM alvo);
@@ -258,12 +262,12 @@ medalha) está em `produto.md` 4.8.
 | Notificação | Tabela `notificacao`, com usuário, tipo, referência, criada em e lida em. Uma por usuário, tipo e referência, por índice único. Medalha anulada antes do trabalho, ou apagada pela purga, não notifica. O texto é do cliente, pelo tipo, no passo 10 |
 | Bolinha de novidade | A de Troféus chega no passo 10, com o sininho. No passo 6, a notificação só é gravada |
 | Raridade | Tabela `raridade_do_item`, uma linha por item do catálogo, com alunos com o item, alunos elegíveis, raridade e quando foi calculada. A leitura só lê |
-| Numerador | Alunos distintos com ao menos uma medalha ativa do item, ex-alunos inclusive. Prêmio de participação e conquista entram nos passos 8 e 9 |
+| Numerador | Alunos distintos com ao menos uma medalha ativa do item, ex-alunos inclusive. Desde o passo 8, também o prêmio de participação válido ou definitivo; a conquista entra no passo 9 |
 | Divisor | Alunos com conta, ativos e ex-alunos, os de demonstração inclusive: o campus inteiro para item aberto, o curso atual para item restrito |
 | Troca de curso | Quem trocou de curso leva a medalha de item restrito ao curso antigo e não é elegível no curso novo: o numerador fica limitado ao divisor |
 | Faixas | Em inteiros, com "abaixo de" estrito: Lendário abaixo de 1%, Épico abaixo de 5%, Raro abaixo de 20%. Item que ninguém tem é Lendário com 0% |
 | Coalescência | Uma linha travada em `recalculo` impede dois cálculos ao mesmo tempo; o recálculo apaga os outros pedidos pendentes, e, se a última execução foi há menos de 10 s, deixa um pedido só para quando a janela fechar (ADR 0005) |
-| Quem pede o recálculo | Concessão e anulação de medalha; cadastro de aluno e registro da demonstração, porque mudam o divisor (ADR 0005); e o seed base, quando há item novo, mudado ou ainda sem raridade, sem acrescentar pedido se já houver um pendente |
+| Quem pede o recálculo | Concessão e anulação de medalha; cadastro de aluno e registro da demonstração, porque mudam o divisor (ADR 0005); e o seed base, quando há item novo, mudado ou ainda sem raridade, sem acrescentar pedido se já houver um pendente. Desde o passo 8, também a aprovação de comprovação, a contestação, a decisão da instituição e a remoção do post pela instituição quando revoga |
 
 ### Leitura do aluno e tela de Troféus
 
@@ -309,7 +313,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 
 | Decisão | Detalhe |
 |---|---|
-| Post (D5) | Ao menos um entre medalha, foto e legenda. Legenda de até 1.000 caracteres. Não é editável. Um prêmio rende um post, por índice único `ix_post_medalha_ativa`, e a corrida responde 409, nunca 500. Os passos 8 e 9 acrescentam os outros prêmios com no máximo um por post |
+| Post (D5) | Ao menos um entre medalha, foto e legenda. Legenda de até 1.000 caracteres. Não é editável. Um prêmio rende um post, por índice único `ix_post_medalha_ativa`, e a corrida responde 409, nunca 500. O passo 8 acrescentou o prêmio de participação (`ix_post_premio_participacao_ativo`, e `ck_post_um_premio` contra os dois no mesmo post); a conquista entra no passo 9 |
 | Quem posta | Só aluno ativo. Ex-aluno, professor e instituição recebem 403. A medalha tem de ser do autor e não estar anulada |
 | Remoção pelo autor | Física: curtidas e comentários saem em cascata, as fotos pela fila, e o prêmio fica livre para um post novo |
 | Remoção pela instituição (D7) | Lógica, com `removido_em` e `removido_por_id`: o post some do feed, do perfil e do link, e o registro fica. No app, pelo menu "..." do post e do comentário |
@@ -376,6 +380,93 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 | HEIC não abre no Chrome: quem escolher um vê "Não deu para abrir essa foto. Escolha outra." | Aceito |
 | A conferência do `content-length` assinado foi provada no emulador, não no R2 | `VerificacaoDoR2Tests`, quando a conta existir |
 | As fotos do lote de demonstração não saem pelo SQL da purga (D14) | Purga pela área web, passo 12 |
+
+## Prêmios de participação (passo 8)
+
+Eventos, reivindicação, fila de comprovações, contestação e decisão da instituição. As
+decisões D1 a D13 foram fechadas no plano do passo; as demais, nas etapas. As regras de
+produto que nasceram aqui estão em `produto.md` 4.6 (datas do evento, itens do evento
+semeado, o revogado segurando a chave), 4.7 (post de reivindicação preso enquanto o prêmio
+pode ser decidido, remoção pela instituição, averiguação para os outros leitores) e 8
+(prêmio revogado sem contestação).
+
+### Eventos
+
+| Decisão | Detalhe |
+|---|---|
+| Evento (D1) | Semeado, com os itens do catálogo que aceita e, se for o caso, o curso a que se restringe; ou digitado pelo aluno na reivindicação, com nome (3 a 120 caracteres) e período, aceitando qualquer item. O item que deduplica por matéria (P17) vai sempre por texto livre, com a matéria: um evento semeado que o aceite faz o seed falhar |
+| Seed (D2) | `data/demo/eventos.json`, com 8 eventos de 2026/2 (4 abertos e 1 de cada curso), lido pelo seed demo: só acrescenta, e falha sem gravar nada com evento divergente, item que não é prêmio de participação, P17, curso inexistente ou código repetido. A CI confere o arquivo contra o catálogo sem banco, no passo "Catálogo e eventos válidos". O resto chega com o seed completo do passo 12 |
+| Datas (D3) | O evento já começou (início até hoje, em São Paulo) e começou depois do fim do último semestre letivo encerrado. O limite é o fim do semestre anterior, e não o início do vigente, para o evento do recesso continuar reivindicável e a reivindicação não parar no recesso. O fim pode estar adiante |
+| Semestre do evento (D4) | O prêmio guarda só as datas do evento. Em que semestre ele conta é regra do passo 11 |
+| Lista | `GET /v1/eventos?item=`, só aluno: os semeados abertos ao curso dele, reivindicáveis hoje e que aceitam o item, do mais recente ao mais antigo. Item que não é prêmio de participação: 404 `item-nao-encontrado` |
+| Matérias do aluno | `GET /v1/eu/materias`, só aluno: as matérias das turmas dele no semestre de hoje, para a apresentação em sala. Pela D3, a data do evento é deste semestre. A matéria vale se o aluno estava matriculado numa turma dela no semestre que contém a data do evento; P17 com data no recesso não acha matéria |
+
+### Reivindicação
+
+| Decisão | Detalhe |
+|---|---|
+| Modelo | `PremioParticipacao` (estado, tier, pontos e versão do item congelados, evento, matéria, chave de deduplicação, aprovação, reprovação com motivo, contestação, revogação com motivo, definitivo) e `Comprovacao` (prêmio, aluno, evento e post), filtrável por evento pensando no lote da fase 2. A concessão direta da instituição, do passo 12, não terá comprovação |
+| Rota | `POST /v1/reivindicacoes`, só aluno: item, o id do evento semeado ou o evento digitado (nunca os dois), a matéria no P17, o upload e a legenda. Grava evento digitado, prêmio, post e comprovação numa transação só, depois do HEAD das duas derivadas, e responde 201 com o post. Nada vai para a fila |
+| Deduplicação (D5) | Chave montada do catálogo: aluno e evento; com evento digitado, aluno, item e data de início; no P17, também a matéria. Índice único `ix_premio_participacao_chave_ativa` entre os que não foram reprovados: o reprovado libera a nova tentativa, o revogado bloqueia o mesmo evento. A corrida responde 409 `premio-ja-reivindicado` |
+| Post de reivindicação | A foto é obrigatória (`foto-obrigatoria`). O post ganhou `premio_participacao_id`, com índice único e `ck_post_um_premio`. O prêmio do post traz, só como acréscimo, `estado` e `evento`; "reivindicado" é a marca de pendente |
+| Post preso | Enquanto o prêmio está reivindicado, válido ou em averiguação, o autor não apaga o post (409 `comprovacao-em-andamento`): a foto sairia do bucket, e a aprovação e a contestação dependem dela. Definitivo, o post é como outro qualquer |
+
+### Fila de comprovações e decisão
+
+| Decisão | Detalhe |
+|---|---|
+| Quem decide | Policy `aprovador` (professor ou instituição) na borda; o papel de instituição e o escopo do professor lidos do banco. O professor decide só a comprovação de aluno matriculado em turma sua no semestre vigente (`fora-do-escopo`, 403) |
+| Fila | `GET /v1/comprovacoes?eventoId=&cursor=`: as pendentes, das mais antigas para as mais novas, 20 por página por cursor `(criada_em, id)`, com aluno, item, evento (semeado ou digitado), foto, legenda e as matérias em comum (D13: para o professor, só as que ele também leciona). `GET /v1/comprovacoes/eventos` traz os eventos com pendentes e quantas, para os chips |
+| Marca de 7 dias (D11) | Mais de 7 vezes 24 horas desde a reivindicação, na fila de comprovações, e desde a contestação, na fila de contestações. Sem decisão automática por decurso |
+| Corrida | Vale quem chega primeiro: `xmin` no prêmio, e quem perde recebe 409 `comprovacao-ja-decidida` |
+| Aprovação | `POST /v1/comprovacoes/{id}/aprovacao`: o prêmio fica válido e pontua na hora. Na mesma transação, a notificação, o recálculo de raridade e o trabalho `tornar-premio-definitivo`, adiado para o fim da janela de 15 dias. Aluno que virou ex-aluno não tem a comprovação aprovada (409 `ex-aluno`) |
+| Reprovação | `POST /v1/comprovacoes/{id}/reprovacao`, com motivo de 1 a 500 caracteres (D10, `motivo-invalido`): o post perde o vínculo e fica comum, e a notificação vai para a fila |
+| Definitivo | O handler do fim da janela entrou já na etapa 3 (a fila conta como falha o tipo sem handler): torna definitivo só o prêmio ainda válido, e o trabalho que chega antes da hora volta para a fila no instante certo |
+| Pontos | Perfil e Troféus somam medalhas ativas e prêmios de participação válidos e definitivos; o item obtido traz a data da aprovação e o post |
+| Raridade (D6) | O numerador passou a contar prêmio de participação válido ou definitivo. Em averiguação não conta: os outros não o veem |
+
+### Contestação e decisão da instituição
+
+| Decisão | Detalhe |
+|---|---|
+| Contestação | `POST /v1/premios-participacao/{id}/contestacao`, professor da turma (inclusive quem aprovou) ou instituição, com motivo, dentro da janela. Uma por prêmio, por índice único, também depois de confirmado (`premio-ja-contestado`). Não aprovado: `premio-nao-contestavel`; janela fechada, definitivo ou revogado: `fora-da-janela-de-contestacao`. O prêmio vai a averiguação, para de pontuar, e notificação e raridade vão para a fila |
+| Averiguação para os outros | O post continua no ar, mas sem o prêmio para quem não é o aluno nem a instituição: sem pontos, sem tier e sem a marca. Mostrar o nome do item sem tier e pontos tornaria opcionais campos hoje obrigatórios da resposta, o que não é aditivo |
+| Fila de contestações | `GET /v1/contestacoes`, só instituição: as abertas, das mais antigas para as mais novas, com motivo, quem contestou, a foto e a marca de 7 dias |
+| Decisão | `POST /v1/contestacoes/{id}/confirmacao` (definitivo na hora, janela encerrada) e `.../revogacao` com motivo (sai da pontuação, fica no histórico, o post perde o vínculo). `xmin` na contestação: `contestacao-ja-decidida`. O trabalho do fim da janela, ainda agendado, não muda nada depois |
+| Remoção pela instituição | Remover o post de reivindicação resolve o prêmio no mesmo ato, com o motivo "Removido pela instituição.": pendente, reprova; válido, revoga; em averiguação, decide a contestação revogando. Só então o post sai, e a foto pela fila. A instituição não depende da fila para tirar do ar uma foto imprópria |
+| Notificações | `comprovacaoAprovada`, `comprovacaoReprovada`, `contestacaoAberta`, `decisaoDeContestacao` e `premioRevogado` (o válido revogado pela remoção, que não tem contestação), uma por prêmio e tipo. O texto é do cliente, no passo 10 |
+| Histórico do aluno (D9) | `GET /v1/eu/reivindicacoes`, só aluno: pendente, em averiguação, reprovada e revogada, com o motivo nas duas últimas, pelo instante em que entrou no estado |
+| Telas da instituição (D7) | A API da instituição está completa e testada; as telas chegam no passo 12. O e2e decide pela API |
+| Purga | O SQL apaga `comprovacao`, `contestacao`, `premio_participacao` e o evento digitado por quem é do lote, antes do usuário |
+
+### Cliente
+
+| Decisão | Detalhe |
+|---|---|
+| Novo post | Controle segmentado "Post" e "Reivindicar prêmio". Na reivindicação, a foto é obrigatória, o prêmio vem do catálogo de participação (a lista recolhe para o escolhido, com "Trocar prêmio"), o evento vem da lista ou de "Outro evento" (nome e datas em dd/mm/aaaa), e a matéria só no item que a pede (`exigeMateria` em `GET /v1/eu/premios`, para o app não cravar "P17") |
+| Marcas no post | Pendente: selo do metal, chip "Pendente" e "Aguardando aprovação" sob os pontos. Em averiguação, para o aluno: só o chip, sem metal, tier e pontos. Chip neutro em `surface2`, raio 8, na altura do selo |
+| Troféus | Seção "Reivindicações" na aba Troféus, só quando há alguma, com o medalhão apagado, o estado e o motivo |
+| Comprovações (D8) | `/comprovacoes`, pelo menu do perfil do professor, ao lado de "Minhas turmas": chips de evento, cartões como os do feed, "Aprovar" e "Reprovar". A marca de 7 dias é um chip em `highlight` com texto `ink`, sem ouro sobre claro |
+| Folha de motivo | Uma só, para reprovar e contestar, que sobe de baixo: motivo de 1 a 500 com contador, recusa dentro da folha |
+| Contestar | "Contestar prêmio" no "..." do post, para o professor, no prêmio de participação válido. Escopo e janela, a API confere |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxos | Só no celular, claro e escuro, cada execução com os seus alunos, professora e instituição: reivindicação pela tela com foto, aprovação pela fila e os pontos em Troféus; reprovação pela folha, nova tentativa com outra foto, aprovação e contestação pela tela da professora, revogação pela API da instituição e o histórico do aluno |
+| Instituição própria | Uma conta de instituição por teste, como a professora: a recuperação de senha aceita 3 pedidos a cada 15 minutos por e-mail, e a CI roda dois temas e repete o que falha |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| O ranking não é recalculado pela aprovação, contestação, decisão e remoção: a tabela de ranking não existe ainda | Passo 11 |
+| Prêmio definitivo não reavalia conquistas | Passo 9 |
+| A conta de instituição não tem telas para a fila de contestações nem para a concessão direta | Passo 12 |
+| A remoção pela instituição que corre contra outro ato sobre o mesmo prêmio responde 404, como a corrida de duas remoções | Aceito |
+| P17 com data no recesso não acha matéria | Aceito |
+| O e2e depende do evento semeado da semana acadêmica de CC no semestre vigente | Risco "Semestre vigente na avaliação" do plano mestre |
 
 ## Processo e qualidade
 

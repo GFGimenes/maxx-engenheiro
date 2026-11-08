@@ -276,10 +276,23 @@ Prêmio de participação se amarra a um evento, com nome, data de início e dat
 evento vem do seed ou é digitado livremente quando não houver. Atividades de duração
 (iniciação científica, monitoria, extensão) são eventos com período, não com data única.
 
+Só se reivindica evento que **já começou** (data de início até hoje, em São Paulo) e que
+**começou depois do fim do último semestre letivo encerrado**: o ranking corta por semestre
+letivo, e uma reivindicação retroativa pontuaria num semestre a que não pertence. O limite
+é o fim do semestre anterior, e não o início do vigente, para que o evento que começa no
+recesso continue reivindicável e conte para o semestre seguinte; assim a reivindicação não
+para no recesso. A data de fim pode estar adiante, para a atividade de duração que ainda
+corre.
+
 Um aluno tem **um prêmio por evento**. Para evento em texto livre, o sistema bloqueia
 duas reivindicações do mesmo item do catálogo na mesma data; o resto fica a cargo de
 quem aprova. Exceção: apresentação de trabalho em sala deduplica por item + data +
 matéria, e o aprovador natural é o professor daquela matéria.
+
+O evento semeado lista os itens do catálogo que aceita e pode se restringir a um curso; o
+digitado aceita qualquer item. A apresentação de trabalho em sala vai sempre por texto
+livre, com a matéria. A reprovação libera nova reivindicação do mesmo evento; a revogação
+não.
 
 ### 4.7 Ciclo de vida do prêmio de participação
 
@@ -332,6 +345,18 @@ permanece como post comum; o aluno apaga se quiser. Se o post era só o prêmio,
 sem legenda (como na concessão direta pela instituição), ele é apagado, porque post vazio
 não existe. Em averiguação, o post continua
 visível, sem exibir pontos nem tier.
+
+O post de reivindicação é a comprovação: enquanto o prêmio está reivindicado, válido ou em
+averiguação, o autor não o apaga, porque a foto sairia junto e a aprovação e a contestação
+dependem dela. Definitivo, o post é como outro qualquer.
+
+A instituição remove o post de reivindicação a qualquer momento e, no mesmo ato, resolve o
+prêmio com o motivo "Removido pela instituição.": reprova se pendente, revoga se válido e,
+se em averiguação, decide a contestação revogando. Só então o post sai. A instituição não
+depende da fila para tirar do ar uma foto imprópria.
+
+Em averiguação, para quem não é o aluno nem a instituição, o post aparece sem o prêmio: sem
+pontos, sem tier e sem a marca.
 
 ### 4.8 Medalha: concessão e anulação
 
@@ -485,7 +510,8 @@ Registro no banco, mostrado no sininho do cabeçalho do feed, em qualquer plataf
 Push nativo é evolução de fase 2.
 
 Geram notificação: medalha recebida, comprovação aprovada ou reprovada, contestação
-aberta, decisão de contestação, aviso novo. Bolinha dourada de novidade aparece nas abas
+aberta, decisão de contestação, prêmio revogado sem contestação (pela remoção do post pela
+instituição, seção 4.7), aviso novo. Bolinha dourada de novidade aparece nas abas
 Mural (aviso não lido) e Troféus (prêmio novo).
 
 ---

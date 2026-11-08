@@ -5,7 +5,10 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { AvisoDeErro } from "../autenticacao/AvisoDeErro";
 import { Avatar } from "../components/Avatar";
 import { Icon } from "../components/Icon";
+import { MenuDeContestacao } from "../comprovacoes/MenuDeContestacao";
 import { FaixaPremio } from "../premios/FaixaPremio";
+import { MarcaDeEstado, temMarca } from "../premiosParticipacao/MarcaDeEstado";
+import { descreverPremio } from "../premiosParticipacao/textos";
 import { SeloPremio } from "../premios/SeloPremio";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
@@ -22,7 +25,6 @@ import {
   descreverAutor,
   descreverComentarios,
   descreverCurtidas,
-  descreverMedalha,
   tempoDesde,
   usuarioDoArroba,
 } from "./textos";
@@ -83,12 +85,20 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
       : leitor?.papeis.includes("instituicao")
         ? "remover"
         : null;
+  // O professor contesta prêmio de participação válido (produto.md 4.7). O escopo de turma e
+  // a janela de 15 dias, a API confere.
+  const contesta =
+    !acao &&
+    !!leitor?.papeis.includes("professor") &&
+    post.premio?.tipo === "premioParticipacao" &&
+    post.premio.estado === "valido";
   // A instituição não curte nem comenta (produto.md 2.1).
   const interage =
     !!leitor &&
     (leitor.papeis.includes("aluno") || leitor.papeis.includes("professor"));
   const premio = post.premio;
   const glifo = premio?.tipo === "medalha" ? "fita" : "taca";
+  const emAveriguacao = premio?.estado === "emAveriguacao";
 
   const alternarCurtida = () => {
     const anterior = curtida;
@@ -151,15 +161,21 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
           </Text>
           {premio && (
             <View style={styles.selo}>
-              <SeloPremio
-                nome={premio.nome}
-                tier={premio.tier as Tier}
-                glifo={glifo}
-              />
+              {/* Em averiguação, sem metal e sem tier: só a marca (produto.md 4.7). */}
+              {!emAveriguacao && (
+                <SeloPremio
+                  nome={premio.nome}
+                  tier={premio.tier as Tier}
+                  glifo={glifo}
+                />
+              )}
+              {temMarca(premio.estado) && (
+                <MarcaDeEstado estado={premio.estado!} />
+              )}
             </View>
           )}
         </View>
-        {acao && (
+        {(acao || contesta) && (
           <Pressable
             role="button"
             accessibilityLabel="Mais opções"
@@ -218,14 +234,19 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
       </View>
 
       <View style={styles.texto}>
-        {premio && (
+        {premio && !emAveriguacao && (
           <FaixaPremio
             nome={premio.nome}
             tier={premio.tier as Tier}
             raridade={(premio.raridade?.nivel as Raridade | undefined) ?? null}
             glifo={glifo}
             pontos={premio.pontos}
-            detalhe={descreverMedalha(premio)}
+            nota={
+              premio.estado === "reivindicado"
+                ? "Aguardando aprovação"
+                : undefined
+            }
+            detalhe={descreverPremio(premio)}
           />
         )}
         {descreverCurtidas(curtida.curtidas) && (
@@ -262,6 +283,14 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
           onRemovido?.();
         }}
       />
+      {contesta && post.premio && (
+        <MenuDeContestacao
+          premioId={post.premio.id}
+          nomeDoAluno={post.autor.nomeDeExibicao}
+          aberto={menuAberto}
+          onFechar={() => setMenuAberto(false)}
+        />
+      )}
     </View>
   );
 }
@@ -276,7 +305,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   quem: { flex: 1, gap: 4 },
-  selo: { alignSelf: "flex-start" },
+  selo: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   botaoDeIcone: {
     width: tamanhos.alvoDeToque,
     height: tamanhos.alvoDeToque,

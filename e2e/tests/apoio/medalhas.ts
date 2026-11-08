@@ -120,7 +120,7 @@ export function anularMedalha(medalhaId: string): string {
 // imagem e a mesma conexão. O `compose run` do seeder refazia também o migrator a cada
 // chamada (4,6 s contra 1,9 s com a pilha parada, bem mais com a suíte em paralelo), e o
 // caso da medalha passava dos 30 s (passo 7, etapa 11).
-function comandoDaApi(argumentos: string[]): string {
+export function comandoDaApi(argumentos: string[]): string {
   return execFileSync(
     "docker",
     [

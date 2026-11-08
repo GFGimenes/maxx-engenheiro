@@ -25,6 +25,9 @@ internal sealed class PostRepository(MaxxDbContext db) : IPostRepository
     public Task<bool> PremioTemPostAsync(Guid medalhaId, CancellationToken cancellationToken) =>
         db.Set<Post>().AnyAsync(post => post.MedalhaId == medalhaId && post.RemovidoEm == null, cancellationToken);
 
+    public async Task<IReadOnlyList<Post>> DoPremioParticipacaoAsync(Guid premioId, CancellationToken cancellationToken) =>
+        await db.Set<Post>().Where(post => post.PremioParticipacaoId == premioId).ToListAsync(cancellationToken);
+
     public void Apagar(Post post) => db.Remove(post);
 }
 
@@ -52,6 +55,7 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     post.ChaveDaFotoDoFeed,
                     post.ChaveDaFotoDaGrade,
                     post.MedalhaId,
+                    post.PremioParticipacaoId,
                     post.CriadoEm,
                     AutorId = autor.Id,
                     autor.NomeDeExibicao,
@@ -69,6 +73,15 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
 
         var medalhas = await MedalhasAsync([.. linhas.Where(linha => linha.MedalhaId is not null).Select(linha => linha.MedalhaId!.Value)], cancellationToken);
 
+        // Em averiguação, o prêmio é visível só ao aluno e à instituição (produto.md 4.7 e 9.1):
+        // para os outros, o post continua no ar, sem o prêmio, sem pontos nem tier.
+        var leitorEInstituicao = await db.Set<Usuario>()
+            .Where(usuario => usuario.Id == leitorId)
+            .Select(usuario => (usuario.Papeis & Papeis.Instituicao) != 0)
+            .SingleOrDefaultAsync(cancellationToken);
+        var participacoes = await PremiosParticipacaoAsync(
+            [.. linhas.Where(linha => linha.PremioParticipacaoId is not null).Select(linha => linha.PremioParticipacaoId!.Value)], cancellationToken);
+
         return linhas.ToDictionary(
             linha => linha.Id,
             linha => new PostLido(
@@ -77,7 +90,13 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                 linha.Legenda,
                 linha.ChaveDaFotoDoFeed,
                 linha.ChaveDaFotoDaGrade,
-                linha.MedalhaId is { } medalhaId ? medalhas.GetValueOrDefault(medalhaId) : null,
+                linha.MedalhaId is { } medalhaId
+                    ? medalhas.GetValueOrDefault(medalhaId)
+                    : linha.PremioParticipacaoId is { } premioId
+                        && participacoes.GetValueOrDefault(premioId) is { } participacao
+                        && (participacao.Estado != EstadoDoPremioParticipacao.EmAveriguacao || linha.AutorId == leitorId || leitorEInstituicao)
+                        ? participacao
+                        : null,
                 linha.CriadoEm,
                 linha.Curtidas,
                 linha.Comentarios,
@@ -129,5 +148,59 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     : null,
                 medalha.Materia,
                 medalha.Numero));
+    }
+
+    // O prêmio de participação, com o estado e o nome do evento. A matéria, só na
+    // apresentação em sala; o bimestre não se aplica.
+    private async Task<Dictionary<Guid, PremioDoPost>> PremiosParticipacaoAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var premios = await (
+                from premio in db.Set<PremioParticipacao>()
+                join item in db.Set<ItemCatalogoRow>() on premio.ItemCodigo equals item.Codigo
+                join evento in db.Set<Evento>() on premio.EventoId equals evento.Id
+                join materia in db.Set<Materia>() on premio.MateriaId equals materia.Id into materias
+                from materia in materias.DefaultIfEmpty()
+                join raridade in db.Set<RaridadeDoItemRow>() on premio.ItemCodigo equals raridade.ItemCodigo into raridades
+                from raridade in raridades.DefaultIfEmpty()
+                where ids.Contains(premio.Id)
+                select new
+                {
+                    premio.Id,
+                    premio.ItemCodigo,
+                    item.Nome,
+                    premio.Tier,
+                    premio.Pontos,
+                    premio.Estado,
+                    Evento = evento.Nome,
+                    Materia = materia == null ? null : materia.Nome,
+                    Raridade = raridade == null ? null : raridade.Raridade,
+                    AlunosComItem = raridade == null ? 0 : raridade.AlunosComItem,
+                    AlunosElegiveis = raridade == null ? 0 : raridade.AlunosElegiveis,
+                })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return premios.ToDictionary(
+            premio => premio.Id,
+            premio => new PremioDoPost(
+                TipoDeItem.PremioParticipacao,
+                premio.Id,
+                premio.ItemCodigo,
+                premio.Nome,
+                premio.Tier,
+                premio.Pontos,
+                premio.Raridade is { } nivel && NomeJson.TentarLer<Raridade>(nivel, out var lida)
+                    ? new RaridadeAtual(lida, premio.AlunosComItem, premio.AlunosElegiveis)
+                    : null,
+                premio.Materia,
+                null,
+                premio.Estado,
+                premio.Evento));
     }
 }

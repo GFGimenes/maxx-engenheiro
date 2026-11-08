@@ -58,7 +58,8 @@ internal static class PremiosEndpoints
                     obtido.Materia,
                     obtido.Bimestre,
                     obtido.ObtidoEm,
-                    obtido.PostId))]))]);
+                    obtido.PostId))],
+                item.ExigeMateria))]);
 }
 
 public sealed record PremiosDoAlunoResponse(int Pontos, IReadOnlyList<FamiliaResponse> Familias, IReadOnlyList<ItemDoAlunoResponse> Itens);
@@ -66,6 +67,8 @@ public sealed record PremiosDoAlunoResponse(int Pontos, IReadOnlyList<FamiliaRes
 public sealed record FamiliaResponse(string Codigo, string Nome, string Descricao, int Passos);
 
 // Tipo, tier e raridade em camelCase, como no catálogo ("premioParticipacao", "lendario").
+// ExigeMateria: o prêmio de participação que deduplica por matéria (apresentação em sala),
+// cuja reivindicação pede a matéria (passo 8).
 // Critério é a descrição do item: não há prêmio secreto (produto.md 4.5).
 public sealed record ItemDoAlunoResponse(
     string Codigo,
@@ -77,7 +80,8 @@ public sealed record ItemDoAlunoResponse(
     string? Familia,
     int? OrdemNaFamilia,
     RaridadeResponse? Raridade,
-    IReadOnlyList<PremioObtidoResponse> Obtidos);
+    IReadOnlyList<PremioObtidoResponse> Obtidos,
+    bool ExigeMateria);
 
 // Percentual dos alunos que têm o item, com uma casa: "x% dos alunos".
 public sealed record RaridadeResponse(string Nivel, double Percentual);
