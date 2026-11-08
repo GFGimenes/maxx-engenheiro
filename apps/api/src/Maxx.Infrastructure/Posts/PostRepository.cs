@@ -25,6 +25,9 @@ internal sealed class PostRepository(MaxxDbContext db) : IPostRepository
     public Task<bool> PremioTemPostAsync(Guid medalhaId, CancellationToken cancellationToken) =>
         db.Set<Post>().AnyAsync(post => post.MedalhaId == medalhaId && post.RemovidoEm == null, cancellationToken);
 
+    public async Task<IReadOnlyList<Post>> DoPremioParticipacaoAsync(Guid premioId, CancellationToken cancellationToken) =>
+        await db.Set<Post>().Where(post => post.PremioParticipacaoId == premioId).ToListAsync(cancellationToken);
+
     public void Apagar(Post post) => db.Remove(post);
 }
 

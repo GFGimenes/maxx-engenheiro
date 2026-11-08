@@ -64,6 +64,9 @@ const MENSAGENS = {
   "materia-nao-se-aplica": "Esse prêmio não pede matéria.",
   "materia-nao-encontrada": "Você não cursava essa matéria na data do evento.",
   "premio-ja-reivindicado": "Você já reivindicou esse prêmio para esse evento.",
+  "comprovacao-nao-encontrada": "Essa comprovação não existe mais.",
+  "comprovacao-ja-decidida": "Outra pessoa já decidiu essa comprovação.",
+  "motivo-invalido": "Escreva o motivo, com até 500 caracteres.",
   // Curtida, comentário e seguir (CodigosSociais.cs)
   "interacao-nao-permitida": "A instituição não curte nem comenta.",
   "comentario-vazio": "Escreva alguma coisa antes de enviar.",

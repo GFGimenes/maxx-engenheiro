@@ -12,6 +12,9 @@ internal static class Politicas
 
     public const string Instituicao = "instituicao";
 
+    // Quem decide comprovação: professor ou instituição. O escopo do professor é do banco.
+    public const string Aprovador = "aprovador";
+
     public static void Configurar(AuthorizationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -19,5 +22,6 @@ internal static class Politicas
         options.AddPolicy(Aluno, policy => policy.RequireAuthenticatedUser().RequireRole(Aluno));
         options.AddPolicy(Professor, policy => policy.RequireAuthenticatedUser().RequireRole(Professor));
         options.AddPolicy(Instituicao, policy => policy.RequireAuthenticatedUser().RequireRole(Instituicao));
+        options.AddPolicy(Aprovador, policy => policy.RequireAuthenticatedUser().RequireRole(Professor, Instituicao));
     }
 }

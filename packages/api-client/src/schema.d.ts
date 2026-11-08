@@ -420,6 +420,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/comprovacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetFilaDeComprovacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comprovacoes/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetEventosDaFilaDeComprovacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comprovacoes/{comprovacaoId}/aprovacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AprovarComprovacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comprovacoes/{comprovacaoId}/reprovacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReprovarComprovacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -656,6 +720,28 @@ export interface components {
             /** Format: date-time */
             criadoEm: string;
         };
+        ComprovacaoNaFilaResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            premioId: string;
+            /** Format: uuid */
+            postId: null | string;
+            aluno: components["schemas"]["AutorDoPostResponse"];
+            item: string;
+            nomeDoItem: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            evento: components["schemas"]["EventoDaComprovacaoResponse"];
+            materia: null | string;
+            foto: null | components["schemas"]["FotoDoPostResponse"];
+            legenda: null | string;
+            /** Format: date-time */
+            reivindicadaEm: string;
+            passouDoPrazo: boolean;
+            materias: string[];
+        };
         ConcessaoDeMedalhaRequest: {
             /** Format: uuid */
             alunoId: string;
@@ -718,12 +804,31 @@ export interface components {
             nomeDeExibicao: string;
             foto: null | string;
         };
+        EventoDaComprovacaoResponse: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** Format: date */
+            inicio: string;
+            /** Format: date */
+            fim: string;
+            digitado: boolean;
+        };
         EventoDigitadoRequest: {
             nome: string;
             /** Format: date */
             inicio: string;
             /** Format: date */
             fim: string;
+        };
+        EventoNaFilaResponse: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
+            /** Format: date */
+            inicio: string;
+            /** Format: int32 */
+            pendentes: number;
         };
         EventoResponse: {
             /** Format: uuid */
@@ -821,6 +926,10 @@ export interface components {
         };
         PaginaDeComentariosResponse: {
             itens: components["schemas"]["ComentarioResponse"][];
+            proximo: null | string;
+        };
+        PaginaDeComprovacoesResponse: {
+            itens: components["schemas"]["ComprovacaoNaFilaResponse"][];
             proximo: null | string;
         };
         PaginaDoFeedResponse: {
@@ -959,6 +1068,9 @@ export interface components {
             /** Format: uuid */
             uploadId: string;
             legenda: null | string;
+        };
+        ReprovacaoRequest: {
+            motivo: null | string;
         };
         SessaoResponse: {
             accessToken: string;
@@ -2171,6 +2283,183 @@ export interface operations {
             };
             /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetFilaDeComprovacoes: {
+        parameters: {
+            query?: {
+                eventoId?: string;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginaDeComprovacoesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetEventosDaFilaDeComprovacoes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventoNaFilaResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    AprovarComprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comprovacaoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ReprovarComprovacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comprovacaoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReprovacaoRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

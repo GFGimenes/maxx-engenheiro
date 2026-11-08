@@ -19,6 +19,21 @@ internal sealed class PremioParticipacaoConfiguration : IEntityTypeConfiguration
         {
             table.HasCheckConstraint("ck_premio_participacao_pontos", "pontos >= 1");
             table.HasCheckConstraint("ck_premio_participacao_versao_do_item", "versao_do_item >= 1");
+
+            // Auditoria (produto.md 4.10): quem e quando sempre juntos, e o motivo junto da
+            // reprovação. A aprovação existe em todo estado depois de válido; a reprovação, só
+            // no reprovado.
+            table.HasCheckConstraint(
+                "ck_premio_participacao_aprovacao",
+                "(aprovado_em IS NULL) = (aprovado_por_id IS NULL) " +
+                "AND (aprovado_em IS NULL) = (estado IN ('reivindicado', 'reprovado'))");
+            table.HasCheckConstraint(
+                "ck_premio_participacao_reprovacao",
+                "(reprovado_em IS NULL) = (reprovado_por_id IS NULL) " +
+                "AND (reprovado_em IS NULL) = (motivo_da_reprovacao IS NULL) " +
+                "AND (reprovado_em IS NULL) = (estado <> 'reprovado')");
+            table.HasCheckConstraint(
+                "ck_premio_participacao_definitivo", "(definitivo_em IS NULL) = (estado <> 'definitivo')");
         });
         builder.HasKey(premio => premio.Id);
         builder.Property(premio => premio.Id).ValueGeneratedNever();
@@ -43,6 +58,9 @@ internal sealed class PremioParticipacaoConfiguration : IEntityTypeConfiguration
         builder.HasOne<ItemCatalogoRow>().WithMany().HasForeignKey(premio => premio.ItemCodigo).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Evento>().WithMany().HasForeignKey(premio => premio.EventoId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Materia>().WithMany().HasForeignKey(premio => premio.MateriaId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(premio => premio.AprovadoPorId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(premio => premio.ReprovadoPorId).OnDelete(DeleteBehavior.Restrict);
+        builder.Property(premio => premio.MotivoDaReprovacao).HasMaxLength(4 * Motivo.TamanhoMaximo);
 
         // Duas decisões ao mesmo tempo (passo 8, etapas 3 e 4): o xmin deixa só a primeira gravar.
         builder.Property<uint>("Versao").IsRowVersion();
@@ -50,6 +68,7 @@ internal sealed class PremioParticipacaoConfiguration : IEntityTypeConfiguration
         builder.Ignore(premio => premio.SeguraAChave);
         builder.Ignore(premio => premio.Pontua);
         builder.Ignore(premio => premio.PrendeOPost);
+        builder.Ignore(premio => premio.FimDaJanela);
     }
 }
 

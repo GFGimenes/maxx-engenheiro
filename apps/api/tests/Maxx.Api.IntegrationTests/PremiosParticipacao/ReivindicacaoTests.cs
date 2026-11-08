@@ -3,13 +3,9 @@ using System.Net.Http.Json;
 using Maxx.Api.IntegrationTests.Fotos;
 using Maxx.Api.Perfil;
 using Maxx.Api.Posts;
-using Maxx.Domain.Academico;
 using Maxx.Domain.Fotos;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
-using Maxx.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using static Maxx.Api.IntegrationTests.Social.MundoSocial;
 
 namespace Maxx.Api.IntegrationTests.PremiosParticipacao;
@@ -229,30 +225,5 @@ public sealed class ReivindicacaoTests(PostgresFixture postgres, ArmazenamentoFi
     private static Task<HttpResponseMessage> ReivindicarAsync(HttpClient client, object pedido) =>
         client.PostAsJsonAsync(new Uri("/api/v1/reivindicacoes", UriKind.Relative), pedido, Ct);
 
-    // O MundoSocial, com três prêmios de participação no catálogo, a semana acadêmica de CC
-    // (começou há 10 dias, aceita P06) e uma de Administração (curso sem ninguém do mundo).
-    private async Task<Mundo> MundoAsync()
-    {
-        var social = await CriarAsync(postgres, armazenamento);
-        await using var scope = social.Factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
-        var cc = await db.Set<Curso>().SingleAsync(curso => curso.Sigla == "CC", Ct);
-        var bancoDeDados = await db.Set<Materia>().SingleAsync(Ct);
-        var adm = new Curso("Administração", "ADM", 8);
-        var hoje = FusoHorario.DataLocal(social.Relogio.GetUtcNow());
-        var semana = Evento.Semeado(
-            "semana-academica-cc", "Semana Acadêmica de Computação", hoje.AddDays(-10), hoje.AddDays(-6), [CatalogoDeParticipacao.P06], cc);
-        var semanaDeAdm = Evento.Semeado(
-            "semana-academica-adm", "Semana Acadêmica de Administração", hoje.AddDays(-10), hoje.AddDays(-6), [CatalogoDeParticipacao.P06], adm);
-        db.AddRange(CatalogoDeParticipacao.Linhas());
-        db.AddRange(adm, semana, semanaDeAdm);
-        await db.SaveChangesAsync(Ct);
-
-        return new Mundo(social, hoje, semana.Id, semanaDeAdm.Id, bancoDeDados.Id);
-    }
-
-    private sealed record Mundo(Social.MundoSocial Social, DateOnly Hoje, Guid Semana, Guid SemanaDeAdm, Guid BancoDeDados) : IAsyncDisposable
-    {
-        public ValueTask DisposeAsync() => Social.DisposeAsync();
-    }
+    private Task<MundoDePremios> MundoAsync() => MundoDePremios.CriarAsync(postgres, armazenamento);
 }

@@ -11,7 +11,8 @@ public interface IConsultaDePremios
     Task<PremiosDoAluno?> DoAlunoAsync(Guid alunoId, CancellationToken cancellationToken);
 }
 
-// Pontos: a soma do que pontua hoje (as medalhas ativas, no passo 6).
+// Pontos: a soma do que pontua hoje: as medalhas ativas e os prêmios de participação
+// válidos e definitivos.
 public sealed record PremiosDoAluno(int Pontos, IReadOnlyList<FamiliaDoCatalogo> Familias, IReadOnlyList<ItemDoAluno> Itens);
 
 public sealed record FamiliaDoCatalogo(string Codigo, string Nome, string Descricao, int Passos);

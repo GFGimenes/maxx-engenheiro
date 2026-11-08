@@ -45,9 +45,33 @@ internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
                     PostId = db.Set<Post>().Where(post => post.MedalhaId == medalha.Id && post.RemovidoEm == null).Select(post => (Guid?)post.Id).FirstOrDefault(),
                 })
             .ToListAsync(cancellationToken);
-        var obtidos = medalhas.ToLookup(
-            medalha => medalha.ItemCodigo,
-            medalha => new PremioObtido(medalha.Id, medalha.Tier, medalha.Pontos, medalha.Materia, medalha.Numero, medalha.ConcedidaEm, medalha.PostId));
+        // O prêmio de participação conta como obtido quando pontua: válido ou definitivo
+        // (produto.md 4.7). Obtido na aprovação; sem bimestre, e com matéria só na sala.
+        var participacoes = await (
+                from premio in db.Set<PremioParticipacao>()
+                join materia in db.Set<Materia>() on premio.MateriaId equals materia.Id into materias
+                from materia in materias.DefaultIfEmpty()
+                where premio.AlunoId == alunoId
+                    && (premio.Estado == EstadoDoPremioParticipacao.Valido || premio.Estado == EstadoDoPremioParticipacao.Definitivo)
+                orderby premio.AprovadoEm descending
+                select new
+                {
+                    premio.Id,
+                    premio.ItemCodigo,
+                    premio.Tier,
+                    premio.Pontos,
+                    Materia = materia == null ? null : materia.Nome,
+                    premio.AprovadoEm,
+                    PostId = db.Set<Post>().Where(post => post.PremioParticipacaoId == premio.Id && post.RemovidoEm == null).Select(post => (Guid?)post.Id).FirstOrDefault(),
+                })
+            .ToListAsync(cancellationToken);
+
+        var obtidos = medalhas
+            .Select(medalha => (medalha.ItemCodigo, Obtido: new PremioObtido(
+                medalha.Id, medalha.Tier, medalha.Pontos, medalha.Materia, medalha.Numero, medalha.ConcedidaEm, medalha.PostId)))
+            .Concat(participacoes.Select(premio => (premio.ItemCodigo, Obtido: new PremioObtido(
+                premio.Id, premio.Tier, premio.Pontos, premio.Materia, null, premio.AprovadoEm!.Value, premio.PostId))))
+            .ToLookup(par => par.ItemCodigo, par => par.Obtido);
 
         var raridades = await db.Set<RaridadeDoItemRow>().AsNoTracking()
             .ToDictionaryAsync(linha => linha.ItemCodigo, cancellationToken);
@@ -55,7 +79,7 @@ internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
         var familias = await db.Set<FamiliaRow>().AsNoTracking().OrderBy(familia => familia.Codigo).ToListAsync(cancellationToken);
 
         return new PremiosDoAluno(
-            medalhas.Sum(medalha => medalha.Pontos),
+            medalhas.Sum(medalha => medalha.Pontos) + participacoes.Sum(premio => premio.Pontos),
             [.. familias.Select(familia => new FamiliaDoCatalogo(familia.Codigo, familia.Nome, familia.Descricao, familia.Passos))],
             [.. itens
                 .Where(item => item.RestricaoCurso is null

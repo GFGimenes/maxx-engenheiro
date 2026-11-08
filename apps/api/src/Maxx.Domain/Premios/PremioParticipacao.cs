@@ -13,10 +13,13 @@ namespace Maxx.Domain.Premios;
 //        │                       └──15 dias sem contestação──> definitivo
 //        └──reprovado──> post comum (nova tentativa é outro post de reivindicação)
 //
-// Nesta etapa nasce a reivindicação; aprovação, reprovação, contestação e decisão vêm
-// nas seguintes.
+// A reivindicação e a decisão sobre a comprovação nascem aqui; contestação e decisão da
+// instituição, na etapa seguinte.
 public sealed class PremioParticipacao
 {
+    // Da aprovação correm 15 dias de janela de contestação (produto.md 4.7).
+    public static readonly TimeSpan JanelaDeContestacao = TimeSpan.FromDays(15);
+
     // Para o EF Core materializar do banco.
     private PremioParticipacao()
     {
@@ -70,6 +73,25 @@ public sealed class PremioParticipacao
     public EstadoDoPremioParticipacao Estado { get; private set; }
 
     public DateTimeOffset ReivindicadoEm { get; private set; }
+
+    // Quem aprovou e quando (produto.md 4.10). Da aprovação corre a janela.
+    public Guid? AprovadoPorId { get; private set; }
+
+    public DateTimeOffset? AprovadoEm { get; private set; }
+
+    // Quem reprovou, quando e por quê. O motivo é visível ao aluno.
+    public Guid? ReprovadoPorId { get; private set; }
+
+    public DateTimeOffset? ReprovadoEm { get; private set; }
+
+    public string? MotivoDaReprovacao { get; private set; }
+
+    // Quando o prêmio ficou definitivo: pelo fim da janela sem contestação ou pela
+    // confirmação da instituição.
+    public DateTimeOffset? DefinitivoEm { get; private set; }
+
+    // O instante em que a janela de contestação fecha, para o prêmio aprovado.
+    public DateTimeOffset? FimDaJanela => AprovadoEm + JanelaDeContestacao;
 
     // Todos os estados seguram a chave, menos o reprovado: a nova tentativa é outra
     // reivindicação do mesmo evento. O revogado segura (decisão do passo 8, D5).
@@ -163,6 +185,82 @@ public sealed class PremioParticipacao
             null);
     }
 
+    // Aprovação da comprovação (produto.md 4.7): o professor de uma turma do aluno no
+    // semestre vigente (escopo conferido no banco por quem chama) ou a instituição. Vale quem
+    // chega primeiro: decidida, a comprovação recusa a segunda decisão. Aprovado, o prêmio
+    // pontua na hora e abre a janela de contestação.
+    public RecusaDaDecisao? Aprovar(Usuario aluno, Usuario quem, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(aluno);
+        ArgumentNullException.ThrowIfNull(quem);
+        if (aluno.Id != AlunoId)
+        {
+            throw new ArgumentException($"O prêmio {Id} não é de {aluno.Id}.", nameof(aluno));
+        }
+
+        ExigirAprovador(quem);
+        if (Estado != EstadoDoPremioParticipacao.Reivindicado)
+        {
+            return RecusaDaDecisao.JaDecidida;
+        }
+
+        if (aluno.EhExAluno)
+        {
+            return RecusaDaDecisao.ExAluno;
+        }
+
+        Estado = EstadoDoPremioParticipacao.Valido;
+        AprovadoPorId = quem.Id;
+        AprovadoEm = agora;
+        return null;
+    }
+
+    // Reprovação, sempre com motivo. A reivindicação se encerra e libera a chave: a nova
+    // tentativa é outro post, com outra foto. O post desta perde o vínculo (quem chama).
+    public RecusaDaDecisao? Reprovar(Usuario quem, string? motivo, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(quem);
+        ExigirAprovador(quem);
+
+        if (Estado != EstadoDoPremioParticipacao.Reivindicado)
+        {
+            return RecusaDaDecisao.JaDecidida;
+        }
+
+        if (Motivo.Normalizar(motivo) is not { } normalizado)
+        {
+            return RecusaDaDecisao.MotivoInvalido;
+        }
+
+        Estado = EstadoDoPremioParticipacao.Reprovado;
+        ReprovadoPorId = quem.Id;
+        ReprovadoEm = agora;
+        MotivoDaReprovacao = normalizado;
+        return null;
+    }
+
+    // Passados os 15 dias sem contestação, o prêmio válido fica definitivo (produto.md 4.7).
+    // Contestado, em averiguação ou já decidido, nada muda: quem resolve é a instituição.
+    public bool TornarDefinitivoSeAJanelaFechou(DateTimeOffset agora)
+    {
+        if (Estado != EstadoDoPremioParticipacao.Valido || agora < FimDaJanela)
+        {
+            return false;
+        }
+
+        Estado = EstadoDoPremioParticipacao.Definitivo;
+        DefinitivoEm = agora;
+        return true;
+    }
+
+    private static void ExigirAprovador(Usuario quem)
+    {
+        if (!quem.Papeis.HasFlag(Papeis.Professor) && !quem.Papeis.HasFlag(Papeis.Instituicao))
+        {
+            throw new DomainException($"Só professor ou instituição decide comprovação; {quem.Id} é {quem.Papeis}.");
+        }
+    }
+
     // A chave do catálogo (produto.md 4.6). Com evento semeado, aluno e evento. Com evento
     // digitado, o evento não identifica nada (cada reivindicação digita o seu), e a chave
     // degrada para aluno, item e data de início do evento. P17 já declara aluno, item, data
@@ -216,12 +314,23 @@ public enum RecusaDaReivindicacao
 
 public sealed record ResultadoDaReivindicacao(PremioParticipacao? Premio, RecusaDaReivindicacao? Recusa);
 
+public enum RecusaDaDecisao
+{
+    // Outro aprovador chegou antes, ou a comprovação já não está pendente.
+    JaDecidida,
+    ExAluno,
+    MotivoInvalido,
+}
+
 // A comprovação (glossário): a foto que sustenta o prêmio de participação reivindicado, que
 // é a do post da reivindicação. Guarda o evento, para a fila filtrar por ele e para a
 // aprovação em lote da fase 2 (produto.md 13). A concessão direta da instituição não tem
 // comprovação.
 public sealed class Comprovacao
 {
+    // A fila marca o que passou de 7 dias, sem decidir nada sozinha (produto.md 4.7 e 12.6).
+    public static readonly TimeSpan PrazoDaMarca = TimeSpan.FromDays(7);
+
     // Para o EF Core materializar do banco.
     private Comprovacao()
     {
@@ -250,6 +359,9 @@ public sealed class Comprovacao
     public Guid? PostId { get; private set; }
 
     public DateTimeOffset CriadaEm { get; private set; }
+
+    // Passou de 7 vezes 24 horas desde a reivindicação (D11).
+    public static bool PassouDoPrazo(DateTimeOffset criadaEm, DateTimeOffset agora) => agora - criadaEm > PrazoDaMarca;
 
     public static Comprovacao De(PremioParticipacao premio, Guid postId)
     {

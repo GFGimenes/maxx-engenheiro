@@ -728,7 +728,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notificacao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida')");
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada')");
                         });
                 });
 
@@ -975,10 +975,22 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("aluno_id");
 
+                    b.Property<DateTimeOffset?>("AprovadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aprovado_em");
+
+                    b.Property<Guid?>("AprovadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aprovado_por_id");
+
                     b.Property<string>("ChaveDeDeduplicacao")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("chave_de_deduplicacao");
+
+                    b.Property<DateTimeOffset?>("DefinitivoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("definitivo_em");
 
                     b.Property<string>("Estado")
                         .IsRequired()
@@ -998,6 +1010,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("materia_id");
 
+                    b.Property<string>("MotivoDaReprovacao")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("motivo_da_reprovacao");
+
                     b.Property<int>("Pontos")
                         .HasColumnType("integer")
                         .HasColumnName("pontos");
@@ -1005,6 +1022,14 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("ReivindicadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reivindicado_em");
+
+                    b.Property<DateTimeOffset?>("ReprovadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reprovado_em");
+
+                    b.Property<Guid?>("ReprovadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reprovado_por_id");
 
                     b.Property<string>("Tier")
                         .IsRequired()
@@ -1024,6 +1049,9 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_premio_participacao");
 
+                    b.HasIndex("AprovadoPorId")
+                        .HasDatabaseName("ix_premio_participacao_aprovado_por_id");
+
                     b.HasIndex("ChaveDeDeduplicacao")
                         .IsUnique()
                         .HasDatabaseName("ix_premio_participacao_chave_ativa")
@@ -1038,12 +1066,21 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.HasIndex("MateriaId")
                         .HasDatabaseName("ix_premio_participacao_materia_id");
 
+                    b.HasIndex("ReprovadoPorId")
+                        .HasDatabaseName("ix_premio_participacao_reprovado_por_id");
+
                     b.HasIndex("AlunoId", "ItemCodigo")
                         .HasDatabaseName("ix_premio_participacao_aluno_id_item_codigo");
 
                     b.ToTable("premio_participacao", null, t =>
                         {
+                            t.HasCheckConstraint("ck_premio_participacao_aprovacao", "(aprovado_em IS NULL) = (aprovado_por_id IS NULL) AND (aprovado_em IS NULL) = (estado IN ('reivindicado', 'reprovado'))");
+
+                            t.HasCheckConstraint("ck_premio_participacao_definitivo", "(definitivo_em IS NULL) = (estado <> 'definitivo')");
+
                             t.HasCheckConstraint("ck_premio_participacao_pontos", "pontos >= 1");
+
+                            t.HasCheckConstraint("ck_premio_participacao_reprovacao", "(reprovado_em IS NULL) = (reprovado_por_id IS NULL) AND (reprovado_em IS NULL) = (motivo_da_reprovacao IS NULL) AND (reprovado_em IS NULL) = (estado <> 'reprovado')");
 
                             t.HasCheckConstraint("ck_premio_participacao_versao_do_item", "versao_do_item >= 1");
                         });
@@ -1786,6 +1823,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_premio_participacao_usuario_aluno_id");
 
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AprovadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_premio_participacao_usuario_aprovado_por_id");
+
                     b.HasOne("Maxx.Domain.Premios.Evento", null)
                         .WithMany()
                         .HasForeignKey("EventoId")
@@ -1805,6 +1848,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasForeignKey("MateriaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_premio_participacao_materia_materia_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ReprovadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_premio_participacao_usuario_reprovado_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Social.Comentario", b =>

@@ -182,6 +182,8 @@ public interface IPremioParticipacaoRepository
 
     Task<PremioParticipacao?> BuscarAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Comprovacao?> ComprovacaoAsync(Guid id, CancellationToken cancellationToken);
+
     // O item com a versão de agora, que o prêmio congela (ADR 0007).
     Task<ItemDePremioParticipacao?> ItemAsync(string codigo, CancellationToken cancellationToken);
 

@@ -2,6 +2,7 @@ using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Fotos;
 using Maxx.Domain.Identidade;
+using Maxx.Domain.Notificacoes;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
 using Maxx.Domain.Tests.Catalogo;
@@ -197,6 +198,145 @@ public class PremioParticipacaoTests
 
         Assert.Equal(RecusaDaPublicacao.FotoObrigatoria, Post.Reivindicar(_ana, "legenda", null, premio, _agora).Recusa);
         Assert.Equal(RecusaDaPublicacao.PremioNaoEncontrado, Post.Reivindicar(bruno, null, doBruno, premio, _agora).Recusa);
+    }
+
+    private static Usuario Renata(bool tambemInstituicao = false) => Usuario.CriarPeloSeed(
+        CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque", tambemInstituicao), "renataA", _agora.AddDays(-90));
+
+    private static Usuario Coordenacao() =>
+        Usuario.CriarPeloSeed(CadastroElegivel.Instituicao("coordenacao@unieduk.com.br", "Coordenação UniMax"), "coordenacao", _agora.AddDays(-90));
+
+    private PremioParticipacao Pendente() => Reivindicar(CatalogoDeTeste.P06, Semana()).Premio!;
+
+    [Fact]
+    public void Aprovado_fica_valido_pontua_grava_quem_e_quando_e_abre_a_janela_de_15_dias()
+    {
+        var premio = Pendente();
+        var renata = Renata();
+
+        Assert.Null(premio.Aprovar(_ana, renata, _agora.AddHours(2)));
+
+        Assert.Equal(EstadoDoPremioParticipacao.Valido, premio.Estado);
+        Assert.True(premio.Pontua);
+        Assert.True(premio.SeguraAChave);
+        Assert.True(premio.PrendeOPost);
+        Assert.Equal((renata.Id, _agora.AddHours(2)), (premio.AprovadoPorId!.Value, premio.AprovadoEm!.Value));
+        Assert.Equal(_agora.AddHours(2).AddDays(15), premio.FimDaJanela);
+    }
+
+    [Fact]
+    public void A_instituicao_e_a_conta_que_acumula_os_dois_papeis_tambem_aprovam()
+    {
+        Assert.Null(Pendente().Aprovar(_ana, Coordenacao(), _agora));
+        Assert.Null(Pendente().Aprovar(_ana, Renata(tambemInstituicao: true), _agora));
+    }
+
+    [Fact]
+    public void Vale_quem_chega_primeiro()
+    {
+        var premio = Pendente();
+        premio.Aprovar(_ana, Renata(), _agora);
+
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Aprovar(_ana, Coordenacao(), _agora.AddMinutes(1)));
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Reprovar(Coordenacao(), "Foto de outro evento.", _agora.AddMinutes(1)));
+        Assert.Equal(EstadoDoPremioParticipacao.Valido, premio.Estado);
+    }
+
+    [Fact]
+    public void Reprovado_grava_quem_quando_e_o_motivo_e_libera_a_chave()
+    {
+        var premio = Pendente();
+        var coordenacao = Coordenacao();
+
+        Assert.Null(premio.Reprovar(coordenacao, "  A foto não mostra o evento.  ", _agora));
+
+        Assert.Equal(EstadoDoPremioParticipacao.Reprovado, premio.Estado);
+        Assert.Equal((coordenacao.Id, _agora, "A foto não mostra o evento."), (premio.ReprovadoPorId!.Value, premio.ReprovadoEm!.Value, premio.MotivoDaReprovacao));
+        Assert.False(premio.Pontua);
+        Assert.False(premio.SeguraAChave);
+        Assert.False(premio.PrendeOPost);
+        Assert.Null(premio.FimDaJanela);
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Aprovar(_ana, Renata(), _agora));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    public void Reprovar_sem_motivo_e_recusado(string? motivo)
+    {
+        var premio = Pendente();
+
+        Assert.Equal(RecusaDaDecisao.MotivoInvalido, premio.Reprovar(Renata(), motivo, _agora));
+        Assert.Equal(EstadoDoPremioParticipacao.Reivindicado, premio.Estado);
+    }
+
+    [Fact]
+    public void Motivo_vai_ate_500_caracteres_contando_emoji_como_um()
+    {
+        var limite = new string('a', 499) + "\U0001F4F7";
+
+        Assert.Equal(limite, Motivo.Normalizar(limite));
+        Assert.Null(Motivo.Normalizar(limite + "a"));
+        Assert.Equal(RecusaDaDecisao.MotivoInvalido, Pendente().Reprovar(Renata(), limite + "a", _agora));
+    }
+
+    [Fact]
+    public void Ex_aluno_nao_tem_a_comprovacao_aprovada_mas_pode_ter_reprovada()
+    {
+        var premio = Pendente();
+        _ana.MarcarExAluno(_agora);
+
+        Assert.Equal(RecusaDaDecisao.ExAluno, premio.Aprovar(_ana, Renata(), _agora));
+        Assert.Null(premio.Reprovar(Renata(), "Ex-aluno não recebe prêmio.", _agora));
+    }
+
+    [Fact]
+    public void Aluno_nao_decide_comprovacao()
+    {
+        var bruno = Aluno("20260102", "bruno.lima", "brunoLima");
+
+        Assert.Throws<DomainException>(() => Pendente().Aprovar(_ana, bruno, _agora));
+        Assert.Throws<DomainException>(() => Pendente().Reprovar(bruno, "Não.", _agora));
+    }
+
+    [Fact]
+    public void Fica_definitivo_so_quando_a_janela_fecha_e_so_se_ainda_valido()
+    {
+        var premio = Pendente();
+        Assert.False(premio.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(30)));
+
+        premio.Aprovar(_ana, Renata(), _agora);
+        Assert.False(premio.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(15).AddSeconds(-1)));
+        Assert.True(premio.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(15)));
+
+        Assert.Equal((EstadoDoPremioParticipacao.Definitivo, _agora.AddDays(15)), (premio.Estado, premio.DefinitivoEm!.Value));
+        Assert.True(premio.Pontua);
+        Assert.False(premio.PrendeOPost);
+        Assert.False(premio.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(16)));
+    }
+
+    [Fact]
+    public void A_marca_da_fila_vem_depois_de_7_vezes_24_horas()
+    {
+        Assert.False(Comprovacao.PassouDoPrazo(_agora, _agora.AddDays(7)));
+        Assert.True(Comprovacao.PassouDoPrazo(_agora, _agora.AddDays(7).AddSeconds(1)));
+    }
+
+    [Fact]
+    public void Notificacao_de_aprovacao_e_de_reprovacao_vao_para_o_aluno()
+    {
+        var aprovado = Pendente();
+        aprovado.Aprovar(_ana, Renata(), _agora);
+        var reprovado = Pendente();
+        reprovado.Reprovar(Renata(), "Outro evento.", _agora);
+
+        var aprovacao = Notificacao.ComprovacaoAprovada(aprovado, _agora);
+        var reprovacao = Notificacao.ComprovacaoReprovada(reprovado, _agora);
+
+        Assert.Equal((_ana.Id, aprovado.Id, TipoDeNotificacao.ComprovacaoAprovada), (aprovacao.UsuarioId, aprovacao.ReferenciaId, aprovacao.Tipo));
+        Assert.Equal((_ana.Id, reprovado.Id, TipoDeNotificacao.ComprovacaoReprovada), (reprovacao.UsuarioId, reprovacao.ReferenciaId, reprovacao.Tipo));
+        Assert.Throws<DomainException>(() => Notificacao.ComprovacaoAprovada(Pendente(), _agora));
+        Assert.Throws<DomainException>(() => Notificacao.ComprovacaoReprovada(aprovado, _agora));
     }
 
     [Fact]

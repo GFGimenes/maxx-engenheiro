@@ -24,6 +24,9 @@ public interface IPostRepository
     // Se o prêmio já rendeu um post que não foi removido.
     Task<bool> PremioTemPostAsync(Guid medalhaId, CancellationToken cancellationToken);
 
+    // Os posts do prêmio de participação, removidos ou não.
+    Task<IReadOnlyList<Post>> DoPremioParticipacaoAsync(Guid premioId, CancellationToken cancellationToken);
+
     void Apagar(Post post);
 }
 

@@ -44,9 +44,35 @@ public sealed class Notificacao
 
         return new Notificacao(medalha.AlunoId, TipoDeNotificacao.MedalhaRecebida, medalha.Id, agora);
     }
+
+    // Comprovação aprovada (passo 8): o prêmio foi aprovado, mesmo que depois contestado.
+    public static Notificacao ComprovacaoAprovada(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.AprovadoEm is null)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi aprovado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.ComprovacaoAprovada, premio.Id, agora);
+    }
+
+    // Comprovação reprovada: o motivo o app lê do prêmio.
+    public static Notificacao ComprovacaoReprovada(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.Estado != EstadoDoPremioParticipacao.Reprovado)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi reprovado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.ComprovacaoReprovada, premio.Id, agora);
+    }
 }
 
 public enum TipoDeNotificacao
 {
     MedalhaRecebida,
+    ComprovacaoAprovada,
+    ComprovacaoReprovada,
 }

@@ -45,4 +45,13 @@ public static class CodigosDoPremioParticipacao
     // Um prêmio por evento: o aluno já tem uma reivindicação que não foi reprovada com a
     // mesma chave.
     public const string PremioJaReivindicado = "premio-ja-reivindicado";
+
+    // O id não é de comprovação nenhuma.
+    public const string ComprovacaoNaoEncontrada = "comprovacao-nao-encontrada";
+
+    // Outro aprovador chegou antes: vale quem decidiu primeiro.
+    public const string ComprovacaoJaDecidida = "comprovacao-ja-decidida";
+
+    // Reprovação, contestação ou revogação sem motivo, ou com mais de 500 caracteres.
+    public const string MotivoInvalido = "motivo-invalido";
 }

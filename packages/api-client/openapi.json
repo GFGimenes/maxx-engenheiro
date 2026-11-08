@@ -1578,6 +1578,244 @@
         ]
       }
     },
+    "/api/v1/comprovacoes": {
+      "get": {
+        "tags": [
+          "Comprovacoes"
+        ],
+        "operationId": "GetFilaDeComprovacoes",
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeComprovacoesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/comprovacoes/eventos": {
+      "get": {
+        "tags": [
+          "Comprovacoes"
+        ],
+        "operationId": "GetEventosDaFilaDeComprovacoes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoNaFilaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/comprovacoes/{comprovacaoId}/aprovacao": {
+      "post": {
+        "tags": [
+          "Comprovacoes"
+        ],
+        "operationId": "AprovarComprovacao",
+        "parameters": [
+          {
+            "name": "comprovacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/comprovacoes/{comprovacaoId}/reprovacao": {
+      "post": {
+        "tags": [
+          "Comprovacoes"
+        ],
+        "operationId": "ReprovarComprovacao",
+        "parameters": [
+          {
+            "name": "comprovacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprovacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -2393,6 +2631,97 @@
           }
         }
       },
+      "ComprovacaoNaFilaResponse": {
+        "required": [
+          "id",
+          "premioId",
+          "postId",
+          "aluno",
+          "item",
+          "nomeDoItem",
+          "tier",
+          "pontos",
+          "evento",
+          "materia",
+          "foto",
+          "legenda",
+          "reivindicadaEm",
+          "passouDoPrazo",
+          "materias"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "premioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "postId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "aluno": {
+            "$ref": "#/components/schemas/AutorDoPostResponse"
+          },
+          "item": {
+            "type": "string"
+          },
+          "nomeDoItem": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "evento": {
+            "$ref": "#/components/schemas/EventoDaComprovacaoResponse"
+          },
+          "materia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "legenda": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reivindicadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "passouDoPrazo": {
+            "type": "boolean"
+          },
+          "materias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ConcessaoDeMedalhaRequest": {
         "required": [
           "alunoId",
@@ -2649,6 +2978,36 @@
           }
         }
       },
+      "EventoDaComprovacaoResponse": {
+        "required": [
+          "id",
+          "nome",
+          "inicio",
+          "fim",
+          "digitado"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fim": {
+            "type": "string",
+            "format": "date"
+          },
+          "digitado": {
+            "type": "boolean"
+          }
+        }
+      },
       "EventoDigitadoRequest": {
         "required": [
           "nome",
@@ -2669,6 +3028,32 @@
           "fim": {
             "type": "string",
             "format": "date"
+          }
+        }
+      },
+      "EventoNaFilaResponse": {
+        "required": [
+          "id",
+          "nome",
+          "inicio",
+          "pendentes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "pendentes": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -3037,6 +3422,27 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComentarioResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PaginaDeComprovacoesResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComprovacaoNaFilaResponse"
             }
           },
           "proximo": {
@@ -3635,6 +4041,22 @@
           }
         }
       },
+      "ReprovacaoRequest": {
+        "required": [
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SessaoResponse": {
         "required": [
           "accessToken",
@@ -3814,6 +4236,9 @@
     },
     {
       "name": "Perfil"
+    },
+    {
+      "name": "Comprovacoes"
     },
     {
       "name": "Demonstracao"
