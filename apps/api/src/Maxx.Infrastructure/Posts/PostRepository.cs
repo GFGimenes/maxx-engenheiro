@@ -30,15 +30,21 @@ internal sealed class PostRepository(MaxxDbContext db) : IPostRepository
 
 internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
 {
-    public async Task<PostLido?> PostAsync(Guid id, Guid leitorId, CancellationToken cancellationToken)
+    public async Task<PostLido?> PostAsync(Guid id, Guid leitorId, CancellationToken cancellationToken) =>
+        (await PostsAsync([id], leitorId, cancellationToken)).GetValueOrDefault(id);
+
+    // Duas consultas para a página inteira, não duas por post: os posts com autor e
+    // contagens, depois as medalhas que eles citam.
+    public async Task<IReadOnlyDictionary<Guid, PostLido>> PostsAsync(
+        IReadOnlyCollection<Guid> ids, Guid leitorId, CancellationToken cancellationToken)
     {
-        var linha = await (
+        var linhas = await (
                 from post in db.Set<Post>()
                 join autor in db.Set<Usuario>() on post.AutorId equals autor.Id
                 join cadastro in db.Set<CadastroElegivel>() on autor.CadastroElegivelId equals cadastro.Id
                 join curso in db.Set<Curso>() on cadastro.CursoId equals curso.Id into cursos
                 from curso in cursos.DefaultIfEmpty()
-                where post.Id == id && post.RemovidoEm == null
+                where ids.Contains(post.Id) && post.RemovidoEm == null
                 select new
                 {
                     post.Id,
@@ -58,35 +64,40 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     Curtiu = db.Set<Curtida>().Any(curtida => curtida.PostId == post.Id && curtida.UsuarioId == leitorId),
                 })
             .AsNoTracking()
-            .SingleOrDefaultAsync(cancellationToken);
-        if (linha is null)
-        {
-            return null;
-        }
+            .ToListAsync(cancellationToken);
 
-        return new PostLido(
-            linha.Id,
-            new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre),
-            linha.Legenda,
-            linha.ChaveDaFotoDoFeed,
-            linha.ChaveDaFotoDaGrade,
-            linha.MedalhaId is { } medalhaId ? await MedalhaAsync(medalhaId, cancellationToken) : null,
-            linha.CriadoEm,
-            linha.Curtidas,
-            linha.Comentarios,
-            linha.Curtiu);
+        var medalhas = await MedalhasAsync([.. linhas.Where(linha => linha.MedalhaId is not null).Select(linha => linha.MedalhaId!.Value)], cancellationToken);
+
+        return linhas.ToDictionary(
+            linha => linha.Id,
+            linha => new PostLido(
+                linha.Id,
+                new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre),
+                linha.Legenda,
+                linha.ChaveDaFotoDoFeed,
+                linha.ChaveDaFotoDaGrade,
+                linha.MedalhaId is { } medalhaId ? medalhas.GetValueOrDefault(medalhaId) : null,
+                linha.CriadoEm,
+                linha.Curtidas,
+                linha.Comentarios,
+                linha.Curtiu));
     }
 
-    private async Task<PremioDoPost?> MedalhaAsync(Guid medalhaId, CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, PremioDoPost>> MedalhasAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
     {
-        var medalha = await (
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var medalhas = await (
                 from linha in db.Set<Medalha>()
                 join item in db.Set<ItemCatalogoRow>() on linha.ItemCodigo equals item.Codigo
                 join materia in db.Set<Materia>() on linha.MateriaId equals materia.Id
                 join bimestre in db.Set<Bimestre>() on linha.BimestreId equals bimestre.Id
                 join raridade in db.Set<RaridadeDoItemRow>() on linha.ItemCodigo equals raridade.ItemCodigo into raridades
                 from raridade in raridades.DefaultIfEmpty()
-                where linha.Id == medalhaId
+                where ids.Contains(linha.Id)
                 select new
                 {
                     linha.Id,
@@ -101,11 +112,11 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     AlunosElegiveis = raridade == null ? 0 : raridade.AlunosElegiveis,
                 })
             .AsNoTracking()
-            .SingleOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
-        return medalha is null
-            ? null
-            : new PremioDoPost(
+        return medalhas.ToDictionary(
+            medalha => medalha.Id,
+            medalha => new PremioDoPost(
                 TipoDeItem.Medalha,
                 medalha.Id,
                 medalha.ItemCodigo,
@@ -116,6 +127,6 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     ? new RaridadeAtual(lida, medalha.AlunosComItem, medalha.AlunosElegiveis)
                     : null,
                 medalha.Materia,
-                medalha.Numero);
+                medalha.Numero));
     }
 }

@@ -31,8 +31,8 @@ internal sealed class MundoSocial : IAsyncDisposable
     public const string Diego = "diego.reis@al.unieduk.com.br";
     public const string Renata = "renata@prof.unieduk.com.br";
     public const string Coordenacao = "coordenacao@unieduk.com.br";
-    public const long Feed = 300 * 1024;
-    public const long Grade = 40 * 1024;
+    public const long TamanhoDoFeed = 300 * 1024;
+    public const long TamanhoDaGrade = 40 * 1024;
 
     private readonly Dictionary<string, Guid> _ids;
 
@@ -144,14 +144,14 @@ internal sealed class MundoSocial : IAsyncDisposable
     {
         var resposta = await client.PostAsJsonAsync(
             new Uri("/api/v1/uploads", UriKind.Relative),
-            new { finalidade = "post", tipoDeConteudo = "image/jpeg", tamanhoDoFeed = Feed, tamanhoDaGrade = Grade },
+            new { finalidade = "post", tipoDeConteudo = "image/jpeg", tamanhoDoFeed = TamanhoDoFeed, tamanhoDaGrade = TamanhoDaGrade },
             Ct);
         Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
         var upload = (await resposta.Content.ReadFromJsonAsync<UploadResponse>(Ct))!;
         if (enviar)
         {
-            await PutAsync(upload.Feed, Feed);
-            await PutAsync(upload.Grade, Grade);
+            await PutAsync(upload.Feed, TamanhoDoFeed);
+            await PutAsync(upload.Grade, TamanhoDaGrade);
         }
 
         return upload;

@@ -33,6 +33,10 @@ public interface IConsultaDePosts
     // Nulo para o que não existe e para o removido pela instituição. Com as curtidas e os
     // comentários contados, e se o leitor curtiu.
     Task<PostLido?> PostAsync(Guid id, Guid leitorId, CancellationToken cancellationToken);
+
+    // Os que existem e não foram removidos, pelo id; os outros ficam de fora.
+    Task<IReadOnlyDictionary<Guid, PostLido>> PostsAsync(
+        IReadOnlyCollection<Guid> ids, Guid leitorId, CancellationToken cancellationToken);
 }
 
 public sealed record PostLido(

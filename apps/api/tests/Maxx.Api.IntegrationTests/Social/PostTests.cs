@@ -45,8 +45,8 @@ public sealed class PostTests(PostgresFixture postgres, ArmazenamentoFixture arm
         // A foto, lida direto do bucket, sem login.
         using var http = new HttpClient();
         Assert.StartsWith(armazenamento.UrlDeLeitura.ToString(), post.Foto!.Feed, StringComparison.Ordinal);
-        Assert.Equal(Feed, (await http.GetByteArrayAsync(new Uri(post.Foto.Feed), Ct)).Length);
-        Assert.Equal(Grade, (await http.GetByteArrayAsync(new Uri(post.Foto.Grade), Ct)).Length);
+        Assert.Equal(TamanhoDoFeed, (await http.GetByteArrayAsync(new Uri(post.Foto.Feed), Ct)).Length);
+        Assert.Equal(TamanhoDaGrade, (await http.GetByteArrayAsync(new Uri(post.Foto.Grade), Ct)).Length);
 
         // O upload foi confirmado: a limpeza não o apaga mais.
         Assert.NotNull(Assert.Single(await mundo.LinhasAsync<UploadPendente>()).ConfirmadoEm);

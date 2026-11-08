@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
+using Maxx.Api.Feed;
 using Maxx.Api.Fotos;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
@@ -94,6 +95,7 @@ builder.Services.AddScoped<Maxx.Application.Posts.RemoverPostHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.CurtidaHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.ComentarioHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.SeguimentoHandler>();
+builder.Services.AddScoped<Maxx.Application.Feed.FeedHandler>();
 
 var app = builder.Build();
 
@@ -160,6 +162,7 @@ v1.MapPremiosEndpoints();
 v1.MapUploadEndpoints();
 v1.MapPostEndpoints();
 v1.MapSocialEndpoints();
+v1.MapFeedEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

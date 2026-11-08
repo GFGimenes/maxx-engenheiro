@@ -230,6 +230,50 @@
         ]
       }
     },
+    "/api/v1/feed": {
+      "get": {
+        "tags": [
+          "Feed"
+        ],
+        "operationId": "GetFeed",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDoFeedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -2240,6 +2284,27 @@
           }
         }
       },
+      "PaginaDoFeedResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PedidoDeUploadRequest": {
         "required": [
           "finalidade",
@@ -2750,6 +2815,9 @@
     },
     {
       "name": "Fotos"
+    },
+    {
+      "name": "Feed"
     },
     {
       "name": "Professor"
