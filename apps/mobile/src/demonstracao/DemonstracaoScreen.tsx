@@ -8,11 +8,18 @@ import { FalhaDaApi, falhaParaTela } from "../api/FalhaDaApi";
 import { AvisoDeErro } from "../autenticacao/AvisoDeErro";
 import { TelaDeAutenticacao } from "../autenticacao/TelaDeAutenticacao";
 import { erroDoNome } from "../cadastro/regras";
+import { Avatar } from "../components/Avatar";
 import { Button } from "../components/Button";
 import { FilterChip } from "../components/FilterChip";
 import { ErrorState } from "../components/StateMessage";
 import { TextField } from "../components/TextField";
 import { TextLink } from "../components/TextLink";
+import {
+  FotoGrandeDemais,
+  gerarDerivadas,
+  type Derivadas,
+} from "../fotos/derivadas";
+import { enviarFoto, escolherFoto } from "../fotos/envio";
 import { useSessao } from "../sessao/SessaoProvider";
 import { TextoDoTermo } from "../termo/TextoDoTermo";
 import { useTermoDeUso } from "../termo/useTermoDeUso";
@@ -80,6 +87,29 @@ function Entrada({
   const [curso, setCurso] = useState<string | null>(null);
   const [erros, setErros] = useState<{ nome?: string; curso?: string }>({});
   const [aviso, setAviso] = useState<string | null>(null);
+  // A foto opcional do registro (produto.md 11): as derivadas saem na hora da escolha e sobem
+  // como foto de perfil logo depois de a conta nascer.
+  const [foto, setFoto] = useState<Derivadas | null>(null);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
+  const [erroDaFoto, setErroDaFoto] = useState<string | null>(null);
+
+  const trocarFoto = async () => {
+    setErroDaFoto(null);
+    try {
+      const escolhida = await escolherFoto();
+      if (!escolhida) return;
+      setPreparandoFoto(true);
+      setFoto(await gerarDerivadas(escolhida));
+    } catch (erro) {
+      setErroDaFoto(
+        erro instanceof FotoGrandeDemais
+          ? erro.message
+          : "Não deu para abrir essa foto. Escolha outra.",
+      );
+    } finally {
+      setPreparandoFoto(false);
+    }
+  };
 
   useEffect(() => {
     void contasDoDispositivo.lerContas().then(setContas);
@@ -128,6 +158,23 @@ function Entrada({
         ...contas,
       ]);
       await iniciar(data.sessao);
+      // Já com a sessão, a foto sobe como a de qualquer perfil. Melhor esforço: a conta já
+      // existe, e a foto pode ser posta depois em Editar perfil.
+      if (foto) {
+        try {
+          const fotoUploadId = await enviarFoto(client, "fotoDePerfil", foto);
+          await client.PATCH("/api/v1/eu/perfil", {
+            body: {
+              nomeDeExibicao: null,
+              prefixo: null,
+              fotoUploadId,
+              removerFoto: null,
+            },
+          });
+        } catch {
+          // Sem foto, por ora.
+        }
+      }
     },
     onError: (erro) => {
       if (!(erro instanceof FalhaDaApi)) {
@@ -270,6 +317,34 @@ function Entrada({
             </View>
             {erros.curso && <AvisoDeErro mensagem={erros.curso} />}
           </View>
+          <View style={styles.cursos}>
+            <Text style={[styles.rotulo, { color: colors.ink }]}>
+              Foto (opcional)
+            </Text>
+            <View style={styles.foto}>
+              <Avatar
+                nome={nome.trim() || "Aluno"}
+                foto={foto?.grade.uri}
+                size={56}
+              />
+              <View style={styles.acoesDaFoto}>
+                <Button
+                  label={foto ? "Trocar foto" : "Escolher foto"}
+                  variant="secondary"
+                  disabled={preparandoFoto}
+                  onPress={() => void trocarFoto()}
+                />
+                {foto && (
+                  <Button
+                    label="Remover foto"
+                    variant="secondary"
+                    onPress={() => setFoto(null)}
+                  />
+                )}
+              </View>
+            </View>
+            {erroDaFoto && <AvisoDeErro mensagem={erroDaFoto} />}
+          </View>
           <Button label="Continuar" size="large" onPress={continuar} />
         </View>
 
@@ -296,5 +371,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  foto: { flexDirection: "row", alignItems: "center", gap: 12 },
+  acoesDaFoto: { flex: 1, gap: 8 },
   voltar: { alignItems: "center" },
 });

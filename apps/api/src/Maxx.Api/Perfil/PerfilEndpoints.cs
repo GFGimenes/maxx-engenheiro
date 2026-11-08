@@ -63,6 +63,10 @@ internal static class PerfilEndpoints
             .WithName("GetDisponibilidadeDoMeuPrefixo")
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        v1.MapGet("/cursos", CursosAsync)
+            .WithName("GetCursos")
+            .WithTags("Busca");
+
         v1.MapGet("/busca/alunos", BuscarAsync)
             .WithName("BuscarAlunos")
             .WithTags("Busca")
@@ -140,10 +144,13 @@ internal static class PerfilEndpoints
         TypedResults.Ok(new DisponibilidadeDoPrefixoResponse(
             await handler.PrefixoDisponivelAsync(PostEndpoints.UsuarioId(principal), prefixo, cancellationToken)));
 
+    private static async Task<Ok<IReadOnlyList<CursoResponse>>> CursosAsync(IConsultaDePerfil consulta, CancellationToken cancellationToken) =>
+        TypedResults.Ok<IReadOnlyList<CursoResponse>>([.. (await consulta.CursosAsync(cancellationToken)).Select(curso => new CursoResponse(curso.Sigla, curso.Nome, curso.DuracaoEmSemestres))]);
+
     private static async Task<Ok<PaginaDeAlunosResponse>> BuscarAsync(
         string? termo,
         string? curso,
-        [Range(1, 8)] int? semestre,
+        [Range(1, int.MaxValue)] int? semestre,
         string? cursor,
         ClaimsPrincipal principal,
         BuscaDeAlunosHandler handler,
@@ -241,5 +248,8 @@ public sealed record DisponibilidadeDoPrefixoResponse(bool Disponivel);
 
 public sealed record AlunoEncontradoResponse(
     Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, bool ExAluno, string? Foto, bool EuSigo);
+
+// DuracaoEmSemestres: os chips de semestre da Busca seguem o curso escolhido.
+public sealed record CursoResponse(string Sigla, string Nome, int DuracaoEmSemestres);
 
 public sealed record PaginaDeAlunosResponse(IReadOnlyList<AlunoEncontradoResponse> Itens, string? Proximo);

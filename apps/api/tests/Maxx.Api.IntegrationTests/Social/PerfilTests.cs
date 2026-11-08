@@ -299,7 +299,7 @@ public sealed class PerfilTests(PostgresFixture postgres, ArmazenamentoFixture a
         using var ana = await mundo.ComoAsync(Ana);
 
         await AssertRecusaAsync(await ana.GetAsync(new Uri($"/api/v1/busca/alunos{consulta}", UriKind.Relative), Ct), HttpStatusCode.BadRequest, "busca-sem-criterio");
-        await AssertRecusaAsync(await ana.GetAsync(new Uri("/api/v1/busca/alunos?semestre=9", UriKind.Relative), Ct), HttpStatusCode.BadRequest, "dados-invalidos");
+        await AssertRecusaAsync(await ana.GetAsync(new Uri("/api/v1/busca/alunos?semestre=0", UriKind.Relative), Ct), HttpStatusCode.BadRequest, "dados-invalidos");
     }
 
     [Fact]
@@ -318,6 +318,48 @@ public sealed class PerfilTests(PostgresFixture postgres, ArmazenamentoFixture a
         var nomes = primeira.Itens.Concat(segunda.Itens).Select(aluno => aluno.NomeDeExibicao).ToList();
         Assert.Equal(25, nomes.Distinct().Count());
         Assert.Equal(nomes.Order(StringComparer.Ordinal), nomes);
+    }
+
+    [Fact]
+    public async Task Cursos_para_os_filtros_da_busca_vem_pela_sigla_com_a_duracao()
+    {
+        await using var mundo = await CriarAsync(postgres, armazenamento);
+        using var ana = await mundo.ComoAsync(Ana);
+        await MedicinaAsync(mundo);
+
+        var cursos = await ana.GetFromJsonAsync<List<CursoResponse>>("/api/v1/cursos", Ct);
+
+        Assert.Equal(
+            [new CursoResponse("CC", "Ciência da Computação", 8), new CursoResponse("MED", "Medicina", 12)],
+            cursos);
+    }
+
+    [Fact]
+    public async Task Busca_filtra_semestres_alem_do_oitavo_em_curso_mais_longo()
+    {
+        await using var mundo = await CriarAsync(postgres, armazenamento);
+        using var ana = await mundo.ComoAsync(Ana);
+        await MedicinaAsync(mundo);
+
+        var doDecimoSegundo = await BuscarAsync(ana, "semestre=12");
+        var deMedicinaNoDecimoSegundo = await BuscarAsync(ana, "curso=MED&semestre=12");
+
+        var lucas = Assert.Single(doDecimoSegundo.Itens);
+        Assert.Equal(("Lucas Mendes", "MED", 12), (lucas.NomeDeExibicao, lucas.Curso, lucas.Semestre));
+        Assert.Equal(lucas.Id, Assert.Single(deMedicinaNoDecimoSegundo.Itens).Id);
+        Assert.Empty((await BuscarAsync(ana, "semestre=13")).Itens);
+    }
+
+    // Medicina, com 12 semestres, e um aluno com conta no 12º, como no mundo de demonstração.
+    private static async Task MedicinaAsync(MundoSocial mundo)
+    {
+        var medicina = new Curso("Medicina", "MED", 12);
+        var cadastro = CadastroElegivel.Aluno("20269001", "lucas.mendes@al.unieduk.com.br", "Lucas Mendes", medicina, 12);
+        await BancoDeTeste.SalvarAsync(
+            mundo.Factory,
+            medicina,
+            cadastro,
+            Usuario.CadastrarAluno(cadastro, medicina, "Lucas Mendes", "lucasMendes", "hash", DateTimeOffset.UtcNow));
     }
 
     private static async Task AlunosAsync(MundoSocial mundo, int quantos)

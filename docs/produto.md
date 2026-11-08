@@ -163,9 +163,9 @@ A matrícula por turma é a única fonte de "quantas matérias o aluno tem no pe
 sem ela as conquistas de alvo dinâmico (todas as matérias) não existem.
 
 Atenção a dois sentidos da palavra semestre: o **semestre letivo** (2026/2) corta
-ranking e conquistas; o **semestre do aluno** (1º ao 8º) é informação de perfil, vem do
-seed e não entra em pontuação nem em conquista: serve para exibição e para o filtro da
-Busca.
+ranking e conquistas; o **semestre do aluno** (do 1º ao último semestre do curso) é
+informação de perfil, vem do seed e não entra em pontuação nem em conquista: serve para
+exibição e para o filtro da Busca.
 
 Datas e horas são guardadas em UTC; as fronteiras de bimestre, semestre e ano são
 interpretadas em `America/Sao_Paulo`.

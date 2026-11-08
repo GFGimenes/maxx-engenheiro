@@ -1,3 +1,3 @@
-import { EditarPerfilEmBreve } from "../../navegacao/EmBreve";
+import { EditarPerfilScreen } from "../../perfil/EditarPerfilScreen";
 
-export default EditarPerfilEmBreve;
+export default EditarPerfilScreen;

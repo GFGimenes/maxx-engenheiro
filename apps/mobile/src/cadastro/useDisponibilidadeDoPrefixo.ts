@@ -17,7 +17,8 @@ export type Disponibilidade =
   // 429 ou rede: não bloqueia. O cadastro confere de novo ao criar a conta.
   | { estado: "nao-verificado" };
 
-function useValorParado<T>(valor: T, espera: number): T {
+// O valor depois que a digitação para: a pergunta à API sai uma vez, não a cada tecla.
+export function useValorParado<T>(valor: T, espera: number): T {
   const [parado, setParado] = useState(valor);
   useEffect(() => {
     const relogio = setTimeout(() => setParado(valor), espera);

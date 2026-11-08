@@ -25,6 +25,9 @@ public interface IConsultaDePerfil
     Task<Pagina<AlunoEncontrado>> BuscarAlunosAsync(
         FiltroDaBusca filtro, string? cursor, int limite, Guid leitorId, CancellationToken cancellationToken);
 
+    // Os cursos, pela sigla: os filtros da Busca (produto.md 6.4).
+    Task<IReadOnlyList<CursoDaBusca>> CursosAsync(CancellationToken cancellationToken);
+
     // Se o prefixo é de outra pessoa, agora ou no passado (reserva permanente).
     Task<bool> PrefixoDeOutraPessoaAsync(string prefixo, Guid usuarioId, CancellationToken cancellationToken);
 }
@@ -53,6 +56,9 @@ public sealed record ProfessorDoPerfil(IReadOnlyList<TurmaDoProfessor> Turmas, i
 
 // Termo sem "@" e sem o sufixo; curso pela sigla; semestre do aluno, de 1 a 8.
 public sealed record FiltroDaBusca(string Termo, string? Curso, int? Semestre);
+
+// A duração dá os semestres do filtro: cada curso vai do 1º ao último dele (Medicina tem 12).
+public sealed record CursoDaBusca(string Sigla, string Nome, int DuracaoEmSemestres);
 
 public sealed record AlunoEncontrado(
     Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, bool ExAluno, string? ChaveDaFotoDaGrade, bool EuSigo);
