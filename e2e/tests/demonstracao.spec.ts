@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { abrirPerfil } from "./apoio/navegacao";
+
 // A demonstração existe só com a flag. Os testes @demo rodam numa passada própria, com o
 // docker-compose.demo.yml por cima; a passada normal os exclui (--grep-invert @demo) e
 // confere a flag desligada.
@@ -42,6 +44,7 @@ test(
     await page.getByRole("button", { name: "Aceitar e entrar" }).click();
 
     await expect(page).toHaveURL(/\/$/);
+    await abrirPerfil(page);
     await expect(page.getByTestId("arroba")).toHaveText(/-CC$/);
 
     await page.getByRole("button", { name: "Sair" }).click();
@@ -51,6 +54,7 @@ test(
       .getByRole("button", { name: `Entrar como ${nome} · CC` })
       .click();
 
+    await abrirPerfil(page);
     await expect(page.getByTestId("arroba")).toHaveText(/-CC$/);
   },
 );

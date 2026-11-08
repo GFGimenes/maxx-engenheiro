@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
-import { InicioProvisorio } from "../inicio/InicioProvisorio";
+import { PerfilProvisorio } from "../inicio/PerfilProvisorio";
 import { caminhos, json, renderComApi } from "../test/renderComApi";
 import { TurmaScreen } from "./TurmaScreen";
 import { TurmasScreen } from "./TurmasScreen";
@@ -271,14 +271,14 @@ describe("entrada pelo início", () => {
       );
 
     const professor = await renderComApi(
-      <InicioProvisorio />,
+      <PerfilProvisorio />,
       comPapeis(["professor"]),
     );
     await apertarBotao("Minhas turmas");
     expect(mockRoteador.push).toHaveBeenCalledWith("/turmas");
     professor.unmount();
 
-    await renderComApi(<InicioProvisorio />, comPapeis(["aluno"]));
+    await renderComApi(<PerfilProvisorio />, comPapeis(["aluno"]));
     expect(await screen.findByTestId("arroba")).toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Minhas turmas" })).toBeNull();
   });

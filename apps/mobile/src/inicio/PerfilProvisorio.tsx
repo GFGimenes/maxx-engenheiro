@@ -11,10 +11,10 @@ import { textStyles } from "../theme/fonts";
 import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
 
-// O início até o feed chegar, no passo 7: quem entrou, o tema e a saída. Para o professor,
-// a entrada das turmas e da concessão de medalha no passo 6; para o aluno, o novo post, até
-// o "+" do cabeçalho do feed.
-export function InicioProvisorio() {
+// A aba Perfil até o perfil de verdade (passo 7, etapa 9): quem entrou, o tema e a saída. Para
+// o professor, a entrada das turmas e da concessão de medalha. Era o início provisório antes
+// de o feed ocupar a Home.
+export function PerfilProvisorio() {
   const { colors } = useTheme();
   const router = useRouter();
   const { sair } = useSessao();
@@ -41,12 +41,9 @@ export function InicioProvisorio() {
             <Text
               style={[textStyles.corpo, styles.centro, { color: colors.ink2 }]}
             >
-              Em breve, o seu feed aparece aqui.
+              Em breve, o seu perfil aparece aqui.
             </Text>
           </View>
-        )}
-        {eu.isSuccess && eu.data.papeis.includes("aluno") && (
-          <Button label="Novo post" onPress={() => router.push("/novo-post")} />
         )}
         {eu.isSuccess && eu.data.papeis.includes("professor") && (
           <Button

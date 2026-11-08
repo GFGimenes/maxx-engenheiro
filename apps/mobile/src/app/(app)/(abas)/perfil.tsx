@@ -1,3 +1,3 @@
-import { PerfilEmBreve } from "../../../navegacao/EmBreve";
+import { PerfilProvisorio } from "../../../inicio/PerfilProvisorio";
 
-export default PerfilEmBreve;
+export default PerfilProvisorio;

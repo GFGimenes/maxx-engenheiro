@@ -39,14 +39,6 @@ export const MuralEmBreve = () => (
   />
 );
 
-export const PerfilEmBreve = () => (
-  <EmBreve
-    icone="user"
-    titulo="Perfil em breve."
-    mensagem="Seus posts, pontos e prêmios vão aparecer aqui."
-  />
-);
-
 const styles = StyleSheet.create({
   centro: { flex: 1, justifyContent: "center" },
 });
