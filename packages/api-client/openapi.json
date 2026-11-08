@@ -514,6 +514,130 @@
         ]
       }
     },
+    "/api/v1/premios-participacao/{premioId}/contestacao": {
+      "post": {
+        "tags": [
+          "Contestacoes"
+        ],
+        "operationId": "ContestarPremioParticipacao",
+        "parameters": [
+          {
+            "name": "premioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotivoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContestacaoCriadaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/reivindicacoes": {
+      "get": {
+        "tags": [
+          "Premios"
+        ],
+        "operationId": "GetMinhasReivindicacoes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReivindicacaoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -1816,6 +1940,198 @@
         ]
       }
     },
+    "/api/v1/contestacoes": {
+      "get": {
+        "tags": [
+          "Contestacoes"
+        ],
+        "operationId": "GetFilaDeContestacoes",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeContestacoesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/contestacoes/{contestacaoId}/confirmacao": {
+      "post": {
+        "tags": [
+          "Contestacoes"
+        ],
+        "operationId": "ConfirmarPremioContestado",
+        "parameters": [
+          {
+            "name": "contestacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/contestacoes/{contestacaoId}/revogacao": {
+      "post": {
+        "tags": [
+          "Contestacoes"
+        ],
+        "operationId": "RevogarPremioContestado",
+        "parameters": [
+          {
+            "name": "contestacaoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotivoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -2759,6 +3075,125 @@
           }
         }
       },
+      "ContestacaoCriadaResponse": {
+        "required": [
+          "id",
+          "premioId",
+          "contestadaEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "premioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contestadaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContestacaoNaFilaResponse": {
+        "required": [
+          "id",
+          "premioId",
+          "postId",
+          "aluno",
+          "item",
+          "nomeDoItem",
+          "tier",
+          "pontos",
+          "evento",
+          "materia",
+          "foto",
+          "legenda",
+          "motivo",
+          "contestadaPor",
+          "contestadaEm",
+          "aprovadoEm",
+          "passouDoPrazo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "premioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "postId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "aluno": {
+            "$ref": "#/components/schemas/AutorDoPostResponse"
+          },
+          "item": {
+            "type": "string"
+          },
+          "nomeDoItem": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "evento": {
+            "$ref": "#/components/schemas/EventoDaComprovacaoResponse"
+          },
+          "materia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "legenda": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "contestadaPor": {
+            "type": "string"
+          },
+          "contestadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "aprovadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "passouDoPrazo": {
+            "type": "boolean"
+          }
+        }
+      },
       "CursoDeDemonstracao": {
         "required": [
           "sigla",
@@ -3390,6 +3825,22 @@
           }
         }
       },
+      "MotivoRequest": {
+        "required": [
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PaginaDeAlunosResponse": {
         "required": [
           "itens",
@@ -3443,6 +3894,27 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ComprovacaoNaFilaResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PaginaDeContestacoesResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContestacaoNaFilaResponse"
             }
           },
           "proximo": {
@@ -4041,6 +4513,70 @@
           }
         }
       },
+      "ReivindicacaoResponse": {
+        "required": [
+          "premioId",
+          "postId",
+          "item",
+          "nomeDoItem",
+          "tier",
+          "pontos",
+          "evento",
+          "materia",
+          "estado",
+          "motivo",
+          "desde"
+        ],
+        "type": "object",
+        "properties": {
+          "premioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "postId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "item": {
+            "type": "string"
+          },
+          "nomeDoItem": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "evento": {
+            "type": "string"
+          },
+          "materia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estado": {
+            "type": "string"
+          },
+          "motivo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "desde": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ReprovacaoRequest": {
         "required": [
           "motivo"
@@ -4224,6 +4760,9 @@
     },
     {
       "name": "Eventos"
+    },
+    {
+      "name": "Contestacoes"
     },
     {
       "name": "Professor"

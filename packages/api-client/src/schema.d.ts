@@ -180,6 +180,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/premios-participacao/{premioId}/contestacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ContestarPremioParticipacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eu/reivindicacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMinhasReivindicacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/professor/turmas": {
         parameters: {
             query?: never;
@@ -484,6 +516,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contestacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetFilaDeContestacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contestacoes/{contestacaoId}/confirmacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConfirmarPremioContestado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contestacoes/{contestacaoId}/revogacao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RevogarPremioContestado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -751,6 +831,39 @@ export interface components {
             token: string;
             senha: string;
         };
+        ContestacaoCriadaResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            premioId: string;
+            /** Format: date-time */
+            contestadaEm: string;
+        };
+        ContestacaoNaFilaResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            premioId: string;
+            /** Format: uuid */
+            postId: null | string;
+            aluno: components["schemas"]["AutorDoPostResponse"];
+            item: string;
+            nomeDoItem: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            evento: components["schemas"]["EventoDaComprovacaoResponse"];
+            materia: null | string;
+            foto: null | components["schemas"]["FotoDoPostResponse"];
+            legenda: null | string;
+            motivo: string;
+            contestadaPor: string;
+            /** Format: date-time */
+            contestadaEm: string;
+            /** Format: date-time */
+            aprovadoEm: string;
+            passouDoPrazo: boolean;
+        };
         CursoDeDemonstracao: {
             sigla: string;
             nome: string;
@@ -920,6 +1033,9 @@ export interface components {
             /** Format: date-time */
             concedidaEm: string;
         };
+        MotivoRequest: {
+            motivo: null | string;
+        };
         PaginaDeAlunosResponse: {
             itens: components["schemas"]["AlunoEncontradoResponse"][];
             proximo: null | string;
@@ -930,6 +1046,10 @@ export interface components {
         };
         PaginaDeComprovacoesResponse: {
             itens: components["schemas"]["ComprovacaoNaFilaResponse"][];
+            proximo: null | string;
+        };
+        PaginaDeContestacoesResponse: {
+            itens: components["schemas"]["ContestacaoNaFilaResponse"][];
             proximo: null | string;
         };
         PaginaDoFeedResponse: {
@@ -1068,6 +1188,23 @@ export interface components {
             /** Format: uuid */
             uploadId: string;
             legenda: null | string;
+        };
+        ReivindicacaoResponse: {
+            /** Format: uuid */
+            premioId: string;
+            /** Format: uuid */
+            postId: null | string;
+            item: string;
+            nomeDoItem: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            evento: string;
+            materia: null | string;
+            estado: string;
+            motivo: null | string;
+            /** Format: date-time */
+            desde: string;
         };
         ReprovacaoRequest: {
             motivo: null | string;
@@ -1502,6 +1639,97 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ContestarPremioParticipacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                premioId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContestacaoCriadaResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetMinhasReivindicacoes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReivindicacaoResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2421,6 +2649,153 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReprovacaoRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetFilaDeContestacoes: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginaDeContestacoesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ConfirmarPremioContestado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contestacaoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RevogarPremioContestado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contestacaoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoRequest"];
             };
         };
         responses: {

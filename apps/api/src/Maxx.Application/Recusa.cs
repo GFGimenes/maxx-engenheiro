@@ -80,6 +80,9 @@ public enum Unicidade
     // Duas reivindicações com a mesma chave de deduplicação: um prêmio por evento.
     PremioParticipacaoAtivo,
 
+    // Duas contestações do mesmo prêmio ao mesmo tempo: uma por prêmio.
+    ContestacaoPorPremio,
+
     // Dois posts não removidos para o mesmo prêmio: um prêmio rende um post.
     PostPorPremio,
 

@@ -383,7 +383,12 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             var premio = PremioParticipacao.Reivindicar(CatalogoDeParticipacao.P01, 1, aluno, null, evento, null, null, agora).Premio!;
             var upload = UploadPendente.Pedir(aluno, FinalidadeDoUpload.Post, "image/jpeg", 1000, 500, agora).Upload!;
             var post = Post.Reivindicar(aluno, null, upload, premio, agora).Post!;
-            await SalvarAsync(factory, evento, premio, upload, post, Comprovacao.De(premio, post.Id));
+            var comprovacao = Comprovacao.De(premio, post.Id);
+
+            // Os dois chegam à averiguação: a contestação segura o prêmio, sem cascata.
+            premio.Aprovar(aluno, contaDaRenata, agora);
+            var contestacao = premio.Contestar(contaDaRenata, "Revi a foto.", agora).Contestacao!;
+            await SalvarAsync(factory, evento, premio, upload, post, comprovacao, contestacao);
         }
 
         // Entre os dois: a Ana curte e comenta o post da Carla, a Carla curte o da Ana e
@@ -434,7 +439,9 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(2, await db.Set<UploadPendente>().CountAsync(Ct));
         Assert.All(await db.Set<Post>().ToListAsync(Ct), post => Assert.Equal(restante.Id, post.AutorId));
         Assert.Equal(2, await db.Set<Post>().CountAsync(Ct));
-        Assert.Equal(restante.Id, (await db.Set<PremioParticipacao>().SingleAsync(Ct)).AlunoId);
+        var premioQueFica = await db.Set<PremioParticipacao>().SingleAsync(Ct);
+        Assert.Equal(restante.Id, premioQueFica.AlunoId);
+        Assert.Equal(premioQueFica.Id, (await db.Set<Contestacao>().SingleAsync(Ct)).PremioParticipacaoId);
         Assert.Equal(restante.Id, (await db.Set<Comprovacao>().SingleAsync(Ct)).AlunoId);
         Assert.Equal(restante.Id, (await db.Set<Evento>().SingleAsync(Ct)).CriadoPorId);
         Assert.Empty(await db.Set<Curtida>().ToListAsync(Ct));

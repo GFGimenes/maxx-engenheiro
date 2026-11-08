@@ -199,18 +199,17 @@ public sealed class ReivindicacaoTests(PostgresFixture postgres, ArmazenamentoFi
     }
 
     [Fact]
-    public async Task O_post_pendente_nao_sai_nem_pelo_autor_nem_pela_instituicao()
+    public async Task O_post_pendente_nao_sai_pelo_autor_e_quem_nao_e_autor_nem_instituicao_nao_remove()
     {
         await using var mundo = await MundoAsync();
         using var ana = await mundo.Social.ComoAsync(Ana);
         using var bruno = await mundo.Social.ComoAsync(Bruno);
-        using var coordenacao = await mundo.Social.ComoAsync(Coordenacao);
         var resposta = await ReivindicarAsync(ana, new { item = "P06", eventoId = mundo.Semana, uploadId = (await FotoEnviadaAsync(ana)).Id });
         var post = (await resposta.Content.ReadFromJsonAsync<PostResponse>(Ct))!;
         var caminho = new Uri($"/api/v1/posts/{post.Id}", UriKind.Relative);
 
+        // A remoção pela instituição, que resolve o prêmio, está em ContestacoesTests.
         await AssertRecusaAsync(await ana.DeleteAsync(caminho, Ct), HttpStatusCode.Conflict, "comprovacao-em-andamento");
-        await AssertRecusaAsync(await coordenacao.DeleteAsync(caminho, Ct), HttpStatusCode.Conflict, "comprovacao-em-andamento");
         await AssertRecusaAsync(await bruno.DeleteAsync(caminho, Ct), HttpStatusCode.Forbidden, "remocao-nao-permitida");
 
         var gravado = Assert.Single(await mundo.Social.LinhasAsync<Post>());

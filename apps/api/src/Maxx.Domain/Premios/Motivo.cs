@@ -6,6 +6,9 @@ public static class Motivo
 {
     public const int TamanhoMaximo = 500;
 
+    // O motivo com que a instituição resolve o prêmio quando remove o post da comprovação.
+    public const string RemovidoPelaInstituicao = "Removido pela instituição.";
+
     // O motivo aparado, ou nulo se vazio ou longo demais.
     public static string? Normalizar(string? motivo)
     {

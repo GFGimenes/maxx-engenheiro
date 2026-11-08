@@ -339,6 +339,177 @@ public class PremioParticipacaoTests
         Assert.Throws<DomainException>(() => Notificacao.ComprovacaoReprovada(aprovado, _agora));
     }
 
+    private PremioParticipacao Aprovado()
+    {
+        var premio = Pendente();
+        premio.Aprovar(_ana, Renata(), _agora);
+        return premio;
+    }
+
+    [Fact]
+    public void Contestado_vai_a_averiguacao_para_de_pontuar_e_prende_o_post()
+    {
+        var premio = Aprovado();
+        var renata = Renata();
+
+        var resultado = premio.Contestar(renata, "  A foto é de outro evento.  ", _agora.AddDays(3));
+
+        var contestacao = Assert.IsType<Contestacao>(resultado.Contestacao);
+        Assert.Equal(
+            (premio.Id, renata.Id, _agora.AddDays(3), "A foto é de outro evento.", true),
+            (contestacao.PremioParticipacaoId, contestacao.ContestadaPorId, contestacao.ContestadaEm, contestacao.Motivo, contestacao.EstaAberta));
+        Assert.Equal((EstadoDoPremioParticipacao.EmAveriguacao, _agora.AddDays(3)), (premio.Estado, premio.ContestadoEm!.Value));
+        Assert.False(premio.Pontua);
+        Assert.True(premio.PrendeOPost);
+        Assert.True(premio.SeguraAChave);
+
+        // Contestado, o fim da janela não o torna definitivo: quem decide é a instituição.
+        Assert.False(premio.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(30)));
+    }
+
+    [Fact]
+    public void Quem_aprovou_tambem_contesta_e_a_instituicao_tambem()
+    {
+        var renata = Renata();
+        var premio = Pendente();
+        premio.Aprovar(_ana, renata, _agora);
+
+        Assert.NotNull(premio.Contestar(renata, "Revi a foto.", _agora).Contestacao);
+        Assert.NotNull(Aprovado().Contestar(Coordenacao(), "Revi a foto.", _agora).Contestacao);
+    }
+
+    [Fact]
+    public void Uma_contestacao_por_premio_mesmo_depois_de_confirmado()
+    {
+        var premio = Aprovado();
+        var contestacao = premio.Contestar(Renata(), "Revi a foto.", _agora).Contestacao!;
+
+        Assert.Equal(RecusaDaContestacao.JaContestado, premio.Contestar(Coordenacao(), "De novo.", _agora).Recusa);
+
+        premio.Confirmar(contestacao, Coordenacao(), _agora.AddDays(1));
+        Assert.Equal(RecusaDaContestacao.JaContestado, premio.Contestar(Coordenacao(), "De novo.", _agora.AddDays(2)).Recusa);
+    }
+
+    [Fact]
+    public void So_dentro_da_janela_e_so_o_premio_aprovado()
+    {
+        var premio = Aprovado();
+
+        Assert.Equal(RecusaDaContestacao.ForaDaJanela, premio.Contestar(Renata(), "Tarde.", _agora.AddDays(15)).Recusa);
+        Assert.NotNull(premio.Contestar(Renata(), "No limite.", _agora.AddDays(15).AddSeconds(-1)).Contestacao);
+        Assert.Equal(RecusaDaContestacao.NaoContestavel, Pendente().Contestar(Renata(), "Pendente.", _agora).Recusa);
+
+        var definitivo = Aprovado();
+        definitivo.TornarDefinitivoSeAJanelaFechou(_agora.AddDays(15));
+        Assert.Equal(RecusaDaContestacao.ForaDaJanela, definitivo.Contestar(Coordenacao(), "Definitivo.", _agora.AddDays(15)).Recusa);
+    }
+
+    [Fact]
+    public void Contestar_sem_motivo_e_recusado_e_nada_muda()
+    {
+        var premio = Aprovado();
+
+        Assert.Equal(RecusaDaContestacao.MotivoInvalido, premio.Contestar(Renata(), " ", _agora).Recusa);
+        Assert.Equal(EstadoDoPremioParticipacao.Valido, premio.Estado);
+        Assert.Null(premio.ContestadoEm);
+    }
+
+    [Fact]
+    public void Confirmado_fica_definitivo_na_hora_e_volta_a_pontuar()
+    {
+        var premio = Aprovado();
+        var contestacao = premio.Contestar(Renata(), "Revi a foto.", _agora).Contestacao!;
+        var coordenacao = Coordenacao();
+
+        Assert.Null(premio.Confirmar(contestacao, coordenacao, _agora.AddDays(2)));
+
+        Assert.Equal((EstadoDoPremioParticipacao.Definitivo, _agora.AddDays(2)), (premio.Estado, premio.DefinitivoEm!.Value));
+        Assert.True(premio.Pontua);
+        Assert.False(premio.PrendeOPost);
+        Assert.Equal((DecisaoDaContestacao.Confirmada, coordenacao.Id, _agora.AddDays(2)), (contestacao.Decisao!.Value, contestacao.DecididaPorId!.Value, contestacao.DecididaEm!.Value));
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Confirmar(contestacao, coordenacao, _agora.AddDays(3)));
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Revogar(coordenacao, "Tarde.", contestacao, _agora.AddDays(3)));
+    }
+
+    [Fact]
+    public void Revogado_pela_contestacao_sai_da_pontuacao_e_fica_no_historico_com_o_motivo()
+    {
+        var premio = Aprovado();
+        var contestacao = premio.Contestar(Renata(), "Revi a foto.", _agora).Contestacao!;
+        var coordenacao = Coordenacao();
+
+        Assert.Null(premio.Revogar(coordenacao, " Foto de outro evento. ", contestacao, _agora.AddDays(2)));
+
+        Assert.Equal(
+            (EstadoDoPremioParticipacao.Revogado, coordenacao.Id, _agora.AddDays(2), "Foto de outro evento."),
+            (premio.Estado, premio.RevogadoPorId!.Value, premio.RevogadoEm!.Value, premio.MotivoDaRevogacao));
+        Assert.False(premio.Pontua);
+        Assert.False(premio.PrendeOPost);
+
+        // Revogado segura a chave: não se reivindica de novo o mesmo evento (D5).
+        Assert.True(premio.SeguraAChave);
+        Assert.Equal(DecisaoDaContestacao.Revogada, contestacao.Decisao);
+    }
+
+    [Fact]
+    public void Revogar_exige_motivo_e_em_averiguacao_a_contestacao_aberta()
+    {
+        var premio = Aprovado();
+        var contestacao = premio.Contestar(Renata(), "Revi a foto.", _agora).Contestacao!;
+
+        Assert.Equal(RecusaDaDecisao.MotivoInvalido, premio.Revogar(Coordenacao(), "", contestacao, _agora));
+        Assert.Equal(RecusaDaDecisao.JaDecidida, premio.Revogar(Coordenacao(), "Sem a contestação.", null, _agora));
+        Assert.Equal(EstadoDoPremioParticipacao.EmAveriguacao, premio.Estado);
+    }
+
+    [Fact]
+    public void O_premio_valido_sem_contestacao_tambem_pode_ser_revogado_pela_instituicao()
+    {
+        var premio = Aprovado();
+
+        Assert.Null(premio.Revogar(Coordenacao(), "Removido pela instituição.", null, _agora));
+        Assert.Equal(EstadoDoPremioParticipacao.Revogado, premio.Estado);
+        Assert.Equal(RecusaDaDecisao.JaDecidida, Pendente().Revogar(Coordenacao(), "Pendente.", null, _agora));
+    }
+
+    [Fact]
+    public void So_a_instituicao_decide_contestacao_e_revoga()
+    {
+        var premio = Aprovado();
+        var contestacao = premio.Contestar(Renata(), "Revi a foto.", _agora).Contestacao!;
+
+        Assert.Throws<DomainException>(() => premio.Confirmar(contestacao, Renata(), _agora));
+        Assert.Throws<DomainException>(() => premio.Revogar(Renata(), "Não.", contestacao, _agora));
+        Assert.Null(premio.Confirmar(contestacao, Renata(tambemInstituicao: true), _agora));
+    }
+
+    [Fact]
+    public void A_marca_da_fila_de_contestacoes_tambem_vem_depois_de_7_vezes_24_horas()
+    {
+        Assert.False(Contestacao.PassouDoPrazo(_agora, _agora.AddDays(7)));
+        Assert.True(Contestacao.PassouDoPrazo(_agora, _agora.AddDays(7).AddTicks(1)));
+    }
+
+    [Fact]
+    public void Notificacoes_de_contestacao_decisao_e_revogacao_vao_para_o_aluno()
+    {
+        var contestado = Aprovado();
+        var contestacao = contestado.Contestar(Renata(), "Revi.", _agora).Contestacao!;
+        var aberta = Notificacao.ContestacaoAberta(contestado, _agora);
+        Assert.Throws<DomainException>(() => Notificacao.DecisaoDeContestacao(contestado, _agora));
+        contestado.Confirmar(contestacao, Coordenacao(), _agora);
+        var decisao = Notificacao.DecisaoDeContestacao(contestado, _agora);
+        var revogado = Aprovado();
+        revogado.Revogar(Coordenacao(), "Removido pela instituição.", null, _agora);
+        var revogacao = Notificacao.PremioRevogado(revogado, _agora);
+
+        Assert.Equal(
+            [TipoDeNotificacao.ContestacaoAberta, TipoDeNotificacao.DecisaoDeContestacao, TipoDeNotificacao.PremioRevogado],
+            new[] { aberta, decisao, revogacao }.Select(notificacao => notificacao.Tipo));
+        Assert.All(new[] { aberta, decisao, revogacao }, notificacao => Assert.Equal(_ana.Id, notificacao.UsuarioId));
+        Assert.Throws<DomainException>(() => Notificacao.ContestacaoAberta(Aprovado(), _agora));
+    }
+
     [Fact]
     public void Post_de_reivindicacao_desvinculado_perde_o_premio()
     {

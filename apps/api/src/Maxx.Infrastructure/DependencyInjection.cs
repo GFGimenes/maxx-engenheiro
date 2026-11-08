@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IEventoRepository, EventoRepository>();
         services.AddScoped<IPremioParticipacaoRepository, PremioParticipacaoRepository>();
         services.AddScoped<IConsultaDeComprovacoes, ConsultaDeComprovacoes>();
+        services.AddScoped<IConsultaDeContestacoes, ConsultaDeContestacoes>();
 
         // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
         // fora de desenvolvimento.
@@ -99,6 +100,9 @@ public static class DependencyInjection
         services.AddTrabalho<NotificarComprovacaoAprovada, NotificarComprovacaoHandler>();
         services.AddTrabalho<NotificarComprovacaoReprovada, NotificarComprovacaoHandler>();
         services.AddTrabalho<TornarPremioDefinitivo, TornarPremioDefinitivoHandler>();
+        services.AddTrabalho<NotificarContestacaoAberta, NotificarContestacaoHandler>();
+        services.AddTrabalho<NotificarDecisaoDeContestacao, NotificarContestacaoHandler>();
+        services.AddTrabalho<NotificarPremioRevogado, NotificarContestacaoHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

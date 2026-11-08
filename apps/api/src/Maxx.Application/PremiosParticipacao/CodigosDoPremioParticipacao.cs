@@ -54,4 +54,21 @@ public static class CodigosDoPremioParticipacao
 
     // Reprovação, contestação ou revogação sem motivo, ou com mais de 500 caracteres.
     public const string MotivoInvalido = "motivo-invalido";
+
+    // O id não é de prêmio de participação nenhum.
+    public const string PremioNaoEncontrado = "premio-nao-encontrado";
+
+    // Só o prêmio aprovado é contestável.
+    public const string PremioNaoContestavel = "premio-nao-contestavel";
+
+    // Uma contestação por prêmio.
+    public const string PremioJaContestado = "premio-ja-contestado";
+
+    // Os 15 dias da aprovação passaram, ou o prêmio já é definitivo ou revogado.
+    public const string ForaDaJanelaDeContestacao = "fora-da-janela-de-contestacao";
+
+    public const string ContestacaoNaoEncontrada = "contestacao-nao-encontrada";
+
+    // Outra decisão gravou primeiro.
+    public const string ContestacaoJaDecidida = "contestacao-ja-decidida";
 }

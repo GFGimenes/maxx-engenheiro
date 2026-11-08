@@ -55,6 +55,14 @@ internal sealed class PremioParticipacaoRepository(MaxxDbContext db) : IPremioPa
 
     public void Adicionar(Comprovacao comprovacao) => db.Add(comprovacao);
 
+    public void Adicionar(Contestacao contestacao) => db.Add(contestacao);
+
+    public Task<Contestacao?> ContestacaoAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<Contestacao>().SingleOrDefaultAsync(contestacao => contestacao.Id == id, cancellationToken);
+
+    public Task<Contestacao?> ContestacaoDoPremioAsync(Guid premioId, CancellationToken cancellationToken) =>
+        db.Set<Contestacao>().SingleOrDefaultAsync(contestacao => contestacao.PremioParticipacaoId == premioId, cancellationToken);
+
     public Task<Comprovacao?> ComprovacaoAsync(Guid id, CancellationToken cancellationToken) =>
         db.Set<Comprovacao>().SingleOrDefaultAsync(comprovacao => comprovacao.Id == id, cancellationToken);
 

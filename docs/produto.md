@@ -345,6 +345,14 @@ O post de reivindicação é a comprovação: enquanto o prêmio está reivindic
 averiguação, o autor não o apaga, porque a foto sairia junto e a aprovação e a contestação
 dependem dela. Definitivo, o post é como outro qualquer.
 
+A instituição remove o post de reivindicação a qualquer momento e, no mesmo ato, resolve o
+prêmio com o motivo "Removido pela instituição.": reprova se pendente, revoga se válido e,
+se em averiguação, decide a contestação revogando. Só então o post sai. A instituição não
+depende da fila para tirar do ar uma foto imprópria.
+
+Em averiguação, para quem não é o aluno nem a instituição, o post aparece sem o prêmio: sem
+pontos, sem tier e sem a marca.
+
 ### 4.8 Medalha: concessão e anulação
 
 O professor concede escolhendo o item do catálogo. No passo 6, a concessão entra pela
@@ -497,7 +505,8 @@ Registro no banco, mostrado no sininho do cabeçalho do feed, em qualquer plataf
 Push nativo é evolução de fase 2.
 
 Geram notificação: medalha recebida, comprovação aprovada ou reprovada, contestação
-aberta, decisão de contestação, aviso novo. Bolinha dourada de novidade aparece nas abas
+aberta, decisão de contestação, prêmio revogado sem contestação (pela remoção do post pela
+instituição, seção 4.7), aviso novo. Bolinha dourada de novidade aparece nas abas
 Mural (aviso não lido) e Troféus (prêmio novo).
 
 ---

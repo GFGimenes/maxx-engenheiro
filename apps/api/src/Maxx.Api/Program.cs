@@ -103,6 +103,7 @@ builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.EventosHandler>(
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ReivindicarHandler>();
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.DecidirComprovacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.FilaDeComprovacoesHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ContestacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 
 var app = builder.Build();
@@ -174,6 +175,7 @@ v1.MapFeedEndpoints();
 v1.MapPerfilEndpoints();
 v1.MapEventoEndpoints();
 v1.MapComprovacaoEndpoints();
+v1.MapContestacaoEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

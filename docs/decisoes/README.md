@@ -130,6 +130,7 @@ DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comprovacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM post WHERE autor_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM contestacao WHERE premio_participacao_id IN (SELECT id FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo));
 DELETE FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM evento WHERE criado_por_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM medalha WHERE aluno_id IN (SELECT usuario_id FROM alvo);

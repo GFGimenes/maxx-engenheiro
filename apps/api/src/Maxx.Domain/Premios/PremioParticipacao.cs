@@ -13,8 +13,8 @@ namespace Maxx.Domain.Premios;
 //        │                       └──15 dias sem contestação──> definitivo
 //        └──reprovado──> post comum (nova tentativa é outro post de reivindicação)
 //
-// A reivindicação e a decisão sobre a comprovação nascem aqui; contestação e decisão da
-// instituição, na etapa seguinte.
+// O ciclo inteiro mora aqui: reivindicação, decisão sobre a comprovação, contestação e
+// decisão da instituição.
 public sealed class PremioParticipacao
 {
     // Da aprovação correm 15 dias de janela de contestação (produto.md 4.7).
@@ -89,6 +89,17 @@ public sealed class PremioParticipacao
     // Quando o prêmio ficou definitivo: pelo fim da janela sem contestação ou pela
     // confirmação da instituição.
     public DateTimeOffset? DefinitivoEm { get; private set; }
+
+    // Quando foi contestado: uma contestação por prêmio, e a marca fica depois da decisão.
+    public DateTimeOffset? ContestadoEm { get; private set; }
+
+    // Quem revogou, quando e por quê (produto.md 4.7): fica no histórico, visível ao aluno e
+    // à instituição. Revoga a instituição, decidindo a contestação ou removendo o post.
+    public Guid? RevogadoPorId { get; private set; }
+
+    public DateTimeOffset? RevogadoEm { get; private set; }
+
+    public string? MotivoDaRevogacao { get; private set; }
 
     // O instante em que a janela de contestação fecha, para o prêmio aprovado.
     public DateTimeOffset? FimDaJanela => AprovadoEm + JanelaDeContestacao;
@@ -251,6 +262,104 @@ public sealed class PremioParticipacao
         Estado = EstadoDoPremioParticipacao.Definitivo;
         DefinitivoEm = agora;
         return true;
+    }
+
+    // Contestação (produto.md 4.7): o professor da turma, inclusive quem aprovou (escopo
+    // conferido no banco por quem chama), ou a instituição, sempre com motivo, dentro dos 15
+    // dias da aprovação. Uma por prêmio. Contestado, o prêmio vai a averiguação e para de
+    // pontuar até a instituição decidir.
+    public ResultadoDaContestacao Contestar(Usuario quem, string? motivo, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(quem);
+        ExigirAprovador(quem);
+
+        if (ContestadoEm is not null)
+        {
+            return new(null, RecusaDaContestacao.JaContestado);
+        }
+
+        switch (Estado)
+        {
+            case EstadoDoPremioParticipacao.Reivindicado or EstadoDoPremioParticipacao.Reprovado:
+                return new(null, RecusaDaContestacao.NaoContestavel);
+            case EstadoDoPremioParticipacao.Definitivo or EstadoDoPremioParticipacao.Revogado:
+                return new(null, RecusaDaContestacao.ForaDaJanela);
+        }
+
+        if (agora >= FimDaJanela)
+        {
+            return new(null, RecusaDaContestacao.ForaDaJanela);
+        }
+
+        if (Motivo.Normalizar(motivo) is not { } normalizado)
+        {
+            return new(null, RecusaDaContestacao.MotivoInvalido);
+        }
+
+        Estado = EstadoDoPremioParticipacao.EmAveriguacao;
+        ContestadoEm = agora;
+        return new(new Contestacao(this, quem, normalizado, agora), null);
+    }
+
+    // A instituição confirma: o prêmio fica definitivo, volta a pontuar e a janela encerra na
+    // hora; não pode mais ser contestado.
+    public RecusaDaDecisao? Confirmar(Contestacao contestacao, Usuario instituicao, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(contestacao);
+        ArgumentNullException.ThrowIfNull(instituicao);
+        ExigirContestacaoDeste(contestacao);
+        Contestacao.ExigirInstituicao(instituicao);
+
+        if (Estado != EstadoDoPremioParticipacao.EmAveriguacao || !contestacao.EstaAberta)
+        {
+            return RecusaDaDecisao.JaDecidida;
+        }
+
+        contestacao.Decidir(instituicao, DecisaoDaContestacao.Confirmada, agora);
+        Estado = EstadoDoPremioParticipacao.Definitivo;
+        DefinitivoEm = agora;
+        return null;
+    }
+
+    // A instituição revoga, com motivo: o prêmio sai da pontuação e fica no histórico. Pela
+    // contestação, decide a contestação aberta; pela remoção do post, revoga também o prêmio
+    // válido, que não tem contestação. Quem chama desvincula o post.
+    public RecusaDaDecisao? Revogar(Usuario instituicao, string? motivo, Contestacao? contestacao, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(instituicao);
+        Contestacao.ExigirInstituicao(instituicao);
+        if (contestacao is not null)
+        {
+            ExigirContestacaoDeste(contestacao);
+        }
+
+        var revogavel = Estado == EstadoDoPremioParticipacao.EmAveriguacao
+            ? contestacao is { EstaAberta: true }
+            : Estado == EstadoDoPremioParticipacao.Valido && contestacao is null;
+        if (!revogavel)
+        {
+            return RecusaDaDecisao.JaDecidida;
+        }
+
+        if (Motivo.Normalizar(motivo) is not { } normalizado)
+        {
+            return RecusaDaDecisao.MotivoInvalido;
+        }
+
+        contestacao?.Decidir(instituicao, DecisaoDaContestacao.Revogada, agora);
+        Estado = EstadoDoPremioParticipacao.Revogado;
+        RevogadoPorId = instituicao.Id;
+        RevogadoEm = agora;
+        MotivoDaRevogacao = normalizado;
+        return null;
+    }
+
+    private void ExigirContestacaoDeste(Contestacao contestacao)
+    {
+        if (contestacao.PremioParticipacaoId != Id)
+        {
+            throw new ArgumentException($"A contestação {contestacao.Id} não é do prêmio {Id}.", nameof(contestacao));
+        }
     }
 
     private static void ExigirAprovador(Usuario quem)

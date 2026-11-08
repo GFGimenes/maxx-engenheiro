@@ -728,7 +728,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notificacao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada')");
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado')");
                         });
                 });
 
@@ -778,6 +778,71 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_comprovacao_evento_id_criada_em_id");
 
                     b.ToTable("comprovacao", (string)null);
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Premios.Contestacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ContestadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("contestada_em");
+
+                    b.Property<Guid>("ContestadaPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("contestada_por_id");
+
+                    b.Property<DateTimeOffset?>("DecididaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decidida_em");
+
+                    b.Property<Guid?>("DecididaPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decidida_por_id");
+
+                    b.Property<string>("Decisao")
+                        .HasColumnType("text")
+                        .HasColumnName("decisao");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("motivo");
+
+                    b.Property<Guid>("PremioParticipacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("premio_participacao_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_contestacao");
+
+                    b.HasIndex("ContestadaPorId")
+                        .HasDatabaseName("ix_contestacao_contestada_por_id");
+
+                    b.HasIndex("DecididaPorId")
+                        .HasDatabaseName("ix_contestacao_decidida_por_id");
+
+                    b.HasIndex("PremioParticipacaoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_contestacao_premio_participacao_id");
+
+                    b.HasIndex("ContestadaEm", "Id")
+                        .HasDatabaseName("ix_contestacao_contestada_em_id")
+                        .HasFilter("decisao IS NULL");
+
+                    b.ToTable("contestacao", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_contestacao_decisao", "(decidida_em IS NULL) = (decidida_por_id IS NULL) AND (decidida_em IS NULL) = (decisao IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Maxx.Domain.Premios.Evento", b =>
@@ -988,6 +1053,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("chave_de_deduplicacao");
 
+                    b.Property<DateTimeOffset?>("ContestadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("contestado_em");
+
                     b.Property<DateTimeOffset?>("DefinitivoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("definitivo_em");
@@ -1015,6 +1084,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("motivo_da_reprovacao");
 
+                    b.Property<string>("MotivoDaRevogacao")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("motivo_da_revogacao");
+
                     b.Property<int>("Pontos")
                         .HasColumnType("integer")
                         .HasColumnName("pontos");
@@ -1030,6 +1104,14 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ReprovadoPorId")
                         .HasColumnType("uuid")
                         .HasColumnName("reprovado_por_id");
+
+                    b.Property<DateTimeOffset?>("RevogadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revogado_em");
+
+                    b.Property<Guid?>("RevogadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("revogado_por_id");
 
                     b.Property<string>("Tier")
                         .IsRequired()
@@ -1069,6 +1151,9 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReprovadoPorId")
                         .HasDatabaseName("ix_premio_participacao_reprovado_por_id");
 
+                    b.HasIndex("RevogadoPorId")
+                        .HasDatabaseName("ix_premio_participacao_revogado_por_id");
+
                     b.HasIndex("AlunoId", "ItemCodigo")
                         .HasDatabaseName("ix_premio_participacao_aluno_id_item_codigo");
 
@@ -1076,11 +1161,15 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_premio_participacao_aprovacao", "(aprovado_em IS NULL) = (aprovado_por_id IS NULL) AND (aprovado_em IS NULL) = (estado IN ('reivindicado', 'reprovado'))");
 
+                            t.HasCheckConstraint("ck_premio_participacao_averiguacao", "estado <> 'emAveriguacao' OR contestado_em IS NOT NULL");
+
                             t.HasCheckConstraint("ck_premio_participacao_definitivo", "(definitivo_em IS NULL) = (estado <> 'definitivo')");
 
                             t.HasCheckConstraint("ck_premio_participacao_pontos", "pontos >= 1");
 
                             t.HasCheckConstraint("ck_premio_participacao_reprovacao", "(reprovado_em IS NULL) = (reprovado_por_id IS NULL) AND (reprovado_em IS NULL) = (motivo_da_reprovacao IS NULL) AND (reprovado_em IS NULL) = (estado <> 'reprovado')");
+
+                            t.HasCheckConstraint("ck_premio_participacao_revogacao", "(revogado_em IS NULL) = (revogado_por_id IS NULL) AND (revogado_em IS NULL) = (motivo_da_revogacao IS NULL) AND (revogado_em IS NULL) = (estado <> 'revogado')");
 
                             t.HasCheckConstraint("ck_premio_participacao_versao_do_item", "versao_do_item >= 1");
                         });
@@ -1741,6 +1830,29 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_comprovacao_premio_participacao_premio_participacao_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Premios.Contestacao", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ContestadaPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_contestacao_usuario_contestada_por_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("DecididaPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_contestacao_usuario_decidida_por_id");
+
+                    b.HasOne("Maxx.Domain.Premios.PremioParticipacao", null)
+                        .WithMany()
+                        .HasForeignKey("PremioParticipacaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_contestacao_premio_participacao_premio_participacao_id");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Premios.Evento", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -1854,6 +1966,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ReprovadoPorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_premio_participacao_usuario_reprovado_por_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("RevogadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_premio_participacao_usuario_revogado_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Social.Comentario", b =>

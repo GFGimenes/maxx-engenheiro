@@ -67,6 +67,11 @@ const MENSAGENS = {
   "comprovacao-nao-encontrada": "Essa comprovação não existe mais.",
   "comprovacao-ja-decidida": "Outra pessoa já decidiu essa comprovação.",
   "motivo-invalido": "Escreva o motivo, com até 500 caracteres.",
+  "premio-nao-contestavel": "Só o prêmio aprovado pode ser contestado.",
+  "premio-ja-contestado": "Esse prêmio já foi contestado.",
+  "fora-da-janela-de-contestacao": "O prazo de 15 dias para contestar acabou.",
+  "contestacao-nao-encontrada": "Essa contestação não existe mais.",
+  "contestacao-ja-decidida": "Essa contestação já foi decidida.",
   // Curtida, comentário e seguir (CodigosSociais.cs)
   "interacao-nao-permitida": "A instituição não curte nem comenta.",
   "comentario-vazio": "Escreva alguma coisa antes de enviar.",

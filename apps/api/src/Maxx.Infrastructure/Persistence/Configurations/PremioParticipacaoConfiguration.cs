@@ -34,6 +34,13 @@ internal sealed class PremioParticipacaoConfiguration : IEntityTypeConfiguration
                 "AND (reprovado_em IS NULL) = (estado <> 'reprovado')");
             table.HasCheckConstraint(
                 "ck_premio_participacao_definitivo", "(definitivo_em IS NULL) = (estado <> 'definitivo')");
+            table.HasCheckConstraint(
+                "ck_premio_participacao_revogacao",
+                "(revogado_em IS NULL) = (revogado_por_id IS NULL) " +
+                "AND (revogado_em IS NULL) = (motivo_da_revogacao IS NULL) " +
+                "AND (revogado_em IS NULL) = (estado <> 'revogado')");
+            table.HasCheckConstraint(
+                "ck_premio_participacao_averiguacao", "estado <> 'emAveriguacao' OR contestado_em IS NOT NULL");
         });
         builder.HasKey(premio => premio.Id);
         builder.Property(premio => premio.Id).ValueGeneratedNever();
@@ -61,6 +68,8 @@ internal sealed class PremioParticipacaoConfiguration : IEntityTypeConfiguration
         builder.HasOne<Usuario>().WithMany().HasForeignKey(premio => premio.AprovadoPorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Usuario>().WithMany().HasForeignKey(premio => premio.ReprovadoPorId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(premio => premio.MotivoDaReprovacao).HasMaxLength(4 * Motivo.TamanhoMaximo);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(premio => premio.RevogadoPorId).OnDelete(DeleteBehavior.Restrict);
+        builder.Property(premio => premio.MotivoDaRevogacao).HasMaxLength(4 * Motivo.TamanhoMaximo);
 
         // Duas decisões ao mesmo tempo (passo 8, etapas 3 e 4): o xmin deixa só a primeira gravar.
         builder.Property<uint>("Versao").IsRowVersion();
@@ -92,5 +101,38 @@ internal sealed class ComprovacaoConfiguration : IEntityTypeConfiguration<Compro
         builder.HasOne<Usuario>().WithMany().HasForeignKey(comprovacao => comprovacao.AlunoId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Evento>().WithMany().HasForeignKey(comprovacao => comprovacao.EventoId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Post>().WithMany().HasForeignKey(comprovacao => comprovacao.PostId).OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+// A contestação: uma por prêmio, pelo índice único, que decide a corrida de duas. As abertas
+// são lidas das mais antigas para as mais novas (fila de contestações). A decisão grava quem,
+// quando e qual, sempre juntos.
+internal sealed class ContestacaoConfiguration : IEntityTypeConfiguration<Contestacao>
+{
+    public void Configure(EntityTypeBuilder<Contestacao> builder)
+    {
+        builder.ToTable("contestacao", table => table.HasCheckConstraint(
+            "ck_contestacao_decisao",
+            "(decidida_em IS NULL) = (decidida_por_id IS NULL) AND (decidida_em IS NULL) = (decisao IS NULL)"));
+        builder.HasKey(contestacao => contestacao.Id);
+        builder.Property(contestacao => contestacao.Id).ValueGeneratedNever();
+
+        builder.Property(contestacao => contestacao.Motivo).IsRequired().HasMaxLength(4 * Motivo.TamanhoMaximo);
+        builder.Property(contestacao => contestacao.Decisao)
+            .HasConversion(
+                decisao => decisao == null ? null : NomeJson.De(decisao.Value),
+                texto => texto == null ? null : Enum.Parse<DecisaoDaContestacao>(texto, true));
+
+        builder.HasIndex(contestacao => contestacao.PremioParticipacaoId).IsUnique();
+        builder.HasIndex(contestacao => new { contestacao.ContestadaEm, contestacao.Id }).HasFilter("decisao IS NULL");
+
+        builder.HasOne<PremioParticipacao>().WithMany().HasForeignKey(contestacao => contestacao.PremioParticipacaoId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(contestacao => contestacao.ContestadaPorId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(contestacao => contestacao.DecididaPorId).OnDelete(DeleteBehavior.Restrict);
+
+        // Duas decisões ao mesmo tempo: o xmin deixa só a primeira gravar.
+        builder.Property<uint>("Versao").IsRowVersion();
+
+        builder.Ignore(contestacao => contestacao.EstaAberta);
     }
 }

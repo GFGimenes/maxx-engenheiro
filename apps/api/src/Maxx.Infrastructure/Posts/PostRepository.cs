@@ -72,6 +72,13 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
             .ToListAsync(cancellationToken);
 
         var medalhas = await MedalhasAsync([.. linhas.Where(linha => linha.MedalhaId is not null).Select(linha => linha.MedalhaId!.Value)], cancellationToken);
+
+        // Em averiguação, o prêmio é visível só ao aluno e à instituição (produto.md 4.7 e 9.1):
+        // para os outros, o post continua no ar, sem o prêmio, sem pontos nem tier.
+        var leitorEInstituicao = await db.Set<Usuario>()
+            .Where(usuario => usuario.Id == leitorId)
+            .Select(usuario => (usuario.Papeis & Papeis.Instituicao) != 0)
+            .SingleOrDefaultAsync(cancellationToken);
         var participacoes = await PremiosParticipacaoAsync(
             [.. linhas.Where(linha => linha.PremioParticipacaoId is not null).Select(linha => linha.PremioParticipacaoId!.Value)], cancellationToken);
 
@@ -85,7 +92,11 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                 linha.ChaveDaFotoDaGrade,
                 linha.MedalhaId is { } medalhaId
                     ? medalhas.GetValueOrDefault(medalhaId)
-                    : linha.PremioParticipacaoId is { } premioId ? participacoes.GetValueOrDefault(premioId) : null,
+                    : linha.PremioParticipacaoId is { } premioId
+                        && participacoes.GetValueOrDefault(premioId) is { } participacao
+                        && (participacao.Estado != EstadoDoPremioParticipacao.EmAveriguacao || linha.AutorId == leitorId || leitorEInstituicao)
+                        ? participacao
+                        : null,
                 linha.CriadoEm,
                 linha.Curtidas,
                 linha.Comentarios,
