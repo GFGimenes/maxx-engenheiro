@@ -341,6 +341,10 @@ sem legenda (como na concessão direta pela instituição), ele é apagado, porq
 não existe. Em averiguação, o post continua
 visível, sem exibir pontos nem tier.
 
+O post de reivindicação é a comprovação: enquanto o prêmio está reivindicado, válido ou em
+averiguação, o autor não o apaga, porque a foto sairia junto e a aprovação e a contestação
+dependem dela. Definitivo, o post é como outro qualquer.
+
 ### 4.8 Medalha: concessão e anulação
 
 O professor concede escolhendo o item do catálogo. No passo 6, a concessão entra pela
