@@ -1,3 +1,6 @@
-import { PerfilEmBreve } from "../../../navegacao/EmBreve";
+import { PerfilScreen } from "../../../perfil/PerfilScreen";
 
-export default PerfilEmBreve;
+// O próprio perfil, na aba.
+export default function MeuPerfil() {
+  return <PerfilScreen />;
+}

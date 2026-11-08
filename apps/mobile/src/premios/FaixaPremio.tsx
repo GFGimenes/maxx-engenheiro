@@ -9,13 +9,16 @@ import { rotulosDeRaridade, rotulosDeTier } from "./rotulos";
 interface FaixaPremioProps {
   nome: string;
   tier: Tier;
-  raridade: Raridade;
+  // Nula enquanto o worker ainda não calculou a escassez do item: sai o ornamento e o texto.
+  raridade?: Raridade | null;
   glifo: Glifo;
   pontos: number;
   // Sob os pontos, como "foto validada".
   nota?: string;
   // Acima do nome, como "Último troféu" no perfil.
   rotulo?: string;
+  // Sob o tier, numa linha só: de onde veio o prêmio, como "Banco de Dados · 4º bimestre".
+  detalhe?: string;
 }
 
 // A faixa do prêmio: medalhão, nome, tier e raridade, pontos à direita. O tier também vai em
@@ -28,6 +31,7 @@ export function FaixaPremio({
   pontos,
   nota,
   rotulo,
+  detalhe,
 }: FaixaPremioProps) {
   const { name, colors } = useTheme();
 
@@ -36,7 +40,7 @@ export function FaixaPremio({
       testID="faixa"
       style={[styles.faixa, { backgroundColor: colors.surface }]}
     >
-      <Medalhao tier={tier} glifo={glifo} raridade={raridade} />
+      <Medalhao tier={tier} glifo={glifo} raridade={raridade ?? undefined} />
 
       <View style={styles.textos}>
         {rotulo && (
@@ -49,8 +53,16 @@ export function FaixaPremio({
           <Text style={[styles.tier, { color: tiers[tier].texto[name] }]}>
             {rotulosDeTier[tier]}
           </Text>
-          {` · ${rotulosDeRaridade[raridade]}`}
+          {raridade ? ` · ${rotulosDeRaridade[raridade]}` : ""}
         </Text>
+        {detalhe && (
+          <Text
+            numberOfLines={1}
+            style={[textStyles.legenda, { color: colors.ink2 }]}
+          >
+            {detalhe}
+          </Text>
+        )}
       </View>
 
       <View style={styles.pontos}>
@@ -58,7 +70,9 @@ export function FaixaPremio({
           {`+${pontos}`}
         </Text>
         {nota && (
-          <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
+          <Text
+            style={[textStyles.legenda, styles.nota, { color: colors.ink2 }]}
+          >
             {nota}
           </Text>
         )}
@@ -79,5 +93,8 @@ const styles = StyleSheet.create({
   },
   textos: { flex: 1, gap: 2 },
   tier: { fontFamily: textStyles.secao.fontFamily },
-  pontos: { alignItems: "flex-end", gap: 2 },
+  // Uma nota longa ("Banco de Dados · 4º bimestre") quebra na própria coluna, sem apertar o
+  // nome do prêmio.
+  pontos: { alignItems: "flex-end", gap: 2, maxWidth: "38%" },
+  nota: { textAlign: "right" },
 });

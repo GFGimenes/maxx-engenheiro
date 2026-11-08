@@ -7,6 +7,7 @@ import {
   versoesAceitas,
   type Aluno,
 } from "./apoio/contas";
+import { abrirPerfil } from "./apoio/navegacao";
 
 // Cada teste cria a própria linha do cadastro elegível. Rodam só no celular, claro e
 // escuro, pelo limite de consultas por IP.
@@ -49,6 +50,7 @@ test(
     await page.getByRole("button", { name: "Aceitar e criar conta" }).click();
 
     await expect(page).toHaveURL(/\/$/);
+    await abrirPerfil(page);
     await expect(page.getByTestId("arroba")).toHaveText(arroba(aluno));
     expect(versoesAceitas(aluno)).toEqual([termo.versao]);
   },

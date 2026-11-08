@@ -23,7 +23,7 @@ internal enum Limite
     // Alto de propósito: a banca inteira entra pelo mesmo celular roteado.
     RegistroDeDemonstracaoPorIp,
 
-    // Declarado aqui; aplicado e testado no passo 7, quando o endpoint de upload nasce.
+    // Por pedido de assinatura, que cobre as duas derivadas de uma foto.
     UploadPorUsuario,
 }
 
@@ -52,7 +52,7 @@ internal sealed partial class LimitesDeTaxa : IDisposable
         [Limite.RecuperacaoPorEmail] = new(3, TimeSpan.FromMinutes(15)),
         [Limite.RegistroDeDemonstracaoPorIp] = new(60, TimeSpan.FromHours(1)),
 
-        // Números provisórios, revistos no passo 7.
+        // Revisto no passo 7: um post ou uma foto de perfil por pedido, 30 por hora sobram.
         [Limite.UploadPorUsuario] = new(30, TimeSpan.FromHours(1)),
     };
 

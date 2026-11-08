@@ -1,4 +1,5 @@
-# Maxx: Postgres, migração, duas réplicas de API, worker, Caddy e Mailpit.
+# Maxx: Postgres, migração, duas réplicas de API, worker, Caddy e Mailpit, mais o emulador
+# do bucket de fotos só na máquina local e na CI.
 # Uso local: cp .env.example .env && docker compose up --build
 
 name: maxx
@@ -14,6 +15,25 @@ x-api-image: &api-image
 # "Cannot load library libgssapi_krb5.so.2", que a imagem aspnet não traz.
 x-api-env: &api-env
   ConnectionStrings__Maxx: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?defina no .env};Username=${POSTGRES_USER:?defina no .env};Password=${POSTGRES_PASSWORD:?defina no .env};Gss Encryption Mode=Disable"
+
+# O bucket das fotos (ADR 0002), para a API e o worker. Na máquina local e na CI, o
+# emulador abaixo, com os valores do .env.example; na VPS, o Cloudflare R2, com os do .env
+# de lá. Sem padrão que aponte para o emulador: faltando um valor, nada sobe.
+x-armazenamento-env: &armazenamento-env
+  Armazenamento__Bucket: ${MAXX_ARMAZENAMENTO_BUCKET:?defina no .env}
+  Armazenamento__Endpoint: ${MAXX_ARMAZENAMENTO_ENDPOINT:?defina no .env}
+  Armazenamento__EndpointPublico: ${MAXX_ARMAZENAMENTO_ENDPOINT_PUBLICO:-}
+  Armazenamento__UrlDeLeitura: ${MAXX_ARMAZENAMENTO_URL_DE_LEITURA:?defina no .env}
+  Armazenamento__Regiao: ${MAXX_ARMAZENAMENTO_REGIAO:-auto}
+  Armazenamento__ChaveDeAcesso: ${MAXX_ARMAZENAMENTO_CHAVE_DE_ACESSO:?defina no .env}
+  Armazenamento__Segredo: ${MAXX_ARMAZENAMENTO_SEGREDO:?defina no .env}
+
+# Sobe o bucket local antes da API, quando o perfil do emulador está ligado. Na VPS o perfil
+# fica desligado, e a dependência some (required: false).
+x-depende-do-bucket-local: &depende-do-bucket-local
+  armazenamento-init:
+    condition: service_completed_successfully
+    required: false
 
 services:
   postgres:
@@ -60,7 +80,7 @@ services:
   api:
     <<: *api-image
     environment:
-      <<: *api-env
+      <<: [*api-env, *armazenamento-env]
       ASPNETCORE_ENVIRONMENT: Production
       # HS256, a mesma nas duas réplicas. Sem ela a API não sobe.
       Jwt__Chave: ${MAXX_JWT_CHAVE:?defina no .env}
@@ -72,6 +92,7 @@ services:
     deploy:
       replicas: 2
     depends_on:
+      <<: *depende-do-bucket-local
       seeder:
         condition: service_completed_successfully
     restart: unless-stopped
@@ -82,7 +103,7 @@ services:
     <<: *api-image
     command: ["worker"]
     environment:
-      <<: *api-env
+      <<: [*api-env, *armazenamento-env]
       DOTNET_ENVIRONMENT: Production
       # O e-mail sai daqui, por um trabalho da fila. Sem a URL o worker não sobe.
       App__UrlPublica: ${MAXX_URL_PUBLICA:-http://localhost}
@@ -94,9 +115,67 @@ services:
       Email__Smtp__Usuario: ${MAXX_SMTP_USUARIO:-}
       Email__Smtp__Senha: ${MAXX_SMTP_SENHA:-}
     depends_on:
+      <<: *depende-do-bucket-local
       seeder:
         condition: service_completed_successfully
     restart: unless-stopped
+
+  # Emulador do bucket de fotos, compatível com S3 (VersityGW), no lugar do Cloudflare R2.
+  # Só na máquina local e na CI, pelo perfil que o .env.example liga (COMPOSE_PROFILES);
+  # nunca em produção. Porta só nesta máquina: é por ela que o navegador envia e lê as
+  # fotos, como faria no R2 e na CDN.
+  armazenamento:
+    image: versity/versitygw:v1.10.0
+    profiles: [armazenamento-local]
+    command: ["posix", "/dados"]
+    environment:
+      ROOT_ACCESS_KEY: ${MAXX_ARMAZENAMENTO_CHAVE_DE_ACESSO:?defina no .env}
+      ROOT_SECRET_KEY: ${MAXX_ARMAZENAMENTO_SEGREDO:?defina no .env}
+      VGW_REGION: ${MAXX_ARMAZENAMENTO_REGIAO:-auto}
+    volumes:
+      # O backend posix guarda cada objeto num arquivo, e os metadados em atributos
+      # estendidos, que o volume do Docker suporta.
+      - armazenamento-data:/dados
+    ports:
+      - "127.0.0.1:${MAXX_ARMAZENAMENTO_PORT:-9000}:7070"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "7070"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  # Prepara o bucket local como o R2 de produção fica configurado: privado para escrita,
+  # leitura anônima de objeto sem listagem (o papel da CDN) e CORS para o PUT do navegador.
+  # Idempotente: roda a cada subida.
+  armazenamento-init:
+    image: amazon/aws-cli:2.38.0
+    profiles: [armazenamento-local]
+    entrypoint: ["/bin/sh", "-ec"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${MAXX_ARMAZENAMENTO_CHAVE_DE_ACESSO:?defina no .env}
+      AWS_SECRET_ACCESS_KEY: ${MAXX_ARMAZENAMENTO_SEGREDO:?defina no .env}
+      AWS_DEFAULT_REGION: ${MAXX_ARMAZENAMENTO_REGIAO:-auto}
+      AWS_ENDPOINT_URL: http://armazenamento:7070
+      # Os checksums padrão do CLI recente não são aceitos por todo serviço compatível.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      BUCKET: ${MAXX_ARMAZENAMENTO_BUCKET:?defina no .env}
+      # O app servido pelo Caddy e o servidor de desenvolvimento do Expo.
+      ORIGENS: '"${MAXX_URL_PUBLICA:-http://localhost}","http://localhost:8081"'
+    command:
+      - |
+        aws s3api head-bucket --bucket "$$BUCKET" 2>/dev/null \
+          || aws s3api create-bucket --bucket "$$BUCKET" \
+               --create-bucket-configuration "LocationConstraint=$$AWS_DEFAULT_REGION"
+        aws s3api put-bucket-policy --bucket "$$BUCKET" --policy \
+          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::$$BUCKET/*\"]}]}"
+        aws s3api put-bucket-cors --bucket "$$BUCKET" --cors-configuration \
+          "{\"CORSRules\":[{\"AllowedOrigins\":[$$ORIGENS],\"AllowedMethods\":[\"PUT\",\"GET\"],\"AllowedHeaders\":[\"content-type\"],\"ExposeHeaders\":[\"ETag\"],\"MaxAgeSeconds\":3000}]}"
+        echo "Bucket $$BUCKET pronto."
+    depends_on:
+      armazenamento:
+        condition: service_healthy
+    restart: "no"
 
   # Recebe todo e-mail que o worker manda, sem entregar a ninguém. Caixa em
   # http://localhost:8025, só nesta máquina.
@@ -126,3 +205,4 @@ networks:
 
 volumes:
   postgres-data:
+  armazenamento-data:

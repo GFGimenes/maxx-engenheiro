@@ -24,6 +24,10 @@ public interface IUsuarioRepository
 
     Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken);
 
+    // Com todos os prefixos que ele já teve: é o que deixa editar o prefixo e voltar a um
+    // antigo (reserva permanente, produto.md 2.3.1).
+    Task<Usuario?> BuscarComPrefixosAsync(Guid id, CancellationToken cancellationToken);
+
     // Login por e-mail, de qualquer papel. E-mail sem diferenciar maiúsculas.
     Task<Usuario?> BuscarPorEmailAsync(string email, CancellationToken cancellationToken);
 

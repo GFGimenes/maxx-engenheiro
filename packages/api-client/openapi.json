@@ -155,6 +155,221 @@
         ]
       }
     },
+    "/api/v1/uploads": {
+      "post": {
+        "tags": [
+          "Fotos"
+        ],
+        "operationId": "PedirUpload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/feed": {
+      "get": {
+        "tags": [
+          "Feed"
+        ],
+        "operationId": "GetFeed",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDoFeedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/cursos": {
+      "get": {
+        "tags": [
+          "Busca"
+        ],
+        "operationId": "GetCursos",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CursoResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/busca/alunos": {
+      "get": {
+        "tags": [
+          "Busca"
+        ],
+        "operationId": "BuscarAlunos",
+        "parameters": [
+          {
+            "name": "termo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "curso",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "semestre",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeAlunosResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -350,6 +565,849 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/posts": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "PublicarPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicarPostRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "GetPost",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "RemoverPost",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}/curtida": {
+      "put": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "CurtirPost",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurtidasResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "DescurtirPost",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurtidasResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}/comentarios": {
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "GetComentarios",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeComentariosResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "Comentar",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComentarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComentarioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/posts/{postId}/comentarios/{comentarioId}": {
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "operationId": "RemoverComentario",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "comentarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/seguindo/{usuarioId}": {
+      "put": {
+        "tags": [
+          "Seguir"
+        ],
+        "operationId": "Seguir",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Seguir"
+        ],
+        "operationId": "DeixarDeSeguir",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/perfis/{usuarioId}": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetPerfil",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/perfis/{usuarioId}/posts": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetPostsDoPerfil",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDoFeedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/perfis/{usuarioId}/premios": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetPremiosDoPerfil",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PremiosDoAlunoResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/perfil": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetMeuPerfil",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "EditarPerfil",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarPerfilRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/perfil/disponibilidade": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetDisponibilidadeDoMeuPrefixo",
+        "parameters": [
+          {
+            "name": "prefixo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadeDoPrefixoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -977,6 +2035,125 @@
           }
         }
       },
+      "AlunoEncontradoResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "curso",
+          "semestre",
+          "exAluno",
+          "foto",
+          "euSigo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "exAluno": {
+            "type": "boolean"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "euSigo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AutorDoComentarioResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "foto"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AutorDoPostResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "curso",
+          "semestre",
+          "foto"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CadastroRequest": {
         "required": [
           "ra",
@@ -1018,6 +2195,47 @@
             "minimum": 1,
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ComentarioRequest": {
+        "required": [
+          "texto"
+        ],
+        "type": "object",
+        "properties": {
+          "texto": {
+            "maxLength": 2000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ComentarioResponse": {
+        "required": [
+          "id",
+          "autor",
+          "texto",
+          "criadoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "autor": {
+            "$ref": "#/components/schemas/AutorDoComentarioResponse"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1073,6 +2291,42 @@
           }
         }
       },
+      "CursoResponse": {
+        "required": [
+          "sigla",
+          "nome",
+          "duracaoEmSemestres"
+        ],
+        "type": "object",
+        "properties": {
+          "sigla": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "duracaoEmSemestres": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CurtidasResponse": {
+        "required": [
+          "curtidas",
+          "curtiu"
+        ],
+        "type": "object",
+        "properties": {
+          "curtidas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "curtiu": {
+            "type": "boolean"
+          }
+        }
+      },
       "DemonstracaoResponse": {
         "required": [
           "cursos"
@@ -1084,6 +2338,17 @@
             "items": {
               "$ref": "#/components/schemas/CursoDeDemonstracao"
             }
+          }
+        }
+      },
+      "DisponibilidadeDoPrefixoResponse": {
+        "required": [
+          "disponivel"
+        ],
+        "type": "object",
+        "properties": {
+          "disponivel": {
+            "type": "boolean"
           }
         }
       },
@@ -1123,6 +2388,46 @@
           }
         }
       },
+      "EditarPerfilRequest": {
+        "required": [
+          "nomeDeExibicao",
+          "prefixo",
+          "fotoUploadId",
+          "removerFoto"
+        ],
+        "type": "object",
+        "properties": {
+          "nomeDeExibicao": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "prefixo": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fotoUploadId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "removerFoto": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "EntradaDeDemonstracaoRequest": {
         "required": [
           "chaveDoDispositivo"
@@ -1136,12 +2441,33 @@
           }
         }
       },
+      "EnvioResponse": {
+        "required": [
+          "url",
+          "tipoDeConteudo",
+          "tamanho"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "tipoDeConteudo": {
+            "type": "string"
+          },
+          "tamanho": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "EuResponse": {
         "required": [
           "id",
           "papeis",
           "arroba",
-          "nomeDeExibicao"
+          "nomeDeExibicao",
+          "foto"
         ],
         "type": "object",
         "properties": {
@@ -1160,6 +2486,12 @@
           },
           "nomeDeExibicao": {
             "type": "string"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1184,6 +2516,21 @@
           "passos": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "FotoDoPostResponse": {
+        "required": [
+          "feed",
+          "grade"
+        ],
+        "type": "object",
+        "properties": {
+          "feed": {
+            "type": "string"
+          },
+          "grade": {
+            "type": "string"
           }
         }
       },
@@ -1448,6 +2795,320 @@
           }
         }
       },
+      "PaginaDeAlunosResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlunoEncontradoResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PaginaDeComentariosResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComentarioResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PaginaDoFeedResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PedidoDeUploadRequest": {
+        "required": [
+          "finalidade",
+          "tipoDeConteudo",
+          "tamanhoDoFeed",
+          "tamanhoDaGrade"
+        ],
+        "type": "object",
+        "properties": {
+          "finalidade": {
+            "type": "string"
+          },
+          "tipoDeConteudo": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "tamanhoDoFeed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tamanhoDaGrade": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PerfilResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "papel",
+          "curso",
+          "nomeDoCurso",
+          "semestre",
+          "exAluno",
+          "ra",
+          "pontos",
+          "seguidores",
+          "seguindo",
+          "euSigo",
+          "foto",
+          "professor"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "papel": {
+            "type": "string"
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeDoCurso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "exAluno": {
+            "type": "boolean"
+          },
+          "ra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pontos": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "seguidores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seguindo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "euSigo": {
+            "type": "boolean"
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "professor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProfessorDoPerfilResponse"
+              }
+            ]
+          }
+        }
+      },
+      "PostResponse": {
+        "required": [
+          "id",
+          "autor",
+          "legenda",
+          "foto",
+          "premio",
+          "criadoEm",
+          "curtidas",
+          "comentarios",
+          "curtiu"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "autor": {
+            "$ref": "#/components/schemas/AutorDoPostResponse"
+          },
+          "legenda": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "premio": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PremioDoPostResponse"
+              }
+            ]
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "curtidas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "comentarios": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "curtiu": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PremioDoPostResponse": {
+        "required": [
+          "tipo",
+          "id",
+          "item",
+          "nome",
+          "tier",
+          "pontos",
+          "raridade",
+          "materia",
+          "bimestre"
+        ],
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "raridade": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RaridadeResponse"
+              }
+            ]
+          },
+          "materia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bimestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PremioObtidoResponse": {
         "required": [
           "id",
@@ -1455,7 +3116,8 @@
           "pontos",
           "materia",
           "bimestre",
-          "obtidoEm"
+          "obtidoEm",
+          "postId"
         ],
         "type": "object",
         "properties": {
@@ -1486,6 +3148,13 @@
           "obtidoEm": {
             "type": "string",
             "format": "date-time"
+          },
+          "postId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -1548,6 +3217,57 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ProfessorDoPerfilResponse": {
+        "required": [
+          "turmas",
+          "medalhasConcedidas"
+        ],
+        "type": "object",
+        "properties": {
+          "turmas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurmaDoPerfilResponse"
+            }
+          },
+          "medalhasConcedidas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PublicarPostRequest": {
+        "required": [
+          "legenda",
+          "uploadId",
+          "medalhaId"
+        ],
+        "type": "object",
+        "properties": {
+          "legenda": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "uploadId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "medalhaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -1700,6 +3420,25 @@
           }
         }
       },
+      "TurmaDoPerfilResponse": {
+        "required": [
+          "materia",
+          "curso",
+          "semestre"
+        ],
+        "type": "object",
+        "properties": {
+          "materia": {
+            "type": "string"
+          },
+          "curso": {
+            "type": "string"
+          },
+          "semestre": {
+            "type": "string"
+          }
+        }
+      },
       "TurmaDoProfessorResponse": {
         "required": [
           "id",
@@ -1728,6 +3467,31 @@
             "format": "int32"
           }
         }
+      },
+      "UploadResponse": {
+        "required": [
+          "id",
+          "expiraEm",
+          "feed",
+          "grade"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "feed": {
+            "$ref": "#/components/schemas/EnvioResponse"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/EnvioResponse"
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -1750,7 +3514,25 @@
       "name": "Premios"
     },
     {
+      "name": "Fotos"
+    },
+    {
+      "name": "Feed"
+    },
+    {
+      "name": "Busca"
+    },
+    {
       "name": "Professor"
+    },
+    {
+      "name": "Posts"
+    },
+    {
+      "name": "Seguir"
+    },
+    {
+      "name": "Perfil"
     },
     {
       "name": "Demonstracao"

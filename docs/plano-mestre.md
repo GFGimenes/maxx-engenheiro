@@ -184,6 +184,12 @@ Fica pendente: a posição no ranking, que chega no passo 11. Decisões do passo
 - Busca de alunos por nome de exibição e arroba, com filtros de curso e semestre.
 - Editar perfil: foto, nome de exibição e a parte do arroba antes do hífen.
 - Deep link `/post/:id` atrás do login.
+- Limite de upload aplicado e testado; controle de tema no menu do perfil; anel dourado no
+  próprio avatar; foto opcional na demonstração.
+
+Ficam pendentes: os posts semeados, que precisam das contas de aluno do seed completo
+(passo 12), e a remoção das fotos do lote no bucket, que o SQL da purga não alcança
+(passo 12). Decisões do passo em `decisoes/README.md`, Posts, upload e feed (passo 7).
 
 ### Passo 8. Prêmios de participação
 
@@ -234,22 +240,34 @@ Fica pendente: a posição no ranking, que chega no passo 11. Decisões do passo
 - Conceder prêmio de participação já aprovado.
 - Publicar aviso de faculdade e de curso.
 - Anular medalha; corrigir e-mail de aluno; marcar ex-aluno.
-- Purgar dados de demonstração por lote, em uma transação.
+- Purgar dados de demonstração por lote, em uma transação, com as fotos do lote (posts e
+  fotos de perfil) removidas do bucket, que o SQL sozinho não alcança (D14 do passo 7).
 - Seed de demonstração completo: 150 alunos, 120 ativos distribuídos por semestres e 30
   ex-alunos, quatro cursos, turmas, matérias, professores, posts com foto, prêmios
   distribuídos de modo que as quatro raridades apareçam, avisos, eventos passados e
-  futuros, duas comprovações pendentes e uma contestação aberta.
+  futuros, duas comprovações pendentes e uma contestação aberta. Os posts semeados, que o
+  passo 7 deixou para cá (D13), nascem com as contas desses alunos.
 
 ### Passo 13. Endurecimento e ensaio
 
 - k6 a 2.000 usuários virtuais, p95 medido em feed, perfil e ranking. Micro-cache da
-  primeira página do feed só se o número pedir.
+  primeira página do feed só se o número pedir. Do passo 7: o p95 do trecho de
+  recomendação, que ordena sem índice; se o planejador escolhe o índice do feed com volume
+  real (o teste dele desliga a varredura); e se a busca usa os índices de trigramas.
+- CSP do build web liberando o domínio da CDN das fotos em `img-src` e o endpoint do R2 em
+  `connect-src`, para o PUT direto do navegador.
+- R2 de verdade: rodar uma vez o `VerificacaoDoR2Tests`, que confere tipo e tamanho presos
+  na assinatura, leitura pela CDN sem login, remoção e o CORS do PUT.
+- Privilégio de `CREATE EXTENSION` do usuário do banco na VPS: a migration do passo 7 cria
+  `unaccent` e `pg_trgm`. Revisar se a VPS usar um usuário com menos privilégio que o dono
+  do banco.
 - Verificação de saúde do worker e alerta de fila parada, pelo defeito silencioso
   descrito no ADR 0005, e de trabalho que ficou `falho` na fila.
 - CSP, HSTS e cabeçalhos de segurança; varredura de dependências e de segredos na CI.
 - Backup: `pg_dump` noturno para o bucket e dump manual antes de migration, com
   restauração testada uma vez.
-- APK gerado e fumaça mínima com Maestro.
+- APK gerado e fumaça mínima com Maestro, incluindo o PUT da foto no Android, que até lá
+  só passa pelo Jest.
 - Ensaio da demonstração remota: não há apresentação presencial, a avaliação é remota,
   antes de 05/12, e cada avaliador entra pela própria conexão. O ensaio entra na VPS de
   fora, por conexões diferentes, com a demonstração ligada.

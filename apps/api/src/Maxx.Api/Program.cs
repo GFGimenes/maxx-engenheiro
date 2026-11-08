@@ -3,11 +3,16 @@ using System.Text.Json.Serialization;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
+using Maxx.Api.Feed;
+using Maxx.Api.Fotos;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
+using Maxx.Api.Perfil;
+using Maxx.Api.Posts;
 using Maxx.Api.Premios;
+using Maxx.Api.Social;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
@@ -33,6 +38,7 @@ if (args is ["worker", ..])
         worker.Configuration.GetConnectionString("Maxx")
             ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada."));
     worker.AddEnvioDeEmail(exigirUrl: true);
+    worker.AddArmazenamentoDeFotos(exigir: true);
     worker.Services.AddWorker();
     await worker.Build().RunAsync();
     return 0;
@@ -78,11 +84,21 @@ builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 var servindo = !isMigrate && !isSeed && !isAnulacao && !isOpenApiGeneration;
 builder.AddAutenticacao(exigirChave: servindo);
+builder.AddArmazenamentoDeFotos(exigir: servindo);
 var demonstracao = builder.AddDemonstracao(servindo: servindo, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
 builder.Services.AddLimitesDeTaxa();
 builder.Services.AddScoped<Maxx.Application.Medalhas.ConcederMedalhaHandler>();
 builder.Services.AddScoped<Maxx.Application.Medalhas.AnularMedalhaHandler>();
+builder.Services.AddScoped<Maxx.Application.Fotos.PedirUploadHandler>();
+builder.Services.AddScoped<Maxx.Application.Posts.PublicarPostHandler>();
+builder.Services.AddScoped<Maxx.Application.Posts.RemoverPostHandler>();
+builder.Services.AddScoped<Maxx.Application.Social.CurtidaHandler>();
+builder.Services.AddScoped<Maxx.Application.Social.ComentarioHandler>();
+builder.Services.AddScoped<Maxx.Application.Social.SeguimentoHandler>();
+builder.Services.AddScoped<Maxx.Application.Feed.FeedHandler>();
+builder.Services.AddScoped<Maxx.Application.Perfil.EditarPerfilHandler>();
+builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 
 var app = builder.Build();
 
@@ -146,6 +162,11 @@ v1.MapEuEndpoints();
 v1.MapTermoDeUsoEndpoints();
 v1.MapProfessorEndpoints();
 v1.MapPremiosEndpoints();
+v1.MapUploadEndpoints();
+v1.MapPostEndpoints();
+v1.MapSocialEndpoints();
+v1.MapFeedEndpoints();
+v1.MapPerfilEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

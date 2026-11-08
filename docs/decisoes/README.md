@@ -27,7 +27,7 @@ seis assumidas de propósito, na seção 12 daquele documento.
 |---|---|
 | Hospedagem | Docker Compose em uma VPS, Caddy na frente, HTTPS automático com HSTS e cabeçalhos de segurança, CSP no build web |
 | Réplicas | Duas réplicas de API sem estado atrás do Caddy: resiliência de deploy, não capacidade |
-| Storage | Cloudflare R2 com a CDN da Cloudflare |
+| Storage | Cloudflare R2 com a CDN da Cloudflare em produção. No compose, na CI e nos testes de integração, o emulador VersityGW, compatível com S3; trocar um pelo outro muda só o `.env`. Ver Posts, upload e feed (passo 7) |
 | Migrations | Contêiner separado com advisory lock, antes de subir as réplicas. Nunca no startup da aplicação |
 | Worker | Contêiner separado, `Maxx.Api worker`, uma réplica, consumindo a fila do Postgres (ADR 0008). Ver Medalhas, fila e worker (passo 6) |
 | Backup | `pg_dump` noturno para o bucket, mais dump manual obrigatório antes de cada migration, com restauração testada uma vez |
@@ -100,7 +100,7 @@ Limites de taxa, por réplica:
 | Sugestão e disponibilidade do arroba | 60 por minuto por IP, somadas as duas: elas respondem diferente para um par de RA e e-mail que existe. Cabe na digitação porque o cliente do passo 5 faz debounce antes de perguntar |
 | Recuperação de senha | 3 a cada 15 minutos por e-mail, só no pedido. A confirmação não tem limite: o token tem 256 bits |
 | Registro de demonstração | 60 por hora por IP. Alto de propósito: na avaliação remota, cada avaliador entra pela própria conexão, mas a rede móvel costuma pôr muitos aparelhos atrás do mesmo IP (CGNAT da operadora), e o ensaio do passo 13 cria várias contas a partir de poucas conexões. Um limite baixo recusaria avaliador legítimo. A entrada pela chave do dispositivo não tem limite: a chave tem 256 bits |
-| Upload | 30 por hora por usuário, número provisório. Declarado no passo 3; aplicado, testado e revisto no passo 7, quando o endpoint nasce |
+| Upload | 30 por hora por usuário, contando pedidos de assinatura: cada pedido cobre as duas derivadas. Declarado no passo 3, aplicado e testado no passo 7. Um usuário não esgota o limite de outro |
 
 O IP vem do `X-Forwarded-For` posto pelo Caddy, aceito só dele. Estourado o limite, a
 resposta é 429 em ProblemDetails, com `Retry-After`.
@@ -125,7 +125,12 @@ CREATE TEMP TABLE alvo ON COMMIT DROP AS
 DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM curtida WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM post WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM medalha WHERE aluno_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM upload_pendente WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM usuario WHERE id IN (SELECT usuario_id FROM alvo);
 DELETE FROM matricula WHERE aluno_id IN (SELECT cadastro_id FROM alvo);
 DELETE FROM cadastro_elegivel WHERE id IN (SELECT cadastro_id FROM alvo) AND demonstracao;
@@ -133,9 +138,11 @@ COMMIT;
 ```
 
 Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1`. Os prefixos reservados, os aceites do
-termo e os refresh saem em cascata com o usuário e a família. A lista cresce com os passos que gravam dados
-do aluno (posts, curtidas, prêmios, pontos): cada um acrescenta aqui a tabela dele, antes
-de `usuario`.
+termo e os refresh saem em cascata com o usuário e a família. Curtidas e comentários de
+outras pessoas nos posts do lote saem em cascata com o post. A lista cresce com os passos
+que gravam dados do aluno (prêmios, pontos): cada um acrescenta aqui a tabela dele, antes
+de `usuario`. As fotos no bucket não saem por este SQL, que só alcança o banco: saem na purga
+pela área web da instituição, no passo 12.
 
 ## Cliente
 
@@ -160,13 +167,13 @@ substituta, então não servem de referência de fonte. Componentes técnicos fi
 
 | Decisão | Detalhe |
 |---|---|
-| Tema | Sistema, Claro e Escuro, com Sistema por padrão e a escolha guardada no AsyncStorage. O controle fica na tela de status e na vitrine; o lugar definitivo é o perfil, no passo 7 |
+| Tema | Sistema, Claro e Escuro, com Sistema por padrão e a escolha guardada no AsyncStorage. O controle fica na tela de status e na vitrine e, desde o passo 7, no menu do perfil, que é o lugar definitivo |
 | Ícones | Só `react-native-svg`, com os caminhos do Lucide 1.70.0 num componente nosso (`Icon`), com a licença ao lado. Traço 1.8 em grade de 24. A taça é o `trophy` e a fita é o `medal`. No preenchido, o desenho interno sai recortado na cor de `detailColor`, o fundo sobre o qual o ícone está |
 | Vitrine | Rota `/vitrine` só em `__DEV__`. Em produção, ela volta para o início e nem entra no bundle |
 | Trilha | Por itens da família, de 2 a 5 passos, rolando na horizontal quando não couberem. O primeiro não obtido é o próximo, com cadeado; os demais não obtidos ficam só tracejados. A linha é contínua só entre dois obtidos, e uma lacuna no meio fica sem linha contínua. Círculo de 36, passo de 82, com o cartão de título dentro do componente |
 | Foco | Anel do token `focus`, com 2 px de espessura e 2 px de afastamento, só por teclado (`:focus-visible` na web). A prancheta mostra ouro no claro; vale o token. O contorno padrão do navegador sai com `outline-style: none`, porque largura 0 não o remove. O campo usa a borda de 1,5 px em `focus`, sem anel |
 | Pressionado e desativado | Pressionado com opacidade 0,85, embora a prancheta escureça. Desativado em `surface2` com `ink3`. O segmento ativo desativado mantém `segmentOn`, sem sombra, para a escolha continuar visível |
-| Avatar | Iniciais com as cores do token, do primeiro e do último nome, em Archivo 700 a 40% do tamanho. O anel dourado do próprio aluno fica para os passos 7 e 11 |
+| Avatar | Iniciais com as cores do token, do primeiro e do último nome, em Archivo 700 a 40% do tamanho. Com foto, a derivada da grade no lugar das iniciais. O anel dourado marca o próprio avatar no cabeçalho do perfil desde o passo 7; o do ranking chega no passo 11 |
 | Raios | 8 nos chips. O segmento ativo tem raio 8, valor que vem de `identidade-visual.md`, porque o JSON só traz o raio do trilho |
 | Botão | Discreto com 32 de altura, 44 de toque e texto 13. O grande tem 50, em Instrument Sans 700 tamanho 15. Desde o passo 5, o grande é o da ação principal das telas de autenticação |
 | Campo | Texto em 16, fora da escala, porque abaixo disso o Safari do iPhone dá zoom ao focar. Rótulo em 14, peso 600. O erro de campo entrou no passo 5 (ver Autenticação no cliente) |
@@ -194,7 +201,7 @@ seguem a identidade visual.
 | Refresh serializado | Um refresh por vez na aba: quem chega durante a renovação espera o resultado dela. Na web, também entre abas, pela Web Locks API (`navigator.locks`), porque todas as abas mandam o mesmo cookie e duas abas abrindo juntas contariam como reuso. Sem a API (página fora de HTTPS), fica só a fila da aba |
 | Onde o refresh fica | Na web, no cookie, e o JavaScript não guarda nada; todo pedido leva `X-Maxx-Cliente: web`. No nativo, no `expo-secure-store`, e o refresh novo é gravado antes de valer |
 | Sessão recusada e falha | Só `sessao-invalida` encerra a sessão. Rede, 429 e 5xx deixam o estado "sem conexão", com o refresh guardado e Tentar de novo. O cache de consultas é esvaziado só na saída de uma sessão autenticada |
-| Rotas | O grupo `(app)` exige sessão e manda ao `/login`. O grupo `(publico)` (login, cadastro, esqueci-senha, demonstração) manda quem já entrou para `/`. `/status` e `/redefinir-senha` ficam fora dos grupos. Em `/`, um início provisório (arroba, tema e Sair) até o feed do passo 7 |
+| Rotas | O grupo `(app)` exige sessão e manda ao `/login`. O grupo `(publico)` (login, cadastro, esqueci-senha, demonstração) manda quem já entrou para `/`. `/status` e `/redefinir-senha` ficam fora dos grupos. Em `/`, um início provisório (arroba, tema e Sair) até o passo 7, quando `/` vira o feed e o `?voltar=` do deep link entra (ver passo 7) |
 | Cadastro em três telas | `/cadastro` segue a prancheta (RA, e-mail, senha) com "Continuar", que pede a sugestão de arroba e com ela confere RA e e-mail; `/cadastro/arroba` pede nome e arroba; `/cadastro/termo` mostra o termo vigente, e a conta nasce no aceite. Os dados ficam só em memória: recarregar no meio volta ao primeiro passo |
 | Debounce do arroba | A disponibilidade é consultada 500 ms depois de a digitação parar, e cada consulta cancela a anterior. Arroba fora da forma e a própria sugestão não consultam. 429 ou rede na consulta não travam: o cadastro confere de novo ao criar a conta |
 | Primeiro acesso | "Primeiro acesso? Aluno cria a conta em Cadastrar. Professor define a senha em Esqueci minha senha.", sem link, no lugar do Portal UniMax da prancheta, que não existe na fase 1 |
@@ -272,7 +279,103 @@ medalha) está em `produto.md` 4.8.
 | Professor na aba Troféus | Vê "Troféus e medalhas são dos alunos.", e a tela não pede os prêmios |
 | Modal de concessão | Folha que sobe de baixo, como as do Instagram, com as medalhas do catálogo vigentes: medalhão, nome, tier e pontos, critério e limite. Recusa e falta de conexão ficam dentro da folha |
 | Mensagens | Todo código de `Codigos*.cs` da Application tem mensagem em `erros.ts`; o teste lê todos esses arquivos |
-| e2e | Cada execução cria uma professora (cadastro e vínculo no Postgres, conta pelo `seed demo`, senha pelo Mailpit) e um aluno matriculado na turma vigente de Banco de Dados; a professora concede pela tela, o aluno vê em Troféus, e o comando de anulação roda no contêiner do seeder. Só no celular |
+| e2e | Cada execução cria uma professora (cadastro e vínculo no Postgres, conta pelo `seed demo`, senha pelo Mailpit) e um aluno matriculado na turma vigente de Banco de Dados; a professora concede pela tela, o aluno vê em Troféus, e o comando de anulação roda no contêiner do seeder. Só no celular. Desde o passo 7, o e2e roda o seed e a anulação com `docker compose exec` no worker, que já está de pé (ver passo 7) |
+
+## Posts, upload e feed (passo 7)
+
+O upload direto ao bucket, o post, o feed, as interações, o perfil e a busca. As decisões
+D1 a D14 foram fechadas no plano do passo; as demais, nas etapas. As regras de produto que
+nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto.md` 4.7 e
+4.8.
+
+### Armazenamento e upload
+
+| Decisão | Detalhe |
+|---|---|
+| Emulador | VersityGW `v1.10.0`, compatível com S3, no perfil `armazenamento-local` do compose (ligado por `COMPOSE_PROFILES` no `.env.example`), com bucket e política de leitura criados por um contêiner de inicialização com o `aws-cli`. O mesmo emulador nos testes de integração, por Testcontainers. Só desenvolvimento e teste, nunca produção. A MinIO, primeira escolha, deixou de publicar a imagem da edição comunitária |
+| Adaptador | `IArmazenamentoDeFotos` na Application, implementado com AWSSDK.S3 na Infrastructure: assinar o PUT, conferir com HEAD, remover e montar a URL de leitura. Serve ao R2 e ao emulador. Região `auto`, como no R2 |
+| Dois endereços | `Armazenamento__Endpoint`, por onde a API faz HEAD e remoção, e `Armazenamento__EndpointPublico`, que vai na URL assinada. Vazio, o público é o interno, como no R2. No compose diferem: a API alcança o emulador pela rede interna, e o navegador, pela porta publicada |
+| Configuração | `MAXX_ARMAZENAMENTO_*` no `.env`, com os valores do emulador no `.env.example` e os do R2 só no `.env` da VPS. Sem bucket, endpoint, leitura, chave ou segredo, a API não sobe fora de desenvolvimento e teste |
+| Assinatura | PUT pré-assinado com `content-type` e `content-length` entre os cabeçalhos assinados, válido por 15 minutos. Outro tipo, outro tamanho ou fora da validade: o próprio bucket recusa (ADR 0002). O R2 não aceita POST com política, e por isso o tamanho vai exato na assinatura |
+| Formato (D2) | Só `image/jpeg`, porque o cliente reencoda tudo. Derivada do feed com até 1080 de lado e 1 MiB; da grade, 320 de lado e 200 KiB. Recorte quadrado e central, sem editor (ADR 0003) |
+| Chaves | `<ULID>/feed.jpg` e `<ULID>/grade.jpg`, um ULID novo por pedido: aleatório e sem dado de ninguém na chave |
+| Pedido de upload | `POST /v1/uploads` com finalidade (`post` ou `fotoDePerfil`) e os dois tamanhos, sob o limite `UploadPorUsuario`. Grava `upload_pendente` (dono, finalidade, chaves, tamanhos, criado em, confirmado em) e devolve as duas URLs |
+| Confirmação | O post ou a foto de perfil confirmam o upload, depois de o HEAD achar os dois objetos. Upload de outro usuário ou de outra finalidade recebe 404 `upload-nao-encontrado`; já confirmado, 409 `upload-ja-usado`, também na corrida. Não há prazo próprio na confirmação: até a limpeza de 24 horas, o upload pendente ainda serve |
+| Upload abandonado | O trabalho `limpar-upload-abandonado`, adiado 24 horas e enfileirado na mesma transação da assinatura, apaga os objetos e a linha se o upload continuar pendente. Confirmado, não toca. Idempotente, com `xmin` contra a confirmação simultânea |
+| Remoção de fotos | Post apagado, foto de perfil trocada ou removida: os objetos saem pelo trabalho `remover-fotos`, enfileirado na mesma transação. Remover chave que já não existe não é erro |
+| Verificação do R2 | `VerificacaoDoR2Tests`, pulado por padrão e fora da CI: com `MAXX_VERIFICAR_R2=1` e as `MAXX_ARMAZENAMENTO_*` do bucket real, prova no R2 o que o emulador prova na CI (tipo e tamanho presos, leitura pela CDN sem login, remoção), e o CORS do PUT com `MAXX_VERIFICAR_R2_ORIGEM`. Roda uma vez à mão, quando a conta existir |
+
+### Post e interações
+
+| Decisão | Detalhe |
+|---|---|
+| Post (D5) | Ao menos um entre medalha, foto e legenda. Legenda de até 1.000 caracteres. Não é editável. Um prêmio rende um post, por índice único `ix_post_medalha_ativa`, e a corrida responde 409, nunca 500. Os passos 8 e 9 acrescentam os outros prêmios com no máximo um por post |
+| Quem posta | Só aluno ativo. Ex-aluno, professor e instituição recebem 403. A medalha tem de ser do autor e não estar anulada |
+| Remoção pelo autor | Física: curtidas e comentários saem em cascata, as fotos pela fila, e o prêmio fica livre para um post novo |
+| Remoção pela instituição (D7) | Lógica, com `removido_em` e `removido_por_id`: o post some do feed, do perfil e do link, e o registro fica. No app, pelo menu "..." do post e do comentário |
+| Medalha anulada (D6) | O post perde o vínculo com ela; se ficar sem foto e sem legenda, sai, porque post vazio não existe. A mesma regra vale para o prêmio revogado no passo 8 (`produto.md` 4.7 e 4.8) |
+| Curtida | `PUT` e `DELETE`, idempotentes; curtir duas vezes conta uma |
+| Comentário | Até 500 caracteres, do mais antigo ao mais novo, 20 por página por cursor. Apaga o autor do comentário e a instituição, esta com registro de quem e quando; o dono do post não apaga comentário alheio |
+| Seguir (D9) | Aluno segue aluno, ativo ou ex-aluno. Professor segue só aluno matriculado em turma dele no semestre vigente, conferido no banco, e o vínculo continua depois do semestre. Ninguém segue professor. A conta de professor e instituição segue, curte e comenta como professora. Contadores sem tela de lista |
+
+### Feed
+
+| Decisão | Detalhe |
+|---|---|
+| Página (D8) | 12 posts, três de seguidos para cada recomendação, nas posições 4, 8 e 12. O trecho que acaba cede a vez ao outro: quem não segue ninguém vê só recomendações, e o feed só vem vazio sem post nenhum. A regra está no domínio (`Feed.Intercalar`) |
+| Seguidos | Os do próprio leitor e de quem ele segue, do mais novo ao mais antigo, pelo índice `(autor_id, criado_em desc, id desc)` e cursor `(criado_em, id)` |
+| Recomendação (D8, opção A) | Posts de quem o leitor não segue, por `md5(semente \|\| id)`, com o id desempatando e `COLLATE "C"` na ordem e no cursor. Aval explícito: esse trecho varre os candidatos sem índice na ordenação, barato nesta escala; o p95 é medido no passo 13 |
+| Semente | Sorteada na primeira página e levada dentro do cursor opaco, com a posição de cada trecho. Rolar mantém a ordem; puxar para atualizar começa sessão nova. Cursor adulterado recebe 400 `cursor-invalido` |
+| Por papel | A professora vê os alunos que segue mais recomendações; a instituição, só recomendações. Post removido pela instituição não entra |
+| Seed (D13) | Sem posts semeados neste passo: o mundo de demonstração não tem contas de aluno. Fica para o seed completo do passo 12 |
+
+### Perfil e busca
+
+| Decisão | Detalhe |
+|---|---|
+| Rotas | `GET /v1/perfis/{id}` e `GET /v1/eu/perfil`; a grade em `GET /v1/perfis/{id}/posts`, 18 por página; os prêmios obtidos em `GET /v1/perfis/{id}/premios`. Instituição sem papel de professor não tem perfil social (404) |
+| O que o perfil traz | Nome, arroba, papel, curso, semestre, ex-aluno, pontos, contadores, `euSigo` e foto. O RA só no próprio perfil. Faltantes e progresso só para o dono. O professor mostra as turmas vigentes e quantas medalhas concedeu. A posição no ranking chega no passo 11 |
+| ETag | Fraca, calculada do conteúdo, com 304 e `Cache-Control: private, no-cache`, porque a resposta depende de quem pede. Poupa banda, não banco: a resposta é montada antes de comparar |
+| Editar perfil | `PATCH /v1/eu/perfil` com nome, prefixo, upload de foto ou remoção, tudo ou nada. O prefixo antigo fica reservado ao dono, que pode voltar a ele; o de outra pessoa recebe 409. Trocar e remover a foto no mesmo pedido: 400 `foto-de-perfil-ambigua`. Disponibilidade em `GET /v1/eu/perfil/disponibilidade` |
+| Busca (D11) | `GET /v1/busca/alunos`, 20 por página: por trecho do nome sem acento nem maiúsculas, por trecho do prefixo ou pelo arroba inteiro com "@". Ativos e ex-alunos, filtro pelo curso atual e pelo semestre. Nunca professor, nunca pelo RA; `%` e `_` são texto. Menos de 2 caracteres e nenhum filtro: 400 `busca-sem-criterio` |
+| Índices da busca | Extensões `unaccent` e `pg_trgm`, uma função imutável `maxx_sem_acento` (o `unaccent` sozinho não entra em índice) e índices GIN de trigramas no nome sem acento e no prefixo |
+| Semestres | `GET /v1/cursos` traz a duração em semestres; o filtro vai do 1º ao último semestre do curso, até o 12º de Medicina |
+
+### Cliente
+
+| Decisão | Detalhe |
+|---|---|
+| Derivadas | `expo-image-picker` e `expo-image-manipulator`, sem ampliar foto menor. Derivada acima do limite ganha uma segunda tentativa mais comprimida; ainda grande, "Essa foto ficou grande demais. Escolha outra." |
+| Envio | PUT direto na URL assinada, com o tipo e sem token nem cabeçalho do Maxx. Post que falha depois do envio reaproveita o upload, sem gastar o limite |
+| Novo post | `/novo-post`, pelo "+" do cabeçalho do feed: foto opcional, legenda com contador e a medalha opcional entre as que ainda não têm post. Professor vê "Só aluno publica no feed." |
+| Cartão de post | Como a prancheta, sem o ícone de salvar (não existe na fase 1). O nome no cartão é o prefixo do arroba, sem "@" e sem o sufixo do curso. Curtida otimista; "Enviar" abre a folha de compartilhamento ou copia o link |
+| Deep link | `/post/:id` e `/post/:id/comentarios` atrás do login: o grupo `(app)` manda ao `/login?voltar=`, e o grupo público devolve só para esses dois caminhos, nunca para esquema, host ou outra tela. Na web, o roteador tira o `?voltar=` da URL ao entrar, antes do redirecionamento; por isso o destino é guardado enquanto não há sessão |
+| Pilha sobre as abas | O grupo `(app)` é um `Stack` sem cabeçalho, não um `Slot`: post, comentários, perfil de outra pessoa, novo post e editar perfil ficam por cima das abas, que continuam montadas. O voltar volta para a aba de onde se veio, com a busca digitada. Publicar e post removido voltam ao feed com `dismissTo`, sem empilhar outro |
+| Perfil (D10) | Sem bio, sem "Seguida por" e sem Compartilhar. Arroba sob o nome; anel dourado no próprio avatar; abas por ícone (grade, taça, fita) com a grade de três colunas. Post sem foto aparece na grade como medalhão sobre o metal, ou o começo da legenda sobre `surface`. O perfil de outra pessoa abre fora das abas, com voltar |
+| Menu do perfil | Tema, "Minhas turmas" para o professor e Sair. Fecha a pendência do tema do passo 4 |
+| Busca | Chips de curso e de semestre; os semestres seguem a duração do curso escolhido e, sem curso, vão até a maior. Os atalhos de ranking chegam no passo 11 |
+| Editar perfil | Foto (trocar e remover), nome e prefixo com a disponibilidade consultada 500 ms depois de a digitação parar; o prefixo atual não é consultado. Salvar fica desativado sem mudança |
+| Foto na demonstração (D12) | Opcional, depois de a conta existir, porque o upload exige login. Melhor esforço: se a foto falhar, a conta segue sem ela |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxos | Só no celular, pelo limite de login por IP: post com foto desenhada no navegador e enviada de verdade ao emulador, deep link depois do login, curtida, comentário e remoção; busca, seguir e editar perfil |
+| Comandos no worker | O seed e a anulação do e2e rodam com `docker compose exec -T worker`, no contêiner que já está de pé. O `docker compose run seeder` refazia também a dependência (o migrator) a cada chamada: cerca de 4,6 s contra 1,9 s com a pilha parada, e bem mais com os testes em paralelo, o que estourava os 30 s do caso de medalha. Com isso saiu o `test.slow()` |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| O teste do índice do feed desliga a varredura (`enable_seqscan = off`): prova que o índice serve, não que o planejador o escolhe com pouco dado | k6 do passo 13 |
+| A busca não tem teste com `EXPLAIN` dos índices de trigramas | k6 do passo 13 |
+| Seguir no meio da sessão pode repetir um post já visto como recomendação, e deixar de seguir pode tirar um da sessão. O feed não guarda estado no servidor; puxar para atualizar resolve | Aceito |
+| A migration cria extensões: o usuário do banco precisa de `CREATE EXTENSION` | Passo 13, revisar na VPS |
+| O PUT de Blob no Android e no iOS só passa pelo Jest | Maestro do passo 13 |
+| HEIC não abre no Chrome: quem escolher um vê "Não deu para abrir essa foto. Escolha outra." | Aceito |
+| A conferência do `content-length` assinado foi provada no emulador, não no R2 | `VerificacaoDoR2Tests`, quando a conta existir |
+| As fotos do lote de demonstração não saem pelo SQL da purga (D14) | Purga pela área web, passo 12 |
 
 ## Processo e qualidade
 

@@ -76,6 +76,15 @@ public enum Unicidade
 
     // Duas medalhas ativas com a mesma chave de deduplicação: a mesma vaga do período.
     MedalhaAtiva,
+
+    // Dois posts não removidos para o mesmo prêmio: um prêmio rende um post.
+    PostPorPremio,
+
+    // A mesma pessoa curtindo o mesmo post duas vezes ao mesmo tempo.
+    Curtida,
+
+    // O mesmo seguimento gravado duas vezes ao mesmo tempo.
+    Seguimento,
 }
 
 // Gravação recusada porque a linha mudou desde a leitura (xmin): outro pedido chegou

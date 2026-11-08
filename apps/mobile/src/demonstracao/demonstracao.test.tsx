@@ -12,6 +12,31 @@ jest.mock("expo-router", () => ({
     return <Text>{`redireciona para ${href}`}</Text>;
   },
 }));
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: jest.fn(async () => ({
+    canceled: false,
+    assets: [{ uri: "file:///galeria.jpg", width: 800, height: 800 }],
+  })),
+}));
+jest.mock("expo-image-manipulator", () => ({
+  SaveFormat: { JPEG: "jpeg" },
+  ImageManipulator: {
+    manipulate: () => {
+      const contexto = {
+        crop: () => contexto,
+        resize: () => contexto,
+        renderAsync: async () => ({
+          saveAsync: async () => ({
+            uri: "file:///derivada.jpg",
+            width: 0,
+            height: 0,
+          }),
+        }),
+      };
+      return contexto;
+    },
+  },
+}));
 
 const CURSOS = [
   { sigla: "CC", nome: "Ciência da Computação" },
@@ -30,6 +55,8 @@ let registro: jest.Mock<Promise<Response>, [Request]>;
 let entrada: jest.Mock<Promise<Response>, [Request]>;
 let demo: jest.Mock<Promise<Response>, [Request]>;
 let api: jest.Mock<Promise<Response>, [Request]>;
+let uploads: jest.Mock<Promise<Response>, [Request]>;
+let edicao: jest.Mock<Promise<Response>, [Request]>;
 
 function aparelho(contas: ContaDeDemonstracao[] = []) {
   let guardadas = contas;
@@ -46,6 +73,23 @@ beforeEach(() => {
   jest.clearAllMocks();
   registro = jest.fn();
   entrada = jest.fn();
+  uploads = jest.fn(async (_pedido: Request) =>
+    json(201, {
+      id: "upload-1",
+      expiraEm: "2999-01-01T00:00:00Z",
+      feed: {
+        url: "http://bucket.test/f.jpg",
+        tipoDeConteudo: "image/jpeg",
+        tamanho: 100,
+      },
+      grade: {
+        url: "http://bucket.test/g.jpg",
+        tipoDeConteudo: "image/jpeg",
+        tamanho: 100,
+      },
+    }),
+  );
+  edicao = jest.fn(async (_pedido: Request) => json(200, {}));
   demo = jest.fn(async (_pedido: Request) => json(200, { cursos: CURSOS }));
   api = jest.fn(async (pedido: Request) => {
     const caminho = new URL(pedido.url).pathname;
@@ -53,6 +97,8 @@ beforeEach(() => {
     if (caminho === "/api/v1/termo-de-uso") return json(200, TERMO);
     if (caminho === "/api/v1/demo/alunos") return registro(pedido);
     if (caminho === "/api/v1/demo/entrar") return entrada(pedido);
+    if (caminho === "/api/v1/uploads") return uploads(pedido);
+    if (caminho === "/api/v1/eu/perfil") return edicao(pedido);
     return new Response(null, { status: 404 });
   });
 });
@@ -222,4 +268,71 @@ test("o que estiver guardado fora da forma vira lista vazia, nunca tela quebrada
   expect(
     analisarContas('[{"chave":"a","nome":"Ana","curso":"CC"},{"chave":1}]'),
   ).toEqual([{ chave: "a", nome: "Ana", curso: "CC" }]);
+});
+
+describe("foto opcional do registro", () => {
+  let rede: jest.SpyInstance;
+  beforeEach(() => {
+    rede = jest
+      .spyOn(global, "fetch")
+      .mockImplementation(async (entrada: RequestInfo | URL) =>
+        String(entrada).startsWith("file:///")
+          ? new Response(new Blob([new Uint8Array(100)]))
+          : new Response(null, { status: 200 }),
+      );
+  });
+  afterEach(() => rede.mockRestore());
+
+  test("a foto escolhida sobe como foto de perfil depois que a conta nasce", async () => {
+    registro.mockResolvedValue(
+      json(201, { chaveDoDispositivo: "chave-1", sessao: SESSAO }),
+    );
+    const { gerenciador } = await renderComApi(
+      <DemonstracaoScreen contasDoDispositivo={aparelho()} />,
+      api,
+    );
+
+    await apertar("Escolher foto");
+    expect(
+      await screen.findByRole("button", { name: "Trocar foto" }),
+    ).toBeTruthy();
+    await ateOTermo();
+    await apertar("Aceitar e entrar");
+
+    const ordem = caminhos(api).filter((caminho) =>
+      ["/api/v1/demo/alunos", "/api/v1/uploads", "/api/v1/eu/perfil"].includes(
+        caminho,
+      ),
+    );
+    expect(ordem).toEqual([
+      "/api/v1/demo/alunos",
+      "/api/v1/uploads",
+      "/api/v1/eu/perfil",
+    ]);
+    expect((await uploads.mock.calls[0]![0].clone().json()).finalidade).toBe(
+      "fotoDePerfil",
+    );
+    expect((await edicao.mock.calls[0]![0].clone().json()).fotoUploadId).toBe(
+      "upload-1",
+    );
+    expect(gerenciador.estado).toBe("autenticado");
+  });
+
+  test("se a foto não sobe, a pessoa entra do mesmo jeito", async () => {
+    registro.mockResolvedValue(
+      json(201, { chaveDoDispositivo: "chave-1", sessao: SESSAO }),
+    );
+    uploads.mockResolvedValue(json(429, { codigo: "limite-de-taxa" }));
+    const { gerenciador } = await renderComApi(
+      <DemonstracaoScreen contasDoDispositivo={aparelho()} />,
+      api,
+    );
+
+    await apertar("Escolher foto");
+    await ateOTermo();
+    await apertar("Aceitar e entrar");
+
+    expect(gerenciador.estado).toBe("autenticado");
+    expect(edicao).not.toHaveBeenCalled();
+  });
 });

@@ -171,7 +171,7 @@ public class AccessTokenTests
         new(
             MaxxApiFactory.UnreachableDatabase,
             ambiente,
-            configuracao: new Dictionary<string, string> { ["Jwt:Chave"] = chave, ["App:UrlPublica"] = "https://maxx.teste" },
+            configuracao: new Dictionary<string, string>(MaxxApiFactory.ChaveDeTeste) { ["Jwt:Chave"] = chave },
             servicos: usuario is null ? null : EmMemoria(usuario));
 
     private static Action<IServiceCollection> EmMemoria(Usuario usuario) =>
@@ -214,6 +214,8 @@ public class AccessTokenTests
     {
         public Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(id == usuario.Id ? usuario : null);
+
+        public Task<Usuario?> BuscarComPrefixosAsync(Guid id, CancellationToken cancellationToken) => BuscarAsync(id, cancellationToken);
 
         public Task<bool> ExisteParaCadastroAsync(Guid cadastroElegivelId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

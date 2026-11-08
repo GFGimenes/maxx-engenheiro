@@ -33,6 +33,36 @@ const MENSAGENS = {
     "Esse aluno já recebeu essa medalha o máximo de vezes no período.",
   "medalha-nao-encontrada": "Essa medalha não existe mais.",
   "sem-conta-de-instituicao": "Só a instituição pode fazer isso.",
+  // Fotos (CodigosDaFoto.cs)
+  "envio-nao-permitido": "Você não pode enviar foto aqui.",
+  "tipo-de-foto-nao-aceito": "Não deu para usar essa foto. Escolha outra.",
+  "tamanho-de-foto-invalido": "Essa foto ficou grande demais. Escolha outra.",
+  // Posts (CodigosDoPost.cs)
+  "post-vazio": "Escreva uma legenda, escolha uma foto ou um prêmio.",
+  "legenda-longa": "A legenda passou de 1.000 caracteres.",
+  "post-nao-permitido": "Só aluno publica no feed.",
+  "upload-nao-encontrado": "A foto se perdeu no caminho. Escolha de novo.",
+  "upload-ja-usado": "Essa foto já está em outro post.",
+  "foto-nao-enviada": "A foto não terminou de subir. Tente de novo.",
+  "premio-nao-encontrado": "Esse prêmio não está mais disponível.",
+  "premio-anulado": "Esse prêmio foi anulado.",
+  "premio-ja-postado": "Esse prêmio já tem um post.",
+  "post-nao-encontrado": "Esse post não existe mais.",
+  "remocao-nao-permitida": "Você não pode apagar este post.",
+  // Curtida, comentário e seguir (CodigosSociais.cs)
+  "interacao-nao-permitida": "A instituição não curte nem comenta.",
+  "comentario-vazio": "Escreva alguma coisa antes de enviar.",
+  "comentario-longo": "O comentário passou de 500 caracteres.",
+  "comentario-nao-encontrado": "Esse comentário não existe mais.",
+  "remocao-de-comentario-nao-permitida":
+    "Você não pode apagar este comentário.",
+  "usuario-nao-encontrado": "Essa pessoa não está mais no Maxx.",
+  "seguir-nao-permitido": "Não dá para seguir este perfil.",
+  // Perfil e busca (CodigosDoPerfil.cs)
+  "busca-sem-criterio": "Digite ao menos 2 letras ou escolha um filtro.",
+  "foto-de-perfil-ambigua": "Escolha trocar ou remover a foto.",
+  // Paginação (CodigosDaPaginacao.cs)
+  "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
   "requisicao-invalida": "Confira os dados e tente de novo.",
   "dados-invalidos": "Confira os dados e tente de novo.",
