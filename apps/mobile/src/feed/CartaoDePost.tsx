@@ -5,6 +5,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { AvisoDeErro } from "../autenticacao/AvisoDeErro";
 import { Avatar } from "../components/Avatar";
 import { Icon } from "../components/Icon";
+import { MenuDeContestacao } from "../comprovacoes/MenuDeContestacao";
 import { FaixaPremio } from "../premios/FaixaPremio";
 import { MarcaDeEstado, temMarca } from "../premiosParticipacao/MarcaDeEstado";
 import { descreverPremio } from "../premiosParticipacao/textos";
@@ -84,6 +85,13 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
       : leitor?.papeis.includes("instituicao")
         ? "remover"
         : null;
+  // O professor contesta prêmio de participação válido (produto.md 4.7). O escopo de turma e
+  // a janela de 15 dias, a API confere.
+  const contesta =
+    !acao &&
+    !!leitor?.papeis.includes("professor") &&
+    post.premio?.tipo === "premioParticipacao" &&
+    post.premio.estado === "valido";
   // A instituição não curte nem comenta (produto.md 2.1).
   const interage =
     !!leitor &&
@@ -167,7 +175,7 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
             </View>
           )}
         </View>
-        {acao && (
+        {(acao || contesta) && (
           <Pressable
             role="button"
             accessibilityLabel="Mais opções"
@@ -275,6 +283,14 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
           onRemovido?.();
         }}
       />
+      {contesta && post.premio && (
+        <MenuDeContestacao
+          premioId={post.premio.id}
+          nomeDoAluno={post.autor.nomeDeExibicao}
+          aberto={menuAberto}
+          onFechar={() => setMenuAberto(false)}
+        />
+      )}
     </View>
   );
 }
