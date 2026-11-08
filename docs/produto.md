@@ -328,7 +328,9 @@ Regras do ciclo:
   comprovação. Nunca concede medalha.
 
 Quando um prêmio é reprovado ou revogado, o post perde o vínculo com o prêmio e
-permanece como post comum; o aluno apaga se quiser. Em averiguação, o post continua
+permanece como post comum; o aluno apaga se quiser. Se o post era só o prêmio, sem foto e
+sem legenda (como na concessão direta pela instituição), ele é apagado, porque post vazio
+não existe. Em averiguação, o post continua
 visível, sem exibir pontos nem tier.
 
 ### 4.8 Medalha: concessão e anulação
@@ -347,7 +349,9 @@ de uma linha do cadastro elegível.
 Medalha não é contestável e não é revogável. A instituição pode **anular** uma medalha:
 é ato administrativo, sem motivo público e sem passar por averiguação, para corrigir
 erro de concessão ou nota revista. A anulação recalcula as conquistas que dependiam
-daquela medalha.
+daquela medalha. O post da medalha anulada perde o vínculo e fica como post comum; se ele era
+só a medalha, sem foto e sem legenda, é apagado, porque post vazio não existe. O post que a
+instituição já tinha removido fica como estava.
 
 ### 4.9 Conquistas
 

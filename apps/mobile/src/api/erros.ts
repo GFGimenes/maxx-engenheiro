@@ -37,6 +37,18 @@ const MENSAGENS = {
   "envio-nao-permitido": "Você não pode enviar foto aqui.",
   "tipo-de-foto-nao-aceito": "Não deu para usar essa foto. Escolha outra.",
   "tamanho-de-foto-invalido": "Essa foto ficou grande demais. Escolha outra.",
+  // Posts (CodigosDoPost.cs)
+  "post-vazio": "Escreva uma legenda, escolha uma foto ou um prêmio.",
+  "legenda-longa": "A legenda passou de 1.000 caracteres.",
+  "post-nao-permitido": "Só aluno publica no feed.",
+  "upload-nao-encontrado": "A foto se perdeu no caminho. Escolha de novo.",
+  "upload-ja-usado": "Essa foto já está em outro post.",
+  "foto-nao-enviada": "A foto não terminou de subir. Tente de novo.",
+  "premio-nao-encontrado": "Esse prêmio não está mais disponível.",
+  "premio-anulado": "Esse prêmio foi anulado.",
+  "premio-ja-postado": "Esse prêmio já tem um post.",
+  "post-nao-encontrado": "Esse post não existe mais.",
+  "remocao-nao-permitida": "Você não pode apagar este post.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
   "requisicao-invalida": "Confira os dados e tente de novo.",
   "dados-invalidos": "Confira os dados e tente de novo.",

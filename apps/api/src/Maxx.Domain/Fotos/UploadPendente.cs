@@ -74,6 +74,18 @@ public sealed class UploadPendente
 
     public IReadOnlyList<string> Chaves => [ChaveDoFeed, ChaveDaGrade];
 
+    // Quem usa a foto confirma, e a limpeza da fila passa a deixá-la em paz. Uma vez só: a
+    // mesma foto não vira dois posts.
+    internal void Confirmar(DateTimeOffset agora)
+    {
+        if (EstaConfirmado)
+        {
+            throw new DomainException($"O upload {Id} já foi usado.");
+        }
+
+        ConfirmadoEm = agora;
+    }
+
     // Recusa em vez de exceção: a borda responde com o código de cada caso. O tipo é
     // comparado como o HTTP compara, sem diferenciar maiúsculas, e gravado na forma canônica,
     // que é a que vai presa na assinatura.

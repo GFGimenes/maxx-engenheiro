@@ -1,5 +1,6 @@
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Fila;
+using Maxx.Application.Posts;
 using Maxx.Domain.Academico;
 
 namespace Maxx.Application.Medalhas;
@@ -7,10 +8,13 @@ namespace Maxx.Application.Medalhas;
 // Anulação de medalha pela instituição (produto.md 4.8): ato administrativo, sem motivo
 // público e sem averiguação. Na fase 1, por comando administrativo, até a área web do
 // passo 12. Grava quem anulou e quando e enfileira o recálculo de raridade, na mesma
-// transação; a reavaliação das conquistas chega no passo 9, e o ranking no 11.
+// transação; a reavaliação das conquistas chega no passo 9, e o ranking no 11. O post da
+// medalha perde o vínculo e fica como post comum; o que era só a medalha é apagado, porque
+// post vazio não existe (decisão do passo 7).
 public sealed class AnularMedalhaHandler(
     IUsuarioRepository usuarios,
     IMedalhaRepository medalhas,
+    IPostRepository posts,
     IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
@@ -48,6 +52,25 @@ public sealed class AnularMedalhaHandler(
         if (!medalha.Anular(instituicaoId, relogio.GetUtcNow()))
         {
             return false;
+        }
+
+        // O removido pela instituição fica como está: some para todos de qualquer jeito, e
+        // apagá-lo perderia quem removeu e quando.
+        foreach (var post in await posts.DoPremioAsync(medalha.Id, cancellationToken))
+        {
+            if (post.EstaRemovido)
+            {
+                continue;
+            }
+
+            if (post.FicariaVazioSemPremio)
+            {
+                posts.Apagar(post);
+            }
+            else
+            {
+                post.DesvincularPremio();
+            }
         }
 
         fila.Enfileirar(new RecalcularRaridade());

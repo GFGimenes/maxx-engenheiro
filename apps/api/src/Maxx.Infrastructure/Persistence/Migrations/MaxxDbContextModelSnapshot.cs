@@ -841,6 +841,75 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Social.Post", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("autor_id");
+
+                    b.Property<string>("ChaveDaFotoDaGrade")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_da_grade");
+
+                    b.Property<string>("ChaveDaFotoDoFeed")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_do_feed");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Legenda")
+                        .HasColumnType("text")
+                        .HasColumnName("legenda");
+
+                    b.Property<Guid?>("MedalhaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("medalha_id");
+
+                    b.Property<DateTimeOffset?>("RemovidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removido_em");
+
+                    b.Property<Guid?>("RemovidoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("removido_por_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_post");
+
+                    b.HasIndex("MedalhaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_post_medalha_ativa")
+                        .HasFilter("medalha_id IS NOT NULL AND removido_em IS NULL");
+
+                    b.HasIndex("RemovidoPorId")
+                        .HasDatabaseName("ix_post_removido_por_id");
+
+                    b.HasIndex("AutorId", "CriadoEm", "Id")
+                        .IsDescending(false, true, true)
+                        .HasDatabaseName("ix_post_autor_id_criado_em_id");
+
+                    b.ToTable("post", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_post_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
+
+                            t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Fila.Trabalho", b =>
                 {
                     b.Property<long>("Id")
@@ -1336,6 +1405,28 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_medalha_turma_turma_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Social.Post", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_post_usuario_autor_id");
+
+                    b.HasOne("Maxx.Domain.Premios.Medalha", null)
+                        .WithMany()
+                        .HasForeignKey("MedalhaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_post_medalha_medalha_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("RemovidoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_post_usuario_removido_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>

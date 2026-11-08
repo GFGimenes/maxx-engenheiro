@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicarPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts/{postId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetPost"];
+        put?: never;
+        post?: never;
+        delete: operations["RemoverPost"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -351,6 +383,15 @@ export interface components {
             arroba: string;
             medalhas: components["schemas"]["MedalhaNaTurmaResponse"][];
         };
+        AutorDoPostResponse: {
+            /** Format: uuid */
+            id: string;
+            nomeDeExibicao: string;
+            arroba: string;
+            curso: null | string;
+            /** Format: int32 */
+            semestre: null | number;
+        };
         CadastroRequest: {
             ra: string;
             email: string;
@@ -406,6 +447,10 @@ export interface components {
             descricao: string;
             /** Format: int32 */
             passos: number;
+        };
+        FotoDoPostResponse: {
+            feed: string;
+            grade: string;
         };
         HealthResponse: {
             status: string;
@@ -484,6 +529,30 @@ export interface components {
             /** Format: int64 */
             tamanhoDaGrade: number;
         };
+        PostResponse: {
+            /** Format: uuid */
+            id: string;
+            autor: components["schemas"]["AutorDoPostResponse"];
+            legenda: null | string;
+            foto: null | components["schemas"]["FotoDoPostResponse"];
+            premio: null | components["schemas"]["PremioDoPostResponse"];
+            /** Format: date-time */
+            criadoEm: string;
+        };
+        PremioDoPostResponse: {
+            tipo: string;
+            /** Format: uuid */
+            id: string;
+            item: string;
+            nome: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            raridade: null | components["schemas"]["RaridadeResponse"];
+            materia: null | string;
+            /** Format: int32 */
+            bimestre: null | number;
+        };
         PremioObtidoResponse: {
             /** Format: uuid */
             id: string;
@@ -509,6 +578,13 @@ export interface components {
             status?: null | number;
             detail?: null | string;
             instance?: null | string;
+        };
+        PublicarPostRequest: {
+            legenda: null | string;
+            /** Format: uuid */
+            uploadId: null | string;
+            /** Format: uuid */
+            medalhaId: null | string;
         };
         RaridadeResponse: {
             nivel: string;
@@ -913,6 +989,135 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PublicarPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicarPostRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RemoverPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

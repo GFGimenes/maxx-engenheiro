@@ -8,6 +8,7 @@ using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
+using Maxx.Api.Posts;
 using Maxx.Api.Premios;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
@@ -87,6 +88,8 @@ builder.Services.AddLimitesDeTaxa();
 builder.Services.AddScoped<Maxx.Application.Medalhas.ConcederMedalhaHandler>();
 builder.Services.AddScoped<Maxx.Application.Medalhas.AnularMedalhaHandler>();
 builder.Services.AddScoped<Maxx.Application.Fotos.PedirUploadHandler>();
+builder.Services.AddScoped<Maxx.Application.Posts.PublicarPostHandler>();
+builder.Services.AddScoped<Maxx.Application.Posts.RemoverPostHandler>();
 
 var app = builder.Build();
 
@@ -151,6 +154,7 @@ v1.MapTermoDeUsoEndpoints();
 v1.MapProfessorEndpoints();
 v1.MapPremiosEndpoints();
 v1.MapUploadEndpoints();
+v1.MapPostEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

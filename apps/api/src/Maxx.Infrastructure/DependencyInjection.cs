@@ -7,6 +7,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
+using Maxx.Application.Posts;
 using Maxx.Application.Premios;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
@@ -17,6 +18,7 @@ using Maxx.Infrastructure.Fotos;
 using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Notificacoes;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Posts;
 using Maxx.Infrastructure.Premios;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
@@ -60,6 +62,8 @@ public static class DependencyInjection
         // fora de desenvolvimento.
         services.AddSingleton<IArmazenamentoDeFotos, ArmazenamentoS3>();
         services.AddScoped<IUploadPendenteRepository, UploadPendenteRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IConsultaDePosts, ConsultaDePosts>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
@@ -74,6 +78,7 @@ public static class DependencyInjection
         services.AddTrabalho<NotificarMedalhaRecebida, NotificarMedalhaRecebidaHandler>();
         services.AddTrabalho<RecalcularRaridade, RecalculoDeRaridade>();
         services.AddTrabalho<LimparUploadAbandonado, LimparUploadAbandonadoHandler>();
+        services.AddTrabalho<RemoverFotos, RemoverFotosHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

@@ -15,6 +15,7 @@ using Maxx.Domain.Fotos;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Notificacoes;
 using Maxx.Domain.Premios;
+using Maxx.Domain.Social;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -300,7 +301,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
 
     // O SQL é o do README das decisões, o que será rodado depois da apresentação.
     [Fact]
-    public async Task A_purga_do_readme_apaga_o_lote_com_aceites_medalhas_e_uploads_e_mantem_o_termo_e_o_que_nao_e_do_lote()
+    public async Task A_purga_do_readme_apaga_o_lote_com_aceites_medalhas_uploads_e_posts_e_mantem_o_termo_e_o_que_nao_e_do_lote()
     {
         await using var factory = await MundoAsync();
         using var client = factory.CreateClient();
@@ -357,6 +358,16 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
                 UploadPendente.Pedir(aluno, FinalidadeDoUpload.FotoDePerfil, "image/jpeg", 1000, 1000, DateTimeOffset.UtcNow).Upload!);
         }
 
+        // Um post com a medalha de cada um dos dois: o post segura o autor e a medalha.
+        foreach (var nome in new[] { "Ana Paula", "Carla Dias" })
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var aluno = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == nome, Ct);
+            var medalha = await banco.Set<Medalha>().SingleAsync(linha => linha.AlunoId == aluno.Id, Ct);
+            await SalvarAsync(factory, Post.Publicar(aluno, "Nota 10!", null, medalha, DateTimeOffset.UtcNow).Post!);
+        }
+
         // O worker grava as notificações de medalha recebida, que a purga também leva.
         var consumidor = factory.Services.GetRequiredService<ConsumidorDeTrabalhos>();
         while (await consumidor.ProcessarProximoAsync(Ct))
@@ -382,6 +393,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(restante.Id, (await db.Set<Medalha>().SingleAsync(Ct)).AlunoId);
         Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<UploadPendente>().SingleAsync(Ct)).UsuarioId);
+        Assert.Equal(restante.Id, (await db.Set<Post>().SingleAsync(Ct)).AutorId);
         Assert.Equal(1, await db.Set<CadastroElegivel>().CountAsync(cadastro => cadastro.Papeis == Papeis.Aluno, Ct));
         Assert.Equal(1, await db.Set<TermoDeUso>().CountAsync(Ct));
     }

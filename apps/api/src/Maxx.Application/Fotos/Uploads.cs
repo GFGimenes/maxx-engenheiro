@@ -99,3 +99,20 @@ public sealed class LimparUploadAbandonadoHandler(
         await armazenamento.RemoverAsync(upload.Chaves, cancellationToken);
     }
 }
+
+// Fotos que já foram usadas e deixaram de ser: post apagado ou removido, foto de perfil
+// trocada. As chaves não são segredo, só endereço.
+public sealed record RemoverFotos(IReadOnlyList<string> Chaves) : ICargaDeTrabalho
+{
+    public static string Tipo => "remover-fotos";
+}
+
+// No worker. Remover chave que já não existe não é erro: o trabalho pode rodar de novo.
+public sealed class RemoverFotosHandler(IArmazenamentoDeFotos armazenamento) : ITrabalhoHandler<RemoverFotos>
+{
+    public async Task ExecutarAsync(RemoverFotos carga, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(carga);
+        await armazenamento.RemoverAsync(carga.Chaves, cancellationToken);
+    }
+}
