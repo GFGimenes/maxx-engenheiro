@@ -23,6 +23,12 @@ internal static class EventoEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        v1.MapGet("/eu/materias", MateriasAsync)
+            .WithName("GetMinhasMaterias")
+            .WithTags("Eventos")
+            .RequireAuthorization(Politicas.Aluno)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
         v1.MapPost("/reivindicacoes", ReivindicarAsync)
             .WithName("ReivindicarPremioParticipacao")
             .WithTags("Eventos")
@@ -34,6 +40,12 @@ internal static class EventoEndpoints
 
         return v1;
     }
+
+    // As matérias que o aluno cursa no semestre de hoje, para a apresentação em sala (P17).
+    private static async Task<Ok<IReadOnlyList<MateriaResponse>>> MateriasAsync(
+        ClaimsPrincipal principal, MateriasDoAlunoHandler handler, CancellationToken cancellationToken) =>
+        TypedResults.Ok<IReadOnlyList<MateriaResponse>>([.. (await handler.CursadasAsync(PostEndpoints.UsuarioId(principal), cancellationToken))
+            .Select(materia => new MateriaResponse(materia.Id, materia.Nome))]);
 
     // O post de reivindicação com o prêmio pendente (fluxos/02-post-com-comprovacao.md). A
     // resposta é o post, como o feed o mostra, com a marca de pendente.
@@ -93,3 +105,5 @@ public sealed record EventoDigitadoRequest([property: Required, StringLength(100
 
 // Datas em America/Sao_Paulo, inclusivas. Itens: os códigos dos prêmios que o evento aceita.
 public sealed record EventoResponse(Guid Id, string Nome, DateOnly Inicio, DateOnly Fim, IReadOnlyList<string> Itens);
+
+public sealed record MateriaResponse(Guid Id, string Nome);

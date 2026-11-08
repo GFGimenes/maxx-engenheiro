@@ -41,6 +41,22 @@ internal sealed class EventoRepository(MaxxDbContext db) : IEventoRepository
         .AsNoTracking()
         .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Materia>> MateriasCursadasAsync(Guid alunoId, DateOnly data, CancellationToken cancellationToken)
+    {
+        var semestres = SemestreVigente.Ids(db, data);
+        return await (
+                from usuario in db.Set<Usuario>()
+                join matricula in db.Set<Matricula>() on usuario.CadastroElegivelId equals matricula.AlunoId
+                join turma in db.Set<Turma>() on matricula.TurmaId equals turma.Id
+                join materia in db.Set<Materia>() on turma.MateriaId equals materia.Id
+                where usuario.Id == alunoId && semestres.Contains(turma.SemestreLetivoId)
+                select materia)
+            .Distinct()
+            .OrderBy(materia => materia.Nome)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<Evento?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
         db.Set<Evento>().SingleOrDefaultAsync(evento => evento.Id == id, cancellationToken);
 }

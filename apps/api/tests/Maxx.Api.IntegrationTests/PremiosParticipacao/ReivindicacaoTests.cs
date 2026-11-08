@@ -221,6 +221,27 @@ public sealed class ReivindicacaoTests(PostgresFixture postgres, ArmazenamentoFi
         }
     }
 
+    [Fact]
+    public async Task O_app_sabe_quais_itens_pedem_materia_e_quais_materias_o_aluno_cursa()
+    {
+        await using var mundo = await MundoAsync();
+        using var ana = await mundo.Social.ComoAsync(Ana);
+        using var elisa = await mundo.Social.ComoAsync(MundoDePremios.Elisa);
+        using var renata = await mundo.Social.ComoAsync(Renata);
+        var materias = new Uri("/api/v1/eu/materias", UriKind.Relative);
+
+        var itens = (await ana.GetFromJsonAsync<Api.Premios.PremiosDoAlunoResponse>(new Uri("/api/v1/eu/premios", UriKind.Relative), Ct))!.Itens;
+
+        Assert.True(itens.Single(item => item.Codigo == "P17").ExigeMateria);
+        Assert.False(itens.Single(item => item.Codigo == "P06").ExigeMateria);
+        Assert.False(itens.Single(item => item.Codigo == "M01").ExigeMateria);
+        Assert.Equal(
+            [new Api.PremiosParticipacao.MateriaResponse(mundo.BancoDeDados, "Banco de Dados")],
+            (await ana.GetFromJsonAsync<List<Api.PremiosParticipacao.MateriaResponse>>(materias, Ct))!);
+        Assert.Empty((await elisa.GetFromJsonAsync<List<Api.PremiosParticipacao.MateriaResponse>>(materias, Ct))!);
+        Assert.Equal(HttpStatusCode.Forbidden, (await renata.GetAsync(materias, Ct)).StatusCode);
+    }
+
     private static Task<HttpResponseMessage> ReivindicarAsync(HttpClient client, object pedido) =>
         client.PostAsJsonAsync(new Uri("/api/v1/reivindicacoes", UriKind.Relative), pedido, Ct);
 

@@ -13,6 +13,10 @@ namespace Maxx.Infrastructure.Premios;
 
 internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
 {
+    // A reivindicação que deduplica por matéria (P17) pede a matéria no app.
+    private static readonly string _tipoPremioParticipacao = NomeJson.De(TipoDeItem.PremioParticipacao);
+    private static readonly string _materia = NomeJson.De(CampoDeDeduplicacao.Materia);
+
     public async Task<PremiosDoAluno?> DoAlunoAsync(Guid alunoId, CancellationToken cancellationToken)
     {
         var aluno = await (
@@ -97,7 +101,8 @@ internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
                     raridades.TryGetValue(item.Codigo, out var raridade)
                         ? new RaridadeAtual(Ler<Raridade>(raridade.Raridade), raridade.AlunosComItem, raridade.AlunosElegiveis)
                         : null,
-                    [.. obtidos[item.Codigo]]))]);
+                    [.. obtidos[item.Codigo]],
+                    item.Tipo == _tipoPremioParticipacao && (item.ChaveDeDeduplicacao ?? []).Contains(_materia)))]);
     }
 
     private static T Ler<T>(string texto)

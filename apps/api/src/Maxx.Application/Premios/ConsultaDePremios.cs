@@ -29,7 +29,8 @@ public sealed record ItemDoAluno(
     string? Familia,
     int? OrdemNaFamilia,
     RaridadeAtual? Raridade,
-    IReadOnlyList<PremioObtido> Obtidos);
+    IReadOnlyList<PremioObtido> Obtidos,
+    bool ExigeMateria = false);
 
 public sealed record RaridadeAtual(Raridade Nivel, int AlunosComItem, int AlunosElegiveis)
 {

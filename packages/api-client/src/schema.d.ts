@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eu/materias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMinhasMaterias"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reivindicacoes": {
         parameters: {
             query?: never;
@@ -1007,10 +1023,16 @@ export interface components {
             ordemNaFamilia: null | number;
             raridade: null | components["schemas"]["RaridadeResponse"];
             obtidos: components["schemas"]["PremioObtidoResponse"][];
+            exigeMateria: boolean;
         };
         LoginRequest: {
             identificador: string;
             senha: string;
+        };
+        MateriaResponse: {
+            /** Format: uuid */
+            id: string;
+            nome: string;
         };
         MedalhaConcedidaResponse: {
             /** Format: uuid */
@@ -1579,6 +1601,35 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetMinhasMaterias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MateriaResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -439,6 +439,44 @@
         ]
       }
     },
+    "/api/v1/eu/materias": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "GetMinhasMaterias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MateriaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/reivindicacoes": {
       "post": {
         "tags": [
@@ -3691,7 +3729,8 @@
           "familia",
           "ordemNaFamilia",
           "raridade",
-          "obtidos"
+          "obtidos",
+          "exigeMateria"
         ],
         "type": "object",
         "properties": {
@@ -3742,6 +3781,9 @@
             "items": {
               "$ref": "#/components/schemas/PremioObtidoResponse"
             }
+          },
+          "exigeMateria": {
+            "type": "boolean"
           }
         }
       },
@@ -3760,6 +3802,22 @@
           "senha": {
             "maxLength": 512,
             "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "MateriaResponse": {
+        "required": [
+          "id",
+          "nome"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
             "type": "string"
           }
         }

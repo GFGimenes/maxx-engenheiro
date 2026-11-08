@@ -36,6 +36,15 @@ public sealed class EventosHandler(IEventoRepository eventos, TimeProvider relog
     }
 }
 
+// As matérias que o aluno cursa hoje: o que a apresentação em sala (P17) oferece. A data do
+// evento vale de hoje para trás e não começa antes do fim do semestre anterior (D3), então a
+// matéria da apresentação é deste semestre.
+public sealed class MateriasDoAlunoHandler(IEventoRepository eventos, TimeProvider relogio)
+{
+    public Task<IReadOnlyList<Materia>> CursadasAsync(Guid alunoId, CancellationToken cancellationToken) =>
+        eventos.MateriasCursadasAsync(alunoId, FusoHorario.DataLocal(relogio.GetUtcNow()), cancellationToken);
+}
+
 public interface IEventoRepository
 {
     // Poucos por semestre: a lista inteira, filtrada pela regra do domínio.
@@ -44,6 +53,9 @@ public interface IEventoRepository
     Task<ItemPremioParticipacao?> ItemAsync(string codigo, CancellationToken cancellationToken);
 
     Task<Evento?> BuscarAsync(Guid id, CancellationToken cancellationToken);
+
+    // As matérias das turmas do aluno (usuário) cujo semestre contém a data, por nome.
+    Task<IReadOnlyList<Materia>> MateriasCursadasAsync(Guid alunoId, DateOnly data, CancellationToken cancellationToken);
 
     // O semestre letivo de fim mais recente antes da data, com os bimestres; nulo se nenhum
     // terminou ainda.
