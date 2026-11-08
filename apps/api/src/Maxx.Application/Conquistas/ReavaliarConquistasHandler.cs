@@ -1,7 +1,6 @@
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
-using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Notificacoes;
@@ -22,6 +21,7 @@ public sealed class ReavaliarConquistasHandler(
     IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     AvaliadorDeConquista avaliador,
+    ContextoDasConquistas contextos,
     TimeProvider relogio) : ITrabalhoHandler<ReavaliarConquistas>
 {
     public async Task ExecutarAsync(ReavaliarConquistas carga, CancellationToken cancellationToken)
@@ -53,7 +53,7 @@ public sealed class ReavaliarConquistasHandler(
                 continue;
             }
 
-            var contexto = await ContextoAsync(item, instancia, aluno, calendario, agora, cancellationToken);
+            var contexto = await contextos.MontarAsync(item, instancia, aluno, calendario, agora, cancellationToken);
             var avaliacao = avaliador.Avaliar(item, instancia, fatos, contexto);
             if (!avaliacao.Aplicavel)
             {
@@ -82,22 +82,5 @@ public sealed class ReavaliarConquistasHandler(
         }
 
         await unitOfWork.SalvarAsync(cancellationToken);
-    }
-
-    // A data de referência da vigência é o fim da instância; no período curso, hoje. As
-    // matérias do período só no alvo dinâmico.
-    private async Task<ContextoDaAvaliacao> ContextoAsync(
-        ItemConquista item,
-        InstanciaDePeriodo instancia,
-        AlunoDasConquistas aluno,
-        Calendario calendario,
-        DateTimeOffset agora,
-        CancellationToken cancellationToken)
-    {
-        var referencia = instancia.Fim(calendario) ?? FusoHorario.DataLocal(agora);
-        var materias = item.Regra.Alvo is { EhTodasAsMatriculasDoPeriodo: true }
-            ? await conquistas.MateriasDoPeriodoAsync(aluno.Id, instancia.Semestres(calendario), cancellationToken)
-            : null;
-        return new ContextoDaAvaliacao(referencia, aluno.SiglaDoCurso, materias);
     }
 }

@@ -38,10 +38,16 @@ public sealed record FatoContavel
         ArgumentNullException.ThrowIfNull(medalha);
         ArgumentNullException.ThrowIfNull(calendario);
 
-        if (!medalha.EstaAtiva)
-        {
-            return null;
-        }
+        return medalha.EstaAtiva ? DescreverMedalha(medalha, calendario) : null;
+    }
+
+    // A medalha descrita como fato, ativa ou anulada. Serve só para localizar as instâncias
+    // que ela tocava, como faz o recálculo depois da anulação; nunca para contar: quem conta
+    // usa DaMedalha.
+    public static FatoContavel DescreverMedalha(Medalha medalha, Calendario calendario)
+    {
+        ArgumentNullException.ThrowIfNull(medalha);
+        ArgumentNullException.ThrowIfNull(calendario);
 
         var ano = calendario.AnoDoSemestre(medalha.SemestreLetivoId)
             ?? throw new DomainException($"A medalha {medalha.Id} aponta para um semestre fora do calendário.");

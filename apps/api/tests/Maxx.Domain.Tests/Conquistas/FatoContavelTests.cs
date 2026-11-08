@@ -72,6 +72,19 @@ public class FatoContavelTests
     }
 
     [Fact]
+    public void Medalha_anulada_ainda_e_descrita_para_localizar_as_instancias_que_tocava()
+    {
+        var medalha = Medalha();
+        var ativa = FatoContavel.DaMedalha(medalha, _fatos.Calendario);
+        medalha.Anular(Guid.CreateVersion7(), _agora.AddDays(1));
+
+        var descrita = FatoContavel.DescreverMedalha(medalha, _fatos.Calendario);
+
+        Assert.Equal(ativa, descrita);
+        Assert.Equal(_fatos.InstanciaDoBimestre(4), descrita.InstanciaEm(Periodo.Bimestre, Fatos.Aluno));
+    }
+
+    [Fact]
     public void Premio_de_participacao_so_conta_depois_de_definitivo()
     {
         var (premio, evento) = Aprovado(Data(10, 1));
