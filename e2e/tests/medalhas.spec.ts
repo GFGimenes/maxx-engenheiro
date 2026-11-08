@@ -43,9 +43,6 @@ test(
   "a professora concede, o aluno vê em Troféus e a anulação tira a medalha",
   { tag: "@celular" },
   async ({ browser, request }) => {
-    // Paliativo do passo 7: criar a professora roda o seed num contêiner, e com a suíte
-    // inteira em paralelo o caso passa dos 30 s. A causa fica para a etapa 11.
-    test.slow();
     const professora = await novaProfessora(request);
     const n = Date.now().toString().slice(-6);
     const nome = `Aluno ${n}`;
