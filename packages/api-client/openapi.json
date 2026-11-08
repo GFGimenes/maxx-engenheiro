@@ -1120,6 +1120,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
           "304": {
             "description": "Not Modified"
           },
@@ -1257,6 +1267,16 @@
         ],
         "operationId": "GetMeuPerfil",
         "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
           "304": {
             "description": "Not Modified"
           }
@@ -1283,6 +1303,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Bad Request",
             "content": {
@@ -2807,6 +2837,107 @@
           }
         }
       },
+      "PerfilResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "papel",
+          "curso",
+          "nomeDoCurso",
+          "semestre",
+          "exAluno",
+          "ra",
+          "pontos",
+          "seguidores",
+          "seguindo",
+          "euSigo",
+          "foto",
+          "professor"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "papel": {
+            "type": "string"
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeDoCurso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "exAluno": {
+            "type": "boolean"
+          },
+          "ra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pontos": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "seguidores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seguindo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "euSigo": {
+            "type": "boolean"
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "professor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProfessorDoPerfilResponse"
+              }
+            ]
+          }
+        }
+      },
       "PostResponse": {
         "required": [
           "id",
@@ -3041,6 +3172,25 @@
           }
         }
       },
+      "ProfessorDoPerfilResponse": {
+        "required": [
+          "turmas",
+          "medalhasConcedidas"
+        ],
+        "type": "object",
+        "properties": {
+          "turmas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurmaDoPerfilResponse"
+            }
+          },
+          "medalhasConcedidas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PublicarPostRequest": {
         "required": [
           "legenda",
@@ -3218,6 +3368,25 @@
             "format": "int32"
           },
           "texto": {
+            "type": "string"
+          }
+        }
+      },
+      "TurmaDoPerfilResponse": {
+        "required": [
+          "materia",
+          "curso",
+          "semestre"
+        ],
+        "type": "object",
+        "properties": {
+          "materia": {
+            "type": "string"
+          },
+          "curso": {
+            "type": "string"
+          },
+          "semestre": {
             "type": "string"
           }
         }

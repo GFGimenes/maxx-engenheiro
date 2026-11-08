@@ -764,6 +764,28 @@ export interface components {
             /** Format: int64 */
             tamanhoDaGrade: number;
         };
+        PerfilResponse: {
+            /** Format: uuid */
+            id: string;
+            nomeDeExibicao: string;
+            arroba: string;
+            papel: string;
+            curso: null | string;
+            nomeDoCurso: null | string;
+            /** Format: int32 */
+            semestre: null | number;
+            exAluno: boolean;
+            ra: null | string;
+            /** Format: int32 */
+            pontos: null | number;
+            /** Format: int32 */
+            seguidores: number;
+            /** Format: int32 */
+            seguindo: number;
+            euSigo: boolean;
+            foto: null | components["schemas"]["FotoDoPostResponse"];
+            professor: null | components["schemas"]["ProfessorDoPerfilResponse"];
+        };
         PostResponse: {
             /** Format: uuid */
             id: string;
@@ -821,6 +843,11 @@ export interface components {
             detail?: null | string;
             instance?: null | string;
         };
+        ProfessorDoPerfilResponse: {
+            turmas: components["schemas"]["TurmaDoPerfilResponse"][];
+            /** Format: int32 */
+            medalhasConcedidas: number;
+        };
         PublicarPostRequest: {
             legenda: null | string;
             /** Format: uuid */
@@ -866,6 +893,11 @@ export interface components {
             /** Format: int32 */
             versao: number;
             texto: string;
+        };
+        TurmaDoPerfilResponse: {
+            materia: string;
+            curso: string;
+            semestre: string;
         };
         TurmaDoProfessorResponse: {
             /** Format: uuid */
@@ -1717,6 +1749,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilResponse"];
+                };
+            };
             /** @description Not Modified */
             304: {
                 headers: {
@@ -1817,6 +1858,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilResponse"];
+                };
+            };
             /** @description Not Modified */
             304: {
                 headers: {
@@ -1839,6 +1889,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PerfilResponse"];
+                };
+            };
             /** @description Bad Request */
             400: {
                 headers: {

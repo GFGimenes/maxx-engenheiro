@@ -10,55 +10,74 @@ interface AvatarProps {
   // A derivada da grade da foto de perfil. Sem ela, as iniciais.
   foto?: string | null;
   size?: number;
+  // O anel dourado do próprio aluno, no cabeçalho do perfil dele (prancheta do perfil). É o
+  // ouro da marca, não cor de tier: o aluno não tem tier.
+  anel?: boolean;
 }
 
-// Só com as cores do token: aluno nunca é pintado com cor de tier. O anel dourado do próprio
-// aluno fica para os passos 7 e 11.
+// Espessura do anel e a folga entre ele e o avatar, como na prancheta.
+const ANEL = 3;
+const FOLGA = 3;
+
+// Só com as cores do token: aluno nunca é pintado com cor de tier.
 export function Avatar({
   nome,
   foto,
   size = tamanhos.avatarPost,
+  anel = false,
 }: AvatarProps) {
   const { colors } = useTheme();
+  const interno = anel ? size - 2 * (ANEL + FOLGA) : size;
 
-  if (foto) {
-    return (
-      <Image
-        accessible
-        role="img"
-        aria-label={nome}
-        source={{ uri: foto }}
-        style={[
-          styles.circulo,
-          { width: size, height: size, backgroundColor: colors.avatarBg },
-        ]}
-      />
-    );
-  }
-
-  return (
+  const circulo = foto ? (
+    <Image
+      accessible
+      role="img"
+      aria-label={nome}
+      source={{ uri: foto }}
+      style={[
+        styles.circulo,
+        { width: interno, height: interno, backgroundColor: colors.avatarBg },
+      ]}
+    />
+  ) : (
     <View
       accessible
       role="img"
       aria-label={nome}
       style={[
         styles.circulo,
-        {
-          width: size,
-          height: size,
-          backgroundColor: colors.avatarBg,
-        },
+        { width: interno, height: interno, backgroundColor: colors.avatarBg },
       ]}
     >
       <Text
         numberOfLines={1}
         style={[
           styles.iniciais,
-          { color: colors.avatarFg, fontSize: Math.round(size * 0.4) },
+          { color: colors.avatarFg, fontSize: Math.round(interno * 0.4) },
         ]}
       >
         {iniciais(nome)}
       </Text>
+    </View>
+  );
+
+  if (!anel) return circulo;
+
+  return (
+    <View
+      testID="anel-do-avatar"
+      style={[
+        styles.circulo,
+        {
+          width: size,
+          height: size,
+          borderWidth: ANEL,
+          borderColor: colors.gold,
+        },
+      ]}
+    >
+      {circulo}
     </View>
   );
 }

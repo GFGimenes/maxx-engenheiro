@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
 import { novaConta } from "./apoio/contas";
-import { abrirPerfil } from "./apoio/navegacao";
+import { abrirMenu } from "./apoio/navegacao";
 import {
   anularMedalha,
   matricular,
@@ -43,6 +43,9 @@ test(
   "a professora concede, o aluno vê em Troféus e a anulação tira a medalha",
   { tag: "@celular" },
   async ({ browser, request }) => {
+    // Paliativo do passo 7: criar a professora roda o seed num contêiner, e com a suíte
+    // inteira em paralelo o caso passa dos 30 s. A causa fica para a etapa 11.
+    test.slow();
     const professora = await novaProfessora(request);
     const n = Date.now().toString().slice(-6);
     const nome = `Aluno ${n}`;
@@ -52,7 +55,7 @@ test(
     // A professora, pela lista da turma e pelo modal do catálogo.
     const daProfessora = await novaPagina(browser);
     await entrar(daProfessora, professora.email, professora.senha);
-    await abrirPerfil(daProfessora);
+    await abrirMenu(daProfessora);
     await daProfessora.getByRole("button", { name: "Minhas turmas" }).click();
     await daProfessora.getByRole("button", { name: /^Banco de Dados/ }).click();
     await daProfessora

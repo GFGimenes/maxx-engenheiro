@@ -1,9 +1,10 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
+  Pressable,
   Platform,
   StyleSheet,
   Text,
@@ -26,6 +27,7 @@ import {
   useRemoverComentario,
   type Comentario,
 } from "../feed/api";
+import { perfilDe } from "../feed/CartaoDePost";
 import { tempoDesde, usuarioDoArroba } from "../feed/textos";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
@@ -41,6 +43,7 @@ const caracteres = (texto: string) => Array.from(texto).length;
 export function ComentariosScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const eu = useEu();
   const comentarios = useComentarios(id);
@@ -70,11 +73,17 @@ export function ComentariosScreen() {
     const acao = proprio ? "Apagar" : instituicao ? "Remover" : null;
     return (
       <View testID={`comentario-${item.id}`} style={styles.linha}>
-        <Avatar
-          nome={item.autor.nomeDeExibicao}
-          foto={item.autor.foto}
-          size={32}
-        />
+        <Pressable
+          role="link"
+          accessibilityLabel={`Perfil de ${item.autor.nomeDeExibicao}`}
+          onPress={() => router.push(perfilDe(item.autor.id, eu.data))}
+        >
+          <Avatar
+            nome={item.autor.nomeDeExibicao}
+            foto={item.autor.foto}
+            size={32}
+          />
+        </Pressable>
         <View style={styles.conteudo}>
           <Text style={[textStyles.corpo, { color: colors.ink }]}>
             <Text style={textStyles.secao}>

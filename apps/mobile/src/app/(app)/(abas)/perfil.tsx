@@ -1,3 +1,6 @@
-import { PerfilProvisorio } from "../../../inicio/PerfilProvisorio";
+import { PerfilScreen } from "../../../perfil/PerfilScreen";
 
-export default PerfilProvisorio;
+// O próprio perfil, na aba.
+export default function MeuPerfil() {
+  return <PerfilScreen />;
+}

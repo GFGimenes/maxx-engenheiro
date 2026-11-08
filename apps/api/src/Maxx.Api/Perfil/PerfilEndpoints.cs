@@ -32,6 +32,7 @@ internal static class PerfilEndpoints
 
         perfis.MapGet("/", PerfilAsync)
             .WithName("GetPerfil")
+            .Produces<PerfilResponse>()
             .Produces(StatusCodes.Status304NotModified)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
@@ -48,10 +49,12 @@ internal static class PerfilEndpoints
 
         eu.MapGet("/", MeuPerfilAsync)
             .WithName("GetMeuPerfil")
+            .Produces<PerfilResponse>()
             .Produces(StatusCodes.Status304NotModified);
 
         eu.MapPatch("/", EditarAsync)
             .WithName("EditarPerfil")
+            .Produces<PerfilResponse>()
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);

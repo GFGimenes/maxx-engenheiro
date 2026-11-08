@@ -141,6 +141,19 @@ const ICONES = {
     { cx: 19, cy: 12, r: 1 },
     { cx: 5, cy: 12, r: 1 },
   ],
+  // menu do Lucide: o menu do próprio perfil (tema, turmas, sair).
+  menu: [
+    { d: "M4 6h16", modo: "aberto" },
+    { d: "M4 12h16", modo: "aberto" },
+    { d: "M4 18h16", modo: "aberto" },
+  ],
+  // layout-grid do Lucide: a aba da grade de posts no perfil.
+  grade: [
+    { x: 3, y: 3, width: 7, height: 7, rx: 1 },
+    { x: 14, y: 3, width: 7, height: 7, rx: 1 },
+    { x: 14, y: 14, width: 7, height: 7, rx: 1 },
+    { x: 3, y: 14, width: 7, height: 7, rx: 1 },
+  ],
   inbox: [
     {
       d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",

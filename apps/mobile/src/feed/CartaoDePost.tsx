@@ -37,6 +37,13 @@ export interface Leitor {
   papeis: string[];
 }
 
+// O perfil de quem aparece: o próprio, na aba Perfil; o de outra pessoa, em /usuarios/:id.
+export function perfilDe(usuarioId: string, leitor: Leitor | undefined) {
+  return leitor?.id === usuarioId
+    ? ("/perfil" as const)
+    : (`/usuarios/${usuarioId}` as const);
+}
+
 interface CartaoDePostProps {
   post: Post;
   leitor: Leitor | undefined;
@@ -119,13 +126,22 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
       style={[styles.cartao, { borderBottomColor: colors.line }]}
     >
       <View style={styles.cabecalho}>
-        <Avatar
-          nome={post.autor.nomeDeExibicao}
-          foto={post.autor.foto}
-          size={44}
-        />
+        <Pressable
+          role="link"
+          accessibilityLabel={`Perfil de ${post.autor.nomeDeExibicao}`}
+          onPress={() => router.push(perfilDe(post.autor.id, leitor))}
+        >
+          <Avatar
+            nome={post.autor.nomeDeExibicao}
+            foto={post.autor.foto}
+            size={44}
+          />
+        </Pressable>
         <View style={styles.quem}>
-          <Text numberOfLines={1}>
+          <Text
+            numberOfLines={1}
+            onPress={() => router.push(perfilDe(post.autor.id, leitor))}
+          >
             <Text style={[textStyles.secao, { color: colors.ink }]}>
               {usuario}
             </Text>

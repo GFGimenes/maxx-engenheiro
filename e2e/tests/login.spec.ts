@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { arroba, novaConta, type Aluno } from "./apoio/contas";
-import { abrirPerfil } from "./apoio/navegacao";
+import { abrirMenu, abrirPerfil } from "./apoio/navegacao";
 
 // Os fluxos com conta rodam só no celular, claro e escuro: cada um gasta tentativas de
 // login, e o limite é por IP. O desktop confere o caminho de quem não entrou.
@@ -49,6 +49,7 @@ test(
     await page.reload();
     await estaDentro(page, aluno);
 
+    await abrirMenu(page);
     await page.getByRole("button", { name: "Sair" }).click();
     await expect(page).toHaveURL(/\/login$/);
     await page.goto("/");

@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { Cabecalho } from "../components/Cabecalho";
 import { type IconName } from "../components/Icon";
 import { Screen } from "../components/Screen";
 import { EmptyState } from "../components/StateMessage";
@@ -42,3 +43,19 @@ export const MuralEmBreve = () => (
 const styles = StyleSheet.create({
   centro: { flex: 1, justifyContent: "center" },
 });
+
+// Até a tela de editar perfil (passo 7, etapa 10), o botão do perfil chega aqui.
+export function EditarPerfilEmBreve() {
+  return (
+    <Screen>
+      <Cabecalho titulo="Editar perfil" voltarPara="/perfil" />
+      <View style={styles.centro}>
+        <EmptyState
+          icon="user"
+          title="Em breve."
+          message="Aqui você vai trocar a foto, o nome e o arroba."
+        />
+      </View>
+    </Screen>
+  );
+}
