@@ -74,3 +74,15 @@ sequenceDiagram
 A instituição também pode conceder prêmio de participação direto, já aprovado e sem
 comprovação (`produto.md` 4.7). Esse caminho não tem foto nem fila e fica fora deste
 diagrama.
+
+## Como ficou no passo 8
+
+- A aprovação enfileira a notificação, o recálculo de raridade e o trabalho que torna o
+  prêmio definitivo no fim da janela. O recálculo de ranking do diagrama chega com a tabela
+  de ranking, no passo 11.
+- Enquanto o prêmio está reivindicado, válido ou em averiguação, o autor não apaga o post de
+  reivindicação. A instituição remove, e resolve o prêmio no mesmo ato: pendente, reprova
+  com o motivo "Removido pela instituição." (`produto.md` 4.7).
+- O evento semeado lista os itens que aceita; a apresentação em sala vai sempre por texto
+  livre, com a matéria (`produto.md` 4.6).
+- Rotas, códigos e decisões em `decisoes/README.md`, Prêmios de participação (passo 8).

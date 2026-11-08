@@ -203,6 +203,15 @@ Ficam pendentes: os posts semeados, que precisam das contas de aluno do seed com
 - Trabalho na fila que torna o prêmio definitivo após quinze dias.
 - `Comprovacao` filtrável por evento, já pensando na aprovação em lote da fase 2.
 
+Ficam pendentes: a concessão direta pela instituição e as telas dela (fila de
+contestações, confirmar e revogar), no passo 12, que já tem a API pronta (D7); o texto das
+notificações de comprovação, contestação, decisão e revogação, e o sininho, no passo 10; o
+recálculo do ranking que a aprovação, a contestação, a decisão e a remoção pela instituição
+devem enfileirar (ADR 0005), e a regra de em que semestre o prêmio conta (D4), no passo 11;
+a reavaliação de conquistas quando o prêmio fica definitivo, no passo 9; os eventos
+passados e futuros do seed completo, no passo 12. Decisões do passo em
+`decisoes/README.md`, Prêmios de participação (passo 8).
+
 ### Passo 9. Conquistas
 
 - Avaliador das duas formas de contagem, lendo a regra do catálogo.
@@ -214,6 +223,9 @@ Ficam pendentes: os posts semeados, que precisam das contas de aluno do seed com
 - Índice de unicidade por instância de período.
 - Um teste por forma, um por item e os testes de fronteira previstos em
   `regras-conquista.md`.
+- Do passo 8: reavaliar as conquistas quando o prêmio de participação fica definitivo,
+  pelo fim da janela de 15 dias (trabalho `tornar-premio-definitivo`) ou pela confirmação
+  da contestação.
 
 ### Passo 10. Mural e notificações
 
@@ -232,6 +244,10 @@ Ficam pendentes: os posts semeados, que precisam das contas de aluno do seed com
 - Entrada pelo toque na própria posição no perfil e pelos atalhos da Busca.
 - Filtro entre semestre atual e histórico; topo e linha do próprio aluno em destaque.
 - Ex-aluno só no histórico.
+- Do passo 8: o recálculo do ranking enfileirado também pela aprovação de comprovação,
+  pela contestação, pela decisão da instituição e pela remoção do post pela instituição
+  (ADR 0005), e a regra de em que semestre o prêmio de participação conta (D4); hoje o
+  prêmio guarda só as datas do evento.
 
 ### Passo 12. Área web da instituição
 
@@ -302,5 +318,5 @@ titular, canal de contato e prazo de guarda dos dados.
 | Foto pública para quem tem o link | Decisão consciente, ADR 0002, coberta pelo termo de uso no passo 5 |
 | Semestre vigente na avaliação | A demonstração só oferece cursos com turma no semestre vigente, e o e2e dela depende disso: no recesso (2026/2 termina em 05/12/2026), `GET /v1/demo` vem sem cursos, e o e2e da medalha não acha turma vigente nem bimestre para conceder. A avaliação acontece antes de 05/12 e não há apresentação presencial, então o semestre vigente cobre. Depois disso, os e2e da demonstração e da medalha falham até o calendário ganhar o semestre seguinte |
 | Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. Acompanhar no passo 13 |
-| Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP |
+| Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP. No fechamento do passo 8, uma rodada local da suíte inteira (69 testes, em paralelo) teve uma falha no teste do limite do login, que passou nas outras; o limite é por réplica, e há duas atrás do Caddy |
 | Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest até o Maestro do passo 13. No nativo, o link de senha nova abre no navegador |

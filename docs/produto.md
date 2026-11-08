@@ -289,6 +289,11 @@ duas reivindicações do mesmo item do catálogo na mesma data; o resto fica a c
 quem aprova. Exceção: apresentação de trabalho em sala deduplica por item + data +
 matéria, e o aprovador natural é o professor daquela matéria.
 
+O evento semeado lista os itens do catálogo que aceita e pode se restringir a um curso; o
+digitado aceita qualquer item. A apresentação de trabalho em sala vai sempre por texto
+livre, com a matéria. A reprovação libera nova reivindicação do mesmo evento; a revogação
+não.
+
 ### 4.7 Ciclo de vida do prêmio de participação
 
 ```
