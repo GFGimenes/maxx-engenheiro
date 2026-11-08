@@ -58,6 +58,9 @@ const MENSAGENS = {
     "Você não pode apagar este comentário.",
   "usuario-nao-encontrado": "Essa pessoa não está mais no Maxx.",
   "seguir-nao-permitido": "Não dá para seguir este perfil.",
+  // Perfil e busca (CodigosDoPerfil.cs)
+  "busca-sem-criterio": "Digite ao menos 2 letras ou escolha um filtro.",
+  "foto-de-perfil-ambigua": "Escolha trocar ou remover a foto.",
   // Paginação (CodigosDaPaginacao.cs)
   "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)

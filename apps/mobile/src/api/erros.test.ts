@@ -42,7 +42,7 @@ describe("mensagens de erro", () => {
   it("todo código que a API manda tem mensagem própria", () => {
     const daApi = codigosDaApi();
 
-    expect(arquivosDeCodigos()).toHaveLength(6);
+    expect(arquivosDeCodigos()).toHaveLength(7);
     expect(daApi).toEqual(
       expect.arrayContaining([
         "registro-simultaneo",
@@ -51,6 +51,7 @@ describe("mensagens de erro", () => {
         "premio-ja-postado",
         "seguir-nao-permitido",
         "cursor-invalido",
+        "busca-sem-criterio",
         "dados-invalidos",
       ]),
     );

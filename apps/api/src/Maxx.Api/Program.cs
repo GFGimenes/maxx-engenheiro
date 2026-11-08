@@ -9,6 +9,7 @@ using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
 using Maxx.Api.OpenApi;
+using Maxx.Api.Perfil;
 using Maxx.Api.Posts;
 using Maxx.Api.Premios;
 using Maxx.Api.Social;
@@ -96,6 +97,8 @@ builder.Services.AddScoped<Maxx.Application.Social.CurtidaHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.ComentarioHandler>();
 builder.Services.AddScoped<Maxx.Application.Social.SeguimentoHandler>();
 builder.Services.AddScoped<Maxx.Application.Feed.FeedHandler>();
+builder.Services.AddScoped<Maxx.Application.Perfil.EditarPerfilHandler>();
+builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 
 var app = builder.Build();
 
@@ -163,6 +166,7 @@ v1.MapUploadEndpoints();
 v1.MapPostEndpoints();
 v1.MapSocialEndpoints();
 v1.MapFeedEndpoints();
+v1.MapPerfilEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

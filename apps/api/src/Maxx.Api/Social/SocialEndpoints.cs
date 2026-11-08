@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Maxx.Api.Posts;
 using Maxx.Application;
 using Maxx.Application.Autenticacao;
+using Maxx.Application.Fotos;
 using Maxx.Application.Paginacao;
 using Maxx.Application.Posts;
 using Maxx.Application.Social;
@@ -75,6 +76,7 @@ internal static class SocialEndpoints
         ClaimsPrincipal principal,
         IConsultaDePosts consultaDePosts,
         IConsultaSocial consulta,
+        IArmazenamentoDeFotos armazenamento,
         CancellationToken cancellationToken)
     {
         var posicao = CursorDeTempo.Ler(cursor);
@@ -83,7 +85,7 @@ internal static class SocialEndpoints
                 TipoDeRecusa.NaoEncontrado, CodigosDoPost.PostNaoEncontrado, $"Post {postId} não existe.");
 
         var pagina = await consulta.ComentariosAsync(postId, posicao, ComentariosPorPagina, cancellationToken);
-        return TypedResults.Ok(new PaginaDeComentariosResponse([.. pagina.Itens.Select(ComentarioResponse.De)], pagina.Proximo));
+        return TypedResults.Ok(new PaginaDeComentariosResponse([.. pagina.Itens.Select(comentario => ComentarioResponse.De(comentario, armazenamento))], pagina.Proximo));
     }
 
     private static async Task<Created<ComentarioResponse>> ComentarAsync(
@@ -92,6 +94,7 @@ internal static class SocialEndpoints
         ClaimsPrincipal principal,
         ComentarioHandler handler,
         IUsuarioRepository usuarios,
+        IArmazenamentoDeFotos armazenamento,
         CancellationToken cancellationToken)
     {
         var autorId = PostEndpoints.UsuarioId(principal);
@@ -101,7 +104,8 @@ internal static class SocialEndpoints
             (string?)null,
             new ComentarioResponse(
                 comentario.Id,
-                new AutorDoComentarioResponse(autor.Id, autor.NomeDeExibicao, autor.Arroba.ToString()),
+                new AutorDoComentarioResponse(
+                    autor.Id, autor.NomeDeExibicao, autor.Arroba.ToString(), PostResponse.Leitura(armazenamento, autor.ChaveDaFotoDaGrade)),
                 comentario.Texto,
                 comentario.CriadoEm));
     }
@@ -138,13 +142,14 @@ public sealed record CurtidasResponse(int Curtidas, bool Curtiu)
 // próprios; aqui, só um teto bruto.
 public sealed record ComentarioRequest([property: StringLength(2000)] string? Texto);
 
-public sealed record AutorDoComentarioResponse(Guid Id, string NomeDeExibicao, string Arroba);
+public sealed record AutorDoComentarioResponse(Guid Id, string NomeDeExibicao, string Arroba, string? Foto);
 
 public sealed record ComentarioResponse(Guid Id, AutorDoComentarioResponse Autor, string Texto, DateTimeOffset CriadoEm)
 {
-    public static ComentarioResponse De(ComentarioLido comentario) => new(
+    public static ComentarioResponse De(ComentarioLido comentario, IArmazenamentoDeFotos armazenamento) => new(
         comentario.Id,
-        new AutorDoComentarioResponse(comentario.Autor.Id, comentario.Autor.NomeDeExibicao, comentario.Autor.Arroba),
+        new AutorDoComentarioResponse(
+            comentario.Autor.Id, comentario.Autor.NomeDeExibicao, comentario.Autor.Arroba, PostResponse.Leitura(armazenamento, comentario.Autor.ChaveDaFoto)),
         comentario.Texto,
         comentario.CriadoEm);
 }

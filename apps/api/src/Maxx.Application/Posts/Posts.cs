@@ -52,7 +52,8 @@ public sealed record PostLido(
     bool Curtiu);
 
 // Curso e semestre do aluno são perfil (produto.md 3); o RA nunca sai daqui.
-public sealed record AutorDoPost(Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre);
+// A foto é a derivada da grade (~320²), que basta para o avatar.
+public sealed record AutorDoPost(Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, string? ChaveDaFoto);
 
 // Tier e pontos do momento da concessão (ADR 0007); raridade, a atual. Matéria e bimestre
 // só para medalha.

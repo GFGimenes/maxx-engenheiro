@@ -57,6 +57,7 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     autor.NomeDeExibicao,
                     autor.Prefixo,
                     autor.Sufixo,
+                    FotoDoAutor = autor.ChaveDaFotoDaGrade,
                     Curso = curso == null ? null : curso.Sigla,
                     cadastro.Semestre,
                     Curtidas = db.Set<Curtida>().Count(curtida => curtida.PostId == post.Id),
@@ -72,7 +73,7 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
             linha => linha.Id,
             linha => new PostLido(
                 linha.Id,
-                new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre),
+                new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre, linha.FotoDoAutor),
                 linha.Legenda,
                 linha.ChaveDaFotoDoFeed,
                 linha.ChaveDaFotoDaGrade,

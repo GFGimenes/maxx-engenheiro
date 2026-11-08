@@ -8,6 +8,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
+using Maxx.Application.Perfil;
 using Maxx.Application.Posts;
 using Maxx.Application.Premios;
 using Maxx.Application.Social;
@@ -20,6 +21,7 @@ using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Fotos;
 using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Notificacoes;
+using Maxx.Infrastructure.Perfil;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Posts;
 using Maxx.Infrastructure.Premios;
@@ -73,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<ISeguimentoRepository, SeguimentoRepository>();
         services.AddScoped<IConsultaSocial, ConsultaSocial>();
         services.AddScoped<IConsultaDoFeed, ConsultaDoFeed>();
+        services.AddScoped<IConsultaDePerfil, ConsultaDePerfil>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();

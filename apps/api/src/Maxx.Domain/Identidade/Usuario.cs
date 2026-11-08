@@ -1,4 +1,5 @@
 using Maxx.Domain.Academico;
+using Maxx.Domain.Fotos;
 
 namespace Maxx.Domain.Identidade;
 
@@ -67,6 +68,14 @@ public sealed class Usuario
     public string? LoteDaDemonstracao { get; private set; }
 
     public string? HashDaChaveDoDispositivo { get; private set; }
+
+    // As duas derivadas da foto de perfil (produto.md 2.3: as mesmas regras de assinatura e
+    // de derivadas da foto de post). Sem foto, o avatar são as iniciais.
+    public string? ChaveDaFotoDoFeed { get; private set; }
+
+    public string? ChaveDaFotoDaGrade { get; private set; }
+
+    public bool TemFoto => ChaveDaFotoDoFeed is not null;
 
     public bool EhDemonstracao => LoteDaDemonstracao is not null;
 
@@ -179,6 +188,42 @@ public sealed class Usuario
         Prefixo = novo;
     }
 
+    public void EditarNomeDeExibicao(string nome) => NomeDeExibicao = ValidarNomeDeExibicao(nome);
+
+    // A foto nova confirma o upload; a antiga, se havia, volta para quem chama tirar do
+    // bucket, porque a leitura é pública para quem tem o link (ADR 0002).
+    public ResultadoDaTrocaDeFoto TrocarFoto(UploadPendente upload, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(upload);
+
+        if (upload.UsuarioId != Id || upload.Finalidade != FinalidadeDoUpload.FotoDePerfil)
+        {
+            return new([], RecusaDaTrocaDeFoto.UploadNaoEncontrado);
+        }
+
+        if (upload.EstaConfirmado)
+        {
+            return new([], RecusaDaTrocaDeFoto.UploadJaUsado);
+        }
+
+        var antigas = ChavesDaFoto;
+        upload.Confirmar(agora);
+        ChaveDaFotoDoFeed = upload.ChaveDoFeed;
+        ChaveDaFotoDaGrade = upload.ChaveDaGrade;
+        return new(antigas, null);
+    }
+
+    // As chaves que saíram; nenhuma, se não havia foto.
+    public IReadOnlyList<string> RemoverFoto()
+    {
+        var antigas = ChavesDaFoto;
+        ChaveDaFotoDoFeed = null;
+        ChaveDaFotoDaGrade = null;
+        return antigas;
+    }
+
+    private IReadOnlyList<string> ChavesDaFoto => TemFoto ? [ChaveDaFotoDoFeed!, ChaveDaFotoDaGrade!] : [];
+
     // O prefixo é do dono; o sufixo novo nunca colide com ninguém.
     public void TrocarDeCurso(Curso curso)
     {
@@ -244,3 +289,12 @@ public sealed class PrefixoReservado
 
     public DateTimeOffset ReservadoEm { get; private set; }
 }
+
+public enum RecusaDaTrocaDeFoto
+{
+    // Não é do usuário ou não é de foto de perfil: para quem pede, dá no mesmo.
+    UploadNaoEncontrado,
+    UploadJaUsado,
+}
+
+public sealed record ResultadoDaTrocaDeFoto(IReadOnlyList<string> ChavesAntigas, RecusaDaTrocaDeFoto? Recusa);

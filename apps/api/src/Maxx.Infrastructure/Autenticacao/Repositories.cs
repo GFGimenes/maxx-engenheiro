@@ -58,6 +58,9 @@ internal sealed class UsuarioRepository(MaxxDbContext db) : IUsuarioRepository
     public Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
         db.Set<Usuario>().SingleOrDefaultAsync(usuario => usuario.Id == id, cancellationToken);
 
+    public Task<Usuario?> BuscarComPrefixosAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<Usuario>().Include(usuario => usuario.PrefixosReservados).SingleOrDefaultAsync(usuario => usuario.Id == id, cancellationToken);
+
     // e-mail em citext: a comparação no banco não diferencia maiúsculas.
     public Task<Usuario?> BuscarPorEmailAsync(string email, CancellationToken cancellationToken) =>
         PorCadastro(cadastro => cadastro.Email == email).SingleOrDefaultAsync(cancellationToken);

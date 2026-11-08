@@ -49,7 +49,7 @@ public interface IConsultaSocial
 
 public sealed record EstadoDaCurtida(int Curtidas, bool Curtiu);
 
-public sealed record AutorDoComentario(Guid Id, string NomeDeExibicao, string Arroba);
+public sealed record AutorDoComentario(Guid Id, string NomeDeExibicao, string Arroba, string? ChaveDaFoto);
 
 public sealed record ComentarioLido(Guid Id, AutorDoComentario Autor, string Texto, DateTimeOffset CriadoEm);
 

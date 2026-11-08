@@ -102,7 +102,7 @@ public sealed class InteracoesTests(PostgresFixture postgres, ArmazenamentoFixtu
         Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
         var comentario = (await resposta.Content.ReadFromJsonAsync<ComentarioResponse>(Ct))!;
         Assert.Equal("Parabéns!", comentario.Texto);
-        Assert.Equal(new AutorDoComentarioResponse(mundo.Id(Bruno), "Bruno Lima", "@brunoLima-CC"), comentario.Autor);
+        Assert.Equal(new AutorDoComentarioResponse(mundo.Id(Bruno), "Bruno Lima", "@brunoLima-CC", null), comentario.Autor);
         Assert.Equal(mundo.Relogio.GetUtcNow(), comentario.CriadoEm);
         Assert.Equal(1, (await ana.GetFromJsonAsync<PostResponse>($"/api/v1/posts/{post}", Ct))!.Comentarios);
         Assert.Equal([comentario], (await ComentariosAsync(ana, post)).Itens);

@@ -74,6 +74,7 @@ internal sealed class ConsultaSocial(MaxxDbContext db) : IConsultaSocial
                 autor.NomeDeExibicao,
                 autor.Prefixo,
                 autor.Sufixo,
+                autor.ChaveDaFotoDaGrade,
             })
             .OrderBy(linha => linha.CriadoEm)
             .ThenBy(linha => linha.Id)
@@ -85,7 +86,7 @@ internal sealed class ConsultaSocial(MaxxDbContext db) : IConsultaSocial
         return new Pagina<ComentarioLido>(
             [.. pagina.Select(linha => new ComentarioLido(
                 linha.Id,
-                new AutorDoComentario(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString()),
+                new AutorDoComentario(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.ChaveDaFotoDaGrade),
                 linha.Texto,
                 linha.CriadoEm))],
             linhas.Count > limite ? CursorDeTempo.Codificar(new PosicaoNoTempo(pagina[^1].CriadoEm, pagina[^1].Id)) : null);

@@ -215,6 +215,8 @@ public class AccessTokenTests
         public Task<Usuario?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(id == usuario.Id ? usuario : null);
 
+        public Task<Usuario?> BuscarComPrefixosAsync(Guid id, CancellationToken cancellationToken) => BuscarAsync(id, cancellationToken);
+
         public Task<bool> ExisteParaCadastroAsync(Guid cadastroElegivelId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

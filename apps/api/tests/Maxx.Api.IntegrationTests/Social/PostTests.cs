@@ -35,7 +35,7 @@ public sealed class PostTests(PostgresFixture postgres, ArmazenamentoFixture arm
         Assert.Equal(mundo.Relogio.GetUtcNow(), post.CriadoEm);
 
         // A linha do autor, como no feed: nome, arroba, curso e semestre. Nada de RA.
-        Assert.Equal(new AutorDoPostResponse(mundo.Id(Ana), "Ana Souza", "@anaSouza-CC", "CC", 3), post.Autor);
+        Assert.Equal(new AutorDoPostResponse(mundo.Id(Ana), "Ana Souza", "@anaSouza-CC", "CC", 3, null), post.Autor);
 
         // O prêmio com o tier e os pontos do momento, a matéria e o bimestre.
         var premio = post.Premio!;

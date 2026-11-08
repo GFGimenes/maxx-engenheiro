@@ -613,6 +613,14 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("cadastro_elegivel_id");
 
+                    b.Property<string>("ChaveDaFotoDaGrade")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_da_grade");
+
+                    b.Property<string>("ChaveDaFotoDoFeed")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_do_feed");
+
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
@@ -675,6 +683,8 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_usuario_demonstracao", "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
 
                             t.HasCheckConstraint("ck_usuario_ex_aluno", "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
+
+                            t.HasCheckConstraint("ck_usuario_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
 
                             t.HasCheckConstraint("ck_usuario_papeis", "papeis IN (1, 2, 4, 6)");
 
