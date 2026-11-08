@@ -33,6 +33,10 @@ const MENSAGENS = {
     "Esse aluno já recebeu essa medalha o máximo de vezes no período.",
   "medalha-nao-encontrada": "Essa medalha não existe mais.",
   "sem-conta-de-instituicao": "Só a instituição pode fazer isso.",
+  // Fotos (CodigosDaFoto.cs)
+  "envio-nao-permitido": "Você não pode enviar foto aqui.",
+  "tipo-de-foto-nao-aceito": "Não deu para usar essa foto. Escolha outra.",
+  "tamanho-de-foto-invalido": "Essa foto ficou grande demais. Escolha outra.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
   "requisicao-invalida": "Confira os dados e tente de novo.",
   "dados-invalidos": "Confira os dados e tente de novo.",

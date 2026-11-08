@@ -155,6 +155,81 @@
         ]
       }
     },
+    "/api/v1/uploads": {
+      "post": {
+        "tags": [
+          "Fotos"
+        ],
+        "operationId": "PedirUpload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoDeUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -1136,6 +1211,26 @@
           }
         }
       },
+      "EnvioResponse": {
+        "required": [
+          "url",
+          "tipoDeConteudo",
+          "tamanho"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "tipoDeConteudo": {
+            "type": "string"
+          },
+          "tamanho": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "EuResponse": {
         "required": [
           "id",
@@ -1448,6 +1543,33 @@
           }
         }
       },
+      "PedidoDeUploadRequest": {
+        "required": [
+          "finalidade",
+          "tipoDeConteudo",
+          "tamanhoDoFeed",
+          "tamanhoDaGrade"
+        ],
+        "type": "object",
+        "properties": {
+          "finalidade": {
+            "type": "string"
+          },
+          "tipoDeConteudo": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "tamanhoDoFeed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tamanhoDaGrade": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "PremioObtidoResponse": {
         "required": [
           "id",
@@ -1728,6 +1850,31 @@
             "format": "int32"
           }
         }
+      },
+      "UploadResponse": {
+        "required": [
+          "id",
+          "expiraEm",
+          "feed",
+          "grade"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "feed": {
+            "$ref": "#/components/schemas/EnvioResponse"
+          },
+          "grade": {
+            "$ref": "#/components/schemas/EnvioResponse"
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -1748,6 +1895,9 @@
     },
     {
       "name": "Premios"
+    },
+    {
+      "name": "Fotos"
     },
     {
       "name": "Professor"

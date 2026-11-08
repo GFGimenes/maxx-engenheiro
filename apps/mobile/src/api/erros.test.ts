@@ -42,11 +42,12 @@ describe("mensagens de erro", () => {
   it("todo código que a API manda tem mensagem própria", () => {
     const daApi = codigosDaApi();
 
-    expect(arquivosDeCodigos()).toHaveLength(2);
+    expect(arquivosDeCodigos()).toHaveLength(3);
     expect(daApi).toEqual(
       expect.arrayContaining([
         "registro-simultaneo",
         "limite-atingido",
+        "tamanho-de-foto-invalido",
         "dados-invalidos",
       ]),
     );

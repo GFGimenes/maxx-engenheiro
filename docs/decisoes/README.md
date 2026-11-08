@@ -126,6 +126,7 @@ DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM medalha WHERE aluno_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM upload_pendente WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM usuario WHERE id IN (SELECT usuario_id FROM alvo);
 DELETE FROM matricula WHERE aluno_id IN (SELECT cadastro_id FROM alvo);
 DELETE FROM cadastro_elegivel WHERE id IN (SELECT cadastro_id FROM alvo) AND demonstracao;
@@ -135,7 +136,8 @@ COMMIT;
 Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1`. Os prefixos reservados, os aceites do
 termo e os refresh saem em cascata com o usuário e a família. A lista cresce com os passos que gravam dados
 do aluno (posts, curtidas, prêmios, pontos): cada um acrescenta aqui a tabela dele, antes
-de `usuario`.
+de `usuario`. As fotos no bucket não saem por este SQL, que só alcança o banco: saem na purga
+pela área web da instituição, no passo 12.
 
 ## Cliente
 

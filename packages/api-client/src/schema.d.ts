@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PedirUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/professor/turmas": {
         parameters: {
             query?: never;
@@ -371,6 +387,12 @@ export interface components {
         EntradaDeDemonstracaoRequest: {
             chaveDoDispositivo: string;
         };
+        EnvioResponse: {
+            url: string;
+            tipoDeConteudo: string;
+            /** Format: int64 */
+            tamanho: number;
+        };
         EuResponse: {
             /** Format: uuid */
             id: string;
@@ -454,6 +476,14 @@ export interface components {
             /** Format: date-time */
             concedidaEm: string;
         };
+        PedidoDeUploadRequest: {
+            finalidade: string;
+            tipoDeConteudo: string;
+            /** Format: int64 */
+            tamanhoDoFeed: number;
+            /** Format: int64 */
+            tamanhoDaGrade: number;
+        };
         PremioObtidoResponse: {
             /** Format: uuid */
             id: string;
@@ -527,6 +557,14 @@ export interface components {
             semestre: string;
             /** Format: int32 */
             alunos: number;
+        };
+        UploadResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            expiraEm: string;
+            feed: components["schemas"]["EnvioResponse"];
+            grade: components["schemas"]["EnvioResponse"];
         };
     };
     responses: never;
@@ -664,6 +702,66 @@ export interface operations {
             };
             /** @description Forbidden */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PedirUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoDeUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -59,6 +59,7 @@ public static class DependencyInjection
         // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
         // fora de desenvolvimento.
         services.AddSingleton<IArmazenamentoDeFotos, ArmazenamentoS3>();
+        services.AddScoped<IUploadPendenteRepository, UploadPendenteRepository>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
@@ -72,6 +73,7 @@ public static class DependencyInjection
         services.AddTrabalho<EmailDeRecuperacao, EmailDeRecuperacaoHandler>();
         services.AddTrabalho<NotificarMedalhaRecebida, NotificarMedalhaRecebidaHandler>();
         services.AddTrabalho<RecalcularRaridade, RecalculoDeRaridade>();
+        services.AddTrabalho<LimparUploadAbandonado, LimparUploadAbandonadoHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

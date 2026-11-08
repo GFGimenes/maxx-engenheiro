@@ -86,6 +86,7 @@ builder.Services.AddProxyConfiavel(builder.Configuration);
 builder.Services.AddLimitesDeTaxa();
 builder.Services.AddScoped<Maxx.Application.Medalhas.ConcederMedalhaHandler>();
 builder.Services.AddScoped<Maxx.Application.Medalhas.AnularMedalhaHandler>();
+builder.Services.AddScoped<Maxx.Application.Fotos.PedirUploadHandler>();
 
 var app = builder.Build();
 
@@ -149,6 +150,7 @@ v1.MapEuEndpoints();
 v1.MapTermoDeUsoEndpoints();
 v1.MapProfessorEndpoints();
 v1.MapPremiosEndpoints();
+v1.MapUploadEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

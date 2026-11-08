@@ -311,6 +311,84 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("vinculo_professor", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Fotos.UploadPendente", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ChaveDaGrade")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_grade");
+
+                    b.Property<string>("ChaveDoFeed")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave_do_feed");
+
+                    b.Property<DateTimeOffset?>("ConfirmadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmado_em");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Finalidade")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("finalidade");
+
+                    b.Property<long>("TamanhoDaGrade")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho_da_grade");
+
+                    b.Property<long>("TamanhoDoFeed")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho_do_feed");
+
+                    b.Property<string>("TipoDeConteudo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_conteudo");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_upload_pendente");
+
+                    b.HasIndex("ChaveDaGrade")
+                        .IsUnique()
+                        .HasDatabaseName("ix_upload_pendente_chave_da_grade");
+
+                    b.HasIndex("ChaveDoFeed")
+                        .IsUnique()
+                        .HasDatabaseName("ix_upload_pendente_chave_do_feed");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_upload_pendente_usuario_id");
+
+                    b.ToTable("upload_pendente", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_upload_pendente_finalidade", "finalidade IN ('post', 'fotoDePerfil')");
+
+                            t.HasCheckConstraint("ck_upload_pendente_tamanho_da_grade", "tamanho_da_grade BETWEEN 1 AND 204800");
+
+                            t.HasCheckConstraint("ck_upload_pendente_tamanho_do_feed", "tamanho_do_feed BETWEEN 1 AND 1048576");
+
+                            t.HasCheckConstraint("ck_upload_pendente_tipo", "tipo_de_conteudo = 'image/jpeg'");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Identidade.AceiteDeTermo", b =>
                 {
                     b.Property<Guid>("UsuarioId")
@@ -1113,6 +1191,16 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_vinculo_professor_turma_turma_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Fotos.UploadPendente", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_upload_pendente_usuario_usuario_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Identidade.AceiteDeTermo", b =>
