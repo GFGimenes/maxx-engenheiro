@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -27,8 +28,8 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         // 4 cursos × 4 matérias, uma turma cada em 2026/2; 20 alunos, 4 professores, 1 instituição;
         // cada aluno nas 4 turmas do curso, cada professor nas 4 turmas do curso; conta só
-        // para os 4 professores e a instituição.
-        Assert.Equal(new ResultadoDoSeedDemo(4, 16, 16, 25, 80, 16, 5), resultado);
+        // para os 4 professores e a instituição; os 8 eventos de data/demo/eventos.json.
+        Assert.Equal(new ResultadoDoSeedDemo(4, 16, 16, 25, 80, 16, 5, 8), resultado);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
@@ -91,7 +92,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await ContagensAsync(factory));
     }
 
@@ -171,7 +172,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         }));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 1, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 1, 0, 0, 0), resultado);
     }
 
     [Fact]
@@ -266,6 +267,129 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         Assert.Contains("P05 (ENG)", falha.Message, StringComparison.Ordinal);
         Assert.Equal((0, 0, 0, 0, 0), await ContagensAsync(factory));
+    }
+
+    [Fact]
+    public async Task Eventos_entram_com_datas_itens_e_curso()
+    {
+        await using var factory = await ComBaseAsync();
+        await factory.SeedDemoAsync(Ct);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var cc = await db.Set<Curso>().SingleAsync(curso => curso.Sigla == "CC", Ct);
+        var eventos = await db.Set<Evento>().ToDictionaryAsync(evento => evento.Codigo!, Ct);
+
+        Assert.Equal(8, eventos.Count);
+        Assert.All(eventos.Values, evento => Assert.Equal(OrigemDoEvento.Semeado, evento.Origem));
+        var semana = eventos["semana-academica-cc-2026-2"];
+        Assert.Equal(
+            ("Semana Acadêmica de Ciência da Computação", new DateOnly(2026, 9, 14), new DateOnly(2026, 9, 18), cc.Id),
+            (semana.Nome, semana.Inicio, semana.Fim, semana.CursoId));
+        Assert.Equal(["P06", "P08", "P09"], semana.ItensAceitos);
+        Assert.Null(eventos["maratona-de-programacao-2026"].CursoId);
+    }
+
+    [Fact]
+    public async Task Evento_novo_no_arquivo_entra_sem_mexer_no_resto()
+    {
+        await using var factory = await ComBaseAsync();
+        await factory.SeedDemoAsync(Ct);
+
+        _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz).Add(Evento("palestra-extra-2026-2", "P01")));
+        var resultado = await factory.SeedDemoAsync(Ct);
+
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 1), resultado);
+    }
+
+    [Fact]
+    public async Task Evento_que_diverge_do_arquivo_falha_sem_gravar_nada()
+    {
+        await using var factory = await ComBaseAsync();
+        await factory.SeedDemoAsync(Ct);
+
+        _copia.Alterar("demo/eventos.json", raiz =>
+        {
+            Eventos(raiz)[0]!["fim"] = "2026-08-04";
+            Eventos(raiz).Add(Evento("palestra-extra-2026-2", "P01"));
+        });
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedDemoAsync(Ct));
+
+        Assert.Contains("palestra-abertura-2026-2", falha.Message, StringComparison.Ordinal);
+        Assert.Equal(8, await ContarEventosAsync(factory));
+    }
+
+    [Theory]
+    [InlineData("P99", "P99 não é prêmio de participação")]
+    [InlineData("M01", "M01 não é prêmio de participação")]
+    [InlineData("P17", "deduplica por matéria")]
+    public async Task Evento_com_item_que_nao_pode_aceitar_falha_sem_gravar_nada(string item, string trecho)
+    {
+        await using var factory = await ComBaseAsync();
+
+        _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz).Add(Evento("evento-ruim", item)));
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedDemoAsync(Ct));
+
+        Assert.Contains("evento-ruim", falha.Message, StringComparison.Ordinal);
+        Assert.Contains(trecho, falha.Message, StringComparison.Ordinal);
+        Assert.Equal((0, 0, 0, 0, 0), await ContagensAsync(factory));
+    }
+
+    [Fact]
+    public async Task Evento_de_curso_inexistente_falha_sem_gravar_nada()
+    {
+        await using var factory = await ComBaseAsync();
+
+        _copia.Alterar("demo/eventos.json", raiz =>
+        {
+            var evento = Evento("semana-eng", "P06");
+            evento["curso"] = "ENG";
+            Eventos(raiz).Add(evento);
+        });
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedDemoAsync(Ct));
+
+        Assert.Contains("ENG", falha.Message, StringComparison.Ordinal);
+        Assert.Equal((0, 0, 0, 0, 0), await ContagensAsync(factory));
+    }
+
+    [Fact]
+    public async Task Evento_que_termina_antes_de_comecar_falha()
+    {
+        await using var factory = await ComBaseAsync();
+
+        _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz)[1]!["fim"] = "2026-08-01");
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedDemoAsync(Ct));
+
+        Assert.Contains("doacao-de-sangue-2026-2", falha.Message, StringComparison.Ordinal);
+        Assert.Equal(0, await ContarEventosAsync(factory));
+    }
+
+    [Fact]
+    public async Task Codigo_de_evento_repetido_no_arquivo_falha()
+    {
+        await using var factory = await ComBaseAsync();
+
+        _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz).Add(Evento("mostra-ia-2026-2", "P08")));
+        var falha = await Assert.ThrowsAsync<SeedException>(() => factory.SeedDemoAsync(Ct));
+
+        Assert.Contains("código de evento repetido: mostra-ia-2026-2", falha.Message, StringComparison.Ordinal);
+    }
+
+    private static JsonArray Eventos(JsonNode raiz) => raiz["eventos"]!.AsArray();
+
+    private static JsonObject Evento(string codigo, string item) => new()
+    {
+        ["codigo"] = codigo,
+        ["nome"] = "Palestra extra",
+        ["inicio"] = "2026-10-01",
+        ["fim"] = "2026-10-01",
+        ["itens"] = new JsonArray(item),
+    };
+
+    private static async Task<int> ContarEventosAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Evento>().CountAsync(Ct);
     }
 
     private async Task<MaxxApiFactory> ComBaseAsync()

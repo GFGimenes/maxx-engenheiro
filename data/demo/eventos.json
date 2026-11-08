@@ -1,0 +1,65 @@
+{
+  "observacao": "Eventos semeados do seed demo, a que o prêmio de participação se amarra. Fictícios. Cada evento lista os prêmios de participação que aceita e, quando for o caso, a sigla do curso a que se restringe. A apresentação de trabalho em sala (P17) não tem evento semeado: vai sempre por texto livre, com a matéria. Datas inclusivas, interpretadas em America/Sao_Paulo. O seed só acrescenta e falha se um evento que já existe divergir deste arquivo. O resto dos eventos, passados e futuros, chega com o seed completo do passo 12.",
+  "eventos": [
+    {
+      "codigo": "palestra-abertura-2026-2",
+      "nome": "Palestra de abertura do semestre",
+      "inicio": "2026-08-03",
+      "fim": "2026-08-03",
+      "itens": ["P01"]
+    },
+    {
+      "codigo": "doacao-de-sangue-2026-2",
+      "nome": "Campanha de doação de sangue UniMax",
+      "inicio": "2026-08-24",
+      "fim": "2026-08-28",
+      "itens": ["P02"]
+    },
+    {
+      "codigo": "workshop-carreira-2026-2",
+      "nome": "Workshop de carreira e currículo",
+      "inicio": "2026-09-09",
+      "fim": "2026-09-09",
+      "itens": ["P03"]
+    },
+    {
+      "codigo": "semana-academica-cc-2026-2",
+      "nome": "Semana Acadêmica de Ciência da Computação",
+      "inicio": "2026-09-14",
+      "fim": "2026-09-18",
+      "itens": ["P06", "P08", "P09"],
+      "curso": "CC"
+    },
+    {
+      "codigo": "semana-da-saude-med-2026-2",
+      "nome": "Semana da Saúde de Medicina",
+      "inicio": "2026-10-05",
+      "fim": "2026-10-09",
+      "itens": ["P06", "P08", "P09"],
+      "curso": "MED"
+    },
+    {
+      "codigo": "visita-tecnica-adm-2026-2",
+      "nome": "Visita técnica a um centro de distribuição",
+      "inicio": "2026-10-21",
+      "fim": "2026-10-21",
+      "itens": ["P05"],
+      "curso": "ADM"
+    },
+    {
+      "codigo": "maratona-de-programacao-2026",
+      "nome": "Maratona de Programação, etapa regional",
+      "inicio": "2026-10-24",
+      "fim": "2026-10-24",
+      "itens": ["P13", "P16"]
+    },
+    {
+      "codigo": "mostra-ia-2026-2",
+      "nome": "Mostra de projetos de Inteligência Artificial",
+      "inicio": "2026-11-25",
+      "fim": "2026-11-26",
+      "itens": ["P08", "P09"],
+      "curso": "IA"
+    }
+  ]
+}

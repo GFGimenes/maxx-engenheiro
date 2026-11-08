@@ -732,6 +732,72 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Premios.Evento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Codigo")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("codigo");
+
+                    b.Property<Guid?>("CriadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("criado_por_id");
+
+                    b.Property<Guid?>("CursoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("curso_id");
+
+                    b.Property<DateOnly>("Fim")
+                        .HasColumnType("date")
+                        .HasColumnName("fim");
+
+                    b.Property<DateOnly>("Inicio")
+                        .HasColumnType("date")
+                        .HasColumnName("inicio");
+
+                    b.PrimitiveCollection<string[]>("ItensAceitos")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("itens_aceitos");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("origem");
+
+                    b.HasKey("Id")
+                        .HasName("pk_evento");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_evento_codigo");
+
+                    b.HasIndex("CriadoPorId")
+                        .HasDatabaseName("ix_evento_criado_por_id");
+
+                    b.HasIndex("CursoId")
+                        .HasDatabaseName("ix_evento_curso_id");
+
+                    b.HasIndex("Origem", "Inicio")
+                        .HasDatabaseName("ix_evento_origem_inicio");
+
+                    b.ToTable("evento", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_evento_fim_depois_do_inicio", "fim >= inicio");
+
+                            t.HasCheckConstraint("ck_evento_origem", "(origem = 'semeado' AND codigo IS NOT NULL AND cardinality(itens_aceitos) > 0 AND criado_por_id IS NULL) OR (origem = 'textoLivre' AND codigo IS NULL AND cardinality(itens_aceitos) = 0 AND curso_id IS NULL AND criado_por_id IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1463,6 +1529,21 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_notificacao_usuario_usuario_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Premios.Evento", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("CriadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_evento_usuario_criado_por_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_evento_curso_curso_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Premios.Medalha", b =>

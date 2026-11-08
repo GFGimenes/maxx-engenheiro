@@ -11,6 +11,7 @@ using Maxx.Application.Notificacoes;
 using Maxx.Application.Perfil;
 using Maxx.Application.Posts;
 using Maxx.Application.Premios;
+using Maxx.Application.PremiosParticipacao;
 using Maxx.Application.Social;
 using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Autorizacao;
@@ -25,6 +26,7 @@ using Maxx.Infrastructure.Perfil;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Posts;
 using Maxx.Infrastructure.Premios;
+using Maxx.Infrastructure.PremiosParticipacao;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
 using Maxx.Infrastructure.Social;
@@ -63,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaDoProfessor, ConsultaDoProfessor>();
         services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
         services.AddScoped<IConsultaDePremios, ConsultaDePremios>();
+        services.AddScoped<IEventoRepository, EventoRepository>();
 
         // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
         // fora de desenvolvimento.

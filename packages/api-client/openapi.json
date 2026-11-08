@@ -370,6 +370,75 @@
         ]
       }
     },
+    "/api/v1/eventos": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "GetEventosReivindicaveis",
+        "parameters": [
+          {
+            "name": "item",
+            "in": "query",
+            "schema": {
+              "maxLength": 16,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -2495,6 +2564,39 @@
           }
         }
       },
+      "EventoResponse": {
+        "required": [
+          "id",
+          "nome",
+          "inicio",
+          "fim",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fim": {
+            "type": "string",
+            "format": "date"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "FamiliaResponse": {
         "required": [
           "codigo",
@@ -3521,6 +3623,9 @@
     },
     {
       "name": "Busca"
+    },
+    {
+      "name": "Eventos"
     },
     {
       "name": "Professor"

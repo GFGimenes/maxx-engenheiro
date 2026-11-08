@@ -276,6 +276,14 @@ Prêmio de participação se amarra a um evento, com nome, data de início e dat
 evento vem do seed ou é digitado livremente quando não houver. Atividades de duração
 (iniciação científica, monitoria, extensão) são eventos com período, não com data única.
 
+Só se reivindica evento que **já começou** (data de início até hoje, em São Paulo) e que
+**começou depois do fim do último semestre letivo encerrado**: o ranking corta por semestre
+letivo, e uma reivindicação retroativa pontuaria num semestre a que não pertence. O limite
+é o fim do semestre anterior, e não o início do vigente, para que o evento que começa no
+recesso continue reivindicável e conte para o semestre seguinte; assim a reivindicação não
+para no recesso. A data de fim pode estar adiante, para a atividade de duração que ainda
+corre.
+
 Um aluno tem **um prêmio por evento**. Para evento em texto livre, o sistema bloqueia
 duas reivindicações do mesmo item do catálogo na mesma data; o resto fica a cargo de
 quem aprova. Exceção: apresentação de trabalho em sala deduplica por item + data +

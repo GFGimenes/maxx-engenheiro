@@ -1,6 +1,8 @@
 using Maxx.Domain;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Catalogo;
 using Maxx.Domain.Identidade;
+using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,9 +16,12 @@ namespace Maxx.Infrastructure.Seed;
 // do seed.
 public sealed partial class DatabaseSeeder
 {
+    private static readonly string _tipoPremioParticipacao = NomeJson.De(TipoDeItem.PremioParticipacao);
+
     public async Task<ResultadoDoSeedDemo> SeedDemoAsync(CancellationToken cancellationToken)
     {
         var mundo = MundoDemoReader.Ler(Path.Combine(Dados, "demo"));
+        var eventos = EventosDemoReader.Ler(Path.Combine(Dados, "demo"));
 
         await using var transacao = await AbrirComLockAsync(cancellationToken);
 
@@ -43,6 +48,15 @@ public sealed partial class DatabaseSeeder
         await FalharSeRestricaoSemCursoAsync(demo.Siglas, cancellationToken);
 
         demo.ContasDoSeed(relogio.GetUtcNow());
+
+        var itens = (await db.Set<ItemCatalogoRow>().AsNoTracking()
+                .Where(item => item.Tipo == _tipoPremioParticipacao)
+                .ToListAsync(cancellationToken))
+            .ToDictionary(row => row.Codigo, CatalogoRowMapper.ParaPremioParticipacao, StringComparer.Ordinal);
+        foreach (var evento in eventos.Eventos)
+        {
+            demo.EventoSemeado(evento, itens);
+        }
 
         await db.SaveChangesAsync(cancellationToken);
         await transacao.CommitAsync(cancellationToken);
@@ -120,6 +134,7 @@ public sealed partial class DatabaseSeeder
         private readonly HashSet<(Guid ProfessorId, Guid TurmaId)> _vinculos = [];
         private readonly HashSet<Guid> _cadastrosComConta = [];
         private readonly HashSet<string> _prefixos = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Evento> _eventos = new(StringComparer.Ordinal);
 
         private int _cursosNovos;
         private int _materiasNovas;
@@ -128,11 +143,12 @@ public sealed partial class DatabaseSeeder
         private int _matriculasNovas;
         private int _vinculosNovos;
         private int _contasNovas;
+        private int _eventosNovos;
 
         public IEnumerable<string> Siglas => _cursos.Keys;
 
         public ResultadoDoSeedDemo Resultado => new(
-            _cursosNovos, _materiasNovas, _turmasNovas, _cadastrosNovos, _matriculasNovas, _vinculosNovos, _contasNovas);
+            _cursosNovos, _materiasNovas, _turmasNovas, _cadastrosNovos, _matriculasNovas, _vinculosNovos, _contasNovas, _eventosNovos);
 
         public async Task CarregarAsync(CancellationToken cancellationToken)
         {
@@ -169,6 +185,11 @@ public sealed partial class DatabaseSeeder
             _cadastrosComConta.UnionWith(await db.Set<Usuario>()
                 .Select(usuario => usuario.CadastroElegivelId)
                 .ToListAsync(cancellationToken));
+            foreach (var evento in await db.Set<Evento>().Where(evento => evento.Codigo != null).ToListAsync(cancellationToken))
+            {
+                _eventos[evento.Codigo!] = evento;
+            }
+
             _prefixos.UnionWith(await db.Set<PrefixoReservado>()
                 .Select(reservado => reservado.Prefixo)
                 .ToListAsync(cancellationToken));
@@ -273,6 +294,45 @@ public sealed partial class DatabaseSeeder
         // primeiro acesso é pela recuperação (produto.md 2.5). Vale para toda linha deles no
         // banco, não só as do arquivo. Em ordem de e-mail, para o arroba sair igual a cada
         // banco novo.
+        // O evento semeado, com os itens e o curso conferidos contra o que está no banco: o
+        // catálogo vem do base, e o curso, do mundo ou de uma rodada anterior.
+        public void EventoSemeado(EventoDemo json, Dictionary<string, ItemPremioParticipacao> itens)
+        {
+            var desconhecidos = json.Itens.Where(codigo => !itens.ContainsKey(codigo)).ToList();
+            if (desconhecidos.Count > 0)
+            {
+                throw new SeedException(
+                    $"{EventosDemoReader.Arquivo}, {json.Codigo}: {string.Join(", ", desconhecidos)} não é prêmio de participação do catálogo. " +
+                    "Nada foi gravado.");
+            }
+
+            Curso? curso = null;
+            if (json.Curso is { } sigla && !_cursos.TryGetValue(sigla, out curso))
+            {
+                throw new SeedException($"{EventosDemoReader.Arquivo}, {json.Codigo}: o curso {sigla} não existe. Nada foi gravado.");
+            }
+
+            var novo = Construir(
+                json.Codigo,
+                () => Evento.Semeado(json.Codigo, json.Nome, json.Inicio, json.Fim, [.. json.Itens.Select(codigo => itens[codigo])], curso),
+                EventosDemoReader.Arquivo);
+            if (!_eventos.TryGetValue(novo.Codigo!, out var atual))
+            {
+                db.Add(novo);
+                _eventos[novo.Codigo!] = novo;
+                _eventosNovos++;
+                return;
+            }
+
+            if ((atual.Nome, atual.Inicio, atual.Fim, atual.CursoId) != (novo.Nome, novo.Inicio, novo.Fim, novo.CursoId)
+                || !atual.ItensAceitos.SequenceEqual(novo.ItensAceitos, StringComparer.Ordinal))
+            {
+                throw new SeedException(
+                    $"O evento {atual.Codigo} já existe no banco com dados diferentes de {EventosDemoReader.Arquivo}. " +
+                    "O seed demo só acrescenta: evento novo entra com outro código. Nada foi gravado.");
+            }
+        }
+
         public void ContasDoSeed(DateTimeOffset agora)
         {
             var semConta = _cadastros.Values
@@ -290,7 +350,7 @@ public sealed partial class DatabaseSeeder
         }
 
         // A regra é a do domínio; aqui só se acrescenta de onde veio o dado recusado.
-        private static T Construir<T>(string origem, Func<T> construir)
+        private static T Construir<T>(string origem, Func<T> construir, string arquivo = MundoDemoReader.Arquivo)
         {
             try
             {
@@ -298,7 +358,7 @@ public sealed partial class DatabaseSeeder
             }
             catch (DomainException ex)
             {
-                throw new SeedException($"{MundoDemoReader.Arquivo}, {origem}: {ex.Message} Nada foi gravado.", ex);
+                throw new SeedException($"{arquivo}, {origem}: {ex.Message} Nada foi gravado.", ex);
             }
         }
 
