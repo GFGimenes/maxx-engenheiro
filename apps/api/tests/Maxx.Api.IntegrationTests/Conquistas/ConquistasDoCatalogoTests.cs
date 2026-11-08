@@ -1,0 +1,179 @@
+using Maxx.Domain.Academico;
+using Maxx.Domain.Catalogo;
+using Maxx.Domain.Conquistas;
+using Maxx.Infrastructure.Seed;
+
+namespace Maxx.Api.IntegrationTests.Conquistas;
+
+// Um teste por conquista do catálogo (regras-conquista.md 8): as 18 regras lidas de
+// data/catalogo/ e do calendário de data/calendario/ como o seeder lê, cada uma com o
+// cenário mínimo que fecha o critério e o mesmo cenário um fato abaixo. Sem banco.
+//
+// Os cenários são escritos à mão, e não derivados da regra: é o que pega um alvo, um filtro
+// ou um período trocado no JSON. Cada fato do cenário mínimo conta sozinho (na contagem
+// distinta, cada um é um valor novo), então tirar o último deixa a contagem um abaixo.
+public sealed class ConquistasDoCatalogoTests
+{
+    private static readonly Dictionary<string, ItemConquista> _conquistas = CatalogoReader
+        .Ler(Repositorio.DiretorioDoCatalogo).Catalogo!.Itens.OfType<ItemConquista>()
+        .ToDictionary(conquista => conquista.Codigo);
+
+    private static readonly Calendario _calendario = CalendarioReader.Ler(Path.Combine(Repositorio.DiretorioDeDados, "calendario"));
+
+    private static readonly Guid _aluno = Guid.CreateVersion7();
+
+    private static readonly Dictionary<string, Func<Cenario>> _cenarios = new(StringComparer.Ordinal)
+    {
+        // Bimestre: o 4º de 2026.
+        ["C01"] = () => Bimestre(Medalhas(4, "M01", "M02", "M03", "M04", "M01")),
+        ["C02"] = () => Bimestre(Medalhas(4, "M01", "M01", "M01")),
+        ["C03"] = () => BimestrePorMateria("M03"),
+        ["C04"] = () => BimestrePorMateria("M01"),
+
+        // Semestre: 2026/2.
+        ["C05"] = () => Semestre(Premios(2, "P01", "P03", "P07")),
+        ["C06"] = () => Semestre(Premios(2, "P01", "P02", "P04")),
+        ["C07"] = () => Semestre([.. Medalhas(3, "M01", "M01", "M02", "M02", "M03"), .. Medalhas(4, "M01", "M01", "M02", "M02", "M04")]),
+        ["C08"] = () => Semestre([.. Medalhas(3, "M01", "M01"), .. Medalhas(4, "M01", "M01", "M01")]),
+        ["C09"] = () => Semestre(Premios(2, "P01", "P02", "P03", "P04", "P05", "P06")),
+        ["C10"] = () => SemestrePorMateria("M11"),
+        ["C11"] = () => SemestrePorMateria("M10"),
+
+        // Ano: 2026, atravessando os dois semestres.
+        ["C12"] = () => Ano([.. Medalhas(1, Repetir("M02", 5)), .. Medalhas(2, Repetir("M02", 5)), .. Medalhas(3, Repetir("M02", 5)), .. Medalhas(4, Repetir("M02", 5))]),
+        ["C13"] = () => Ano([.. Premios(1, Repetir("P01", 6)), .. Premios(2, Repetir("P01", 6))]),
+        ["C14"] = () => Ano([.. Medalhas(1, "M01"), .. Medalhas(2, "M01"), .. Medalhas(3, "M01"), .. Medalhas(4, "M01")]),
+        ["C15"] = AnoPorMateria,
+
+        // Curso: a vida do aluno, sem fronteira.
+        ["C16"] = () => Curso(Medalhas(4, Repetir("M02", 50))),
+        ["C17"] = () => Curso(Premios(2, Repetir("P01", 30))),
+        ["C18"] = () => Curso([.. Medalhas(1, Repetir("M04", 50)), .. Medalhas(4, Repetir("M04", 50))]),
+    };
+
+    public static TheoryData<string> Codigos => [.. _conquistas.Keys.Order(StringComparer.Ordinal)];
+
+    [Fact]
+    public void Toda_conquista_do_catalogo_tem_cenario()
+    {
+        Assert.Equal(18, _conquistas.Count);
+        Assert.Equal(_conquistas.Keys.Order(StringComparer.Ordinal), _cenarios.Keys.Order(StringComparer.Ordinal));
+    }
+
+    [Theory]
+    [MemberData(nameof(Codigos))]
+    public void Cenario_minimo_fecha_o_criterio(string codigo)
+    {
+        var conquista = _conquistas[codigo];
+        var cenario = _cenarios[codigo]();
+
+        var avaliacao = new AvaliadorDeConquista().Avaliar(conquista, cenario.Instancia, cenario.Fatos, cenario.Contexto);
+
+        Assert.True(avaliacao.Satisfeita, $"{codigo}: {avaliacao.Contagem} de {avaliacao.Alvo}.");
+        Assert.Equal(avaliacao.Alvo, avaliacao.Contagem);
+        Assert.Equal(cenario.Fatos.Count, avaliacao.Evidencias.Count);
+    }
+
+    [Theory]
+    [MemberData(nameof(Codigos))]
+    public void Um_fato_abaixo_nao_fecha(string codigo)
+    {
+        var conquista = _conquistas[codigo];
+        var cenario = _cenarios[codigo]();
+
+        var avaliacao = new AvaliadorDeConquista().Avaliar(
+            conquista, cenario.Instancia, cenario.Fatos.SkipLast(1), cenario.Contexto);
+
+        Assert.False(avaliacao.Satisfeita, $"{codigo}: {avaliacao.Contagem} de {avaliacao.Alvo}.");
+        Assert.Equal(avaliacao.Alvo - 1, avaliacao.Contagem);
+    }
+
+    private sealed record Cenario(InstanciaDePeriodo Instancia, IReadOnlyList<FatoContavel> Fatos, ContextoDaAvaliacao Contexto);
+
+    private static AnoLetivo Ano2026 => _calendario.Anos.Single(ano => ano.Ano == 2026);
+
+    private static Domain.Academico.Bimestre BimestreN(int numero) => Ano2026.Bimestres.Single(bimestre => bimestre.Numero == numero);
+
+    private static SemestreLetivo SemestreN(int numero) => Ano2026.Semestres[numero - 1];
+
+    private static string[] Repetir(string codigo, int vezes) => [.. Enumerable.Repeat(codigo, vezes)];
+
+    private static FatoContavel Medalha(int bimestre, string item, Guid materia)
+    {
+        var semestre = Ano2026.Semestres.Single(candidato => candidato.Bimestres.Any(b => b.Numero == bimestre));
+        return new FatoContavel
+        {
+            Origem = OrigemDoFato.Medalha,
+            Id = Guid.CreateVersion7(),
+            ItemCodigo = item,
+            MateriaId = materia,
+            BimestreId = BimestreN(bimestre).Id,
+            SemestreLetivoId = semestre.Id,
+            AnoLetivoId = Ano2026.Id,
+        };
+    }
+
+    private static FatoContavel[] Medalhas(int bimestre, params string[] itens) =>
+        [.. itens.Select(item => Medalha(bimestre, item, Guid.CreateVersion7()))];
+
+    private static FatoContavel[] Premios(int semestre, params string[] itens)
+    {
+        var tipos = CatalogoReader.Ler(Repositorio.DiretorioDoCatalogo).Catalogo!.Itens.OfType<ItemPremioParticipacao>()
+            .ToDictionary(item => item.Codigo, item => item.TipoDeEvento);
+        return [.. itens.Select(item => new FatoContavel
+        {
+            Origem = OrigemDoFato.PremioParticipacao,
+            Id = Guid.CreateVersion7(),
+            ItemCodigo = item,
+            SemestreLetivoId = SemestreN(semestre).Id,
+            AnoLetivoId = Ano2026.Id,
+            TipoDeEvento = tipos[item],
+        })];
+    }
+
+    private static ContextoDaAvaliacao Contexto(DateOnly fim, IEnumerable<Guid>? materias = null) =>
+        new(fim, "CC", materias?.ToHashSet());
+
+    private static Cenario Bimestre(FatoContavel[] fatos) =>
+        new(new(Periodo.Bimestre, BimestreN(4).Id), fatos, Contexto(BimestreN(4).Fim));
+
+    private static Cenario Semestre(FatoContavel[] fatos) =>
+        new(new(Periodo.Semestre, SemestreN(2).Id), fatos, Contexto(SemestreN(2).Fim));
+
+    private static Cenario Ano(FatoContavel[] fatos) =>
+        new(new(Periodo.Ano, Ano2026.Id), fatos, Contexto(Ano2026.Fim));
+
+    private static Cenario Curso(FatoContavel[] fatos) =>
+        new(new(Periodo.Curso, _aluno), fatos, Contexto(Ano2026.Fim));
+
+    // Três matérias no período, a medalha em cada uma.
+    private static Cenario BimestrePorMateria(string item)
+    {
+        Guid[] materias = [Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7()];
+        return new(
+            new(Periodo.Bimestre, BimestreN(4).Id),
+            [.. materias.Select(materia => Medalha(4, item, materia))],
+            Contexto(BimestreN(4).Fim, materias));
+    }
+
+    private static Cenario SemestrePorMateria(string item)
+    {
+        Guid[] materias = [Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7()];
+        return new(
+            new(Periodo.Semestre, SemestreN(2).Id),
+            [.. materias.Select(materia => Medalha(4, item, materia))],
+            Contexto(SemestreN(2).Fim, materias));
+    }
+
+    // Duas matérias em cada semestre: a presença integral do semestre (M11) em todas as
+    // quatro.
+    private static Cenario AnoPorMateria()
+    {
+        Guid[] doPrimeiro = [Guid.CreateVersion7(), Guid.CreateVersion7()];
+        Guid[] doSegundo = [Guid.CreateVersion7(), Guid.CreateVersion7()];
+        return new(
+            new(Periodo.Ano, Ano2026.Id),
+            [.. doPrimeiro.Select(materia => Medalha(2, "M11", materia)), .. doSegundo.Select(materia => Medalha(4, "M11", materia))],
+            Contexto(Ano2026.Fim, [.. doPrimeiro, .. doSegundo]));
+    }
+}

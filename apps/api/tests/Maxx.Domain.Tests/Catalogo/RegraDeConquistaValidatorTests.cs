@@ -46,7 +46,12 @@ public class RegraDeConquistaValidatorTests
     [Fact]
     public void Fonte_ambos_aceita_medalha_e_premio_no_filtro()
     {
-        AssertSemErro(C02 with { Regra = C02.Regra with { Fonte = FonteDeContagem.Ambos, FiltroItens = ["M01", "P01"] } });
+        // Numa conquista de semestre: a de bimestre só conta medalha.
+        AssertSemErro(C02 with
+        {
+            Periodo = Periodo.Semestre,
+            Regra = C02.Regra with { Fonte = FonteDeContagem.Ambos, FiltroItens = ["M01", "P01"] },
+        });
     }
 
     [Fact]
@@ -55,6 +60,24 @@ public class RegraDeConquistaValidatorTests
         AssertErro(
             C02 with { Regra = C02.Regra with { Fonte = FonteDeContagem.Ambos, FiltroItens = ["M01", "C03"] } },
             "nunca conta outra conquista");
+    }
+
+    // período e fonte
+
+    [Theory]
+    [InlineData(FonteDeContagem.PremioParticipacao, "P01")]
+    [InlineData(FonteDeContagem.Ambos, "M01")]
+    public void Conquista_de_bimestre_que_conta_premio_de_participacao_e_recusada(FonteDeContagem fonte, string filtrado)
+    {
+        AssertErro(
+            C02 with { Regra = C02.Regra with { Fonte = fonte, FiltroItens = [filtrado] } },
+            "conquista de bimestre só conta medalha");
+    }
+
+    [Fact]
+    public void Conquista_de_semestre_conta_premio_de_participacao()
+    {
+        AssertSemErro(C06);
     }
 
     // agruparPor e forma

@@ -229,6 +229,13 @@ public static class CatalogoValidator
             return;
         }
 
+        // O prêmio de participação conta no semestre do evento e não tem bimestre
+        // (produto.md 4.9): numa instância de bimestre, ele nunca entraria na contagem.
+        if (conquista.Periodo == Periodo.Bimestre && fonte != FonteDeContagem.Medalha)
+        {
+            erros.Add(new(codigo, "prêmio de participação conta no semestre do evento: conquista de bimestre só conta medalha."));
+        }
+
         ValidarFiltro(codigo, fonte, regra.FiltroItens, itensPorCodigo, erros);
         ValidarAgrupamento(codigo, regra, fonte, erros);
         ValidarAlvo(conquista, erros);
