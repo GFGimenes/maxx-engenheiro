@@ -4,6 +4,7 @@ using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autorizacao;
 using Maxx.Application.Demonstracao;
 using Maxx.Application.Fila;
+using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
 using Maxx.Application.Premios;
@@ -12,6 +13,7 @@ using Maxx.Infrastructure.Autorizacao;
 using Maxx.Infrastructure.Demonstracao;
 using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Fila;
+using Maxx.Infrastructure.Fotos;
 using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Notificacoes;
 using Maxx.Infrastructure.Persistence;
@@ -53,6 +55,10 @@ public static class DependencyInjection
         services.AddScoped<IConsultaDoProfessor, ConsultaDoProfessor>();
         services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
         services.AddScoped<IConsultaDePremios, ConsultaDePremios>();
+
+        // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
+        // fora de desenvolvimento.
+        services.AddSingleton<IArmazenamentoDeFotos, ArmazenamentoS3>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();

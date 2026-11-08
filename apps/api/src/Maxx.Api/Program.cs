@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
 using Maxx.Api.Erros;
+using Maxx.Api.Fotos;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
@@ -33,6 +34,7 @@ if (args is ["worker", ..])
         worker.Configuration.GetConnectionString("Maxx")
             ?? throw new InvalidOperationException("ConnectionStrings:Maxx não configurada."));
     worker.AddEnvioDeEmail(exigirUrl: true);
+    worker.AddArmazenamentoDeFotos(exigir: true);
     worker.Services.AddWorker();
     await worker.Build().RunAsync();
     return 0;
@@ -78,6 +80,7 @@ builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 var servindo = !isMigrate && !isSeed && !isAnulacao && !isOpenApiGeneration;
 builder.AddAutenticacao(exigirChave: servindo);
+builder.AddArmazenamentoDeFotos(exigir: servindo);
 var demonstracao = builder.AddDemonstracao(servindo: servindo, gerandoOpenApi: isOpenApiGeneration);
 builder.Services.AddProxyConfiavel(builder.Configuration);
 builder.Services.AddLimitesDeTaxa();

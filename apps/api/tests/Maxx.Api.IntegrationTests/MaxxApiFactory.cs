@@ -22,12 +22,18 @@ public sealed class MaxxApiFactory(
     public const string UnreachableDatabase =
         "Host=127.0.0.1;Port=1;Database=maxx;Username=maxx;Password=maxx;Timeout=2";
 
-    // Fora de desenvolvimento a API não sobe sem chave de assinatura (gerada por execução)
-    // nem sem a URL pública do app.
+    // Fora de desenvolvimento a API não sobe sem chave de assinatura (gerada por execução),
+    // sem a URL pública do app nem sem o bucket das fotos. O bucket daqui não existe: o
+    // cliente do S3 nasce no primeiro uso, e os testes que só sobem a API nunca o usam.
     public static IReadOnlyDictionary<string, string> ChaveDeTeste { get; } = new Dictionary<string, string>
     {
         ["Jwt:Chave"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48)),
         ["App:UrlPublica"] = "https://maxx.teste",
+        ["Armazenamento:Bucket"] = "maxx-fotos",
+        ["Armazenamento:Endpoint"] = "https://armazenamento.invalid",
+        ["Armazenamento:UrlDeLeitura"] = "https://fotos.maxx.teste",
+        ["Armazenamento:ChaveDeAcesso"] = "teste",
+        ["Armazenamento:Segredo"] = "teste",
     };
 
     // Tudo o que a aplicação escreveu em log, de todos os níveis, já formatado.
