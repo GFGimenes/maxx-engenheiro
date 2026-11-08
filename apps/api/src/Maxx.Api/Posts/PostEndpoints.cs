@@ -32,7 +32,8 @@ internal static class PostEndpoints
         posts.MapDelete("/{postId:guid}", RemoverAsync)
             .WithName("RemoverPost")
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return v1;
     }
@@ -115,7 +116,9 @@ public sealed record PostResponse(
                 premio.Pontos,
                 premio.Raridade is { } raridade ? new RaridadeResponse(ProfessorEndpoints.Nome(raridade.Nivel), raridade.Percentual) : null,
                 premio.Materia,
-                premio.Bimestre)
+                premio.Bimestre,
+                premio.Estado is { } estado ? ProfessorEndpoints.Nome(estado) : null,
+                premio.Evento)
             : null,
         post.CriadoEm,
         post.Curtidas,
@@ -135,7 +138,8 @@ public sealed record AutorDoPostResponse(Guid Id, string NomeDeExibicao, string 
 public sealed record FotoDoPostResponse(string Feed, string Grade);
 
 // Tipo, tier e raridade em camelCase, como no catálogo ("medalha", "bronze", "raro").
-// Matéria e bimestre só para medalha.
+// Matéria e bimestre na medalha; matéria também na apresentação em sala. Estado e evento só
+// no prêmio de participação (passo 8): "reivindicado" é a marca de pendente.
 public sealed record PremioDoPostResponse(
     string Tipo,
     Guid Id,
@@ -145,4 +149,6 @@ public sealed record PremioDoPostResponse(
     int Pontos,
     RaridadeResponse? Raridade,
     string? Materia,
-    int? Bimestre);
+    int? Bimestre,
+    string? Estado,
+    string? Evento);

@@ -66,6 +66,7 @@ public static class DependencyInjection
         services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
         services.AddScoped<IConsultaDePremios, ConsultaDePremios>();
         services.AddScoped<IEventoRepository, EventoRepository>();
+        services.AddScoped<IPremioParticipacaoRepository, PremioParticipacaoRepository>();
 
         // O bucket das fotos (ADR 0002). As opções vêm da borda, que recusa subir sem elas
         // fora de desenvolvimento.

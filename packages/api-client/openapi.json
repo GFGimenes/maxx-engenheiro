@@ -439,6 +439,81 @@
         ]
       }
     },
+    "/api/v1/reivindicacoes": {
+      "post": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "ReivindicarPremioParticipacao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReivindicacaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -802,6 +877,16 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2564,6 +2649,29 @@
           }
         }
       },
+      "EventoDigitadoRequest": {
+        "required": [
+          "nome",
+          "inicio",
+          "fim"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fim": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
       "EventoResponse": {
         "required": [
           "id",
@@ -3162,7 +3270,9 @@
           "pontos",
           "raridade",
           "materia",
-          "bimestre"
+          "bimestre",
+          "estado",
+          "evento"
         ],
         "type": "object",
         "properties": {
@@ -3208,6 +3318,18 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "estado": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evento": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3456,6 +3578,60 @@
           },
           "sessao": {
             "$ref": "#/components/schemas/SessaoResponse"
+          }
+        }
+      },
+      "ReivindicacaoRequest": {
+        "required": [
+          "item",
+          "eventoId",
+          "eventoDigitado",
+          "materiaId",
+          "uploadId",
+          "legenda"
+        ],
+        "type": "object",
+        "properties": {
+          "item": {
+            "maxLength": 16,
+            "minLength": 0,
+            "type": "string"
+          },
+          "eventoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "eventoDigitado": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EventoDigitadoRequest"
+              }
+            ]
+          },
+          "materiaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "legenda": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

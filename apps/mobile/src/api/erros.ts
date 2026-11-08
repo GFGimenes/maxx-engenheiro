@@ -24,11 +24,11 @@ const MENSAGENS = {
   // Medalhas (CodigosDaMedalha.cs)
   "fora-do-escopo": "Essa turma não é sua neste semestre.",
   "aluno-fora-da-turma": "Esse aluno não está nesta turma.",
-  "item-nao-encontrado": "Essa medalha não está no catálogo.",
-  "ex-aluno": "Ex-aluno não recebe medalha.",
+  "item-nao-encontrado": "Esse prêmio não está no catálogo.",
+  "ex-aluno": "Ex-aluno não recebe prêmio.",
   "fora-do-periodo": "Não há bimestre em andamento para esta turma hoje.",
-  "item-fora-de-vigencia": "Essa medalha não está valendo agora.",
-  "item-de-outro-curso": "Essa medalha é de outro curso.",
+  "item-fora-de-vigencia": "Esse prêmio não vale nessa data.",
+  "item-de-outro-curso": "Esse prêmio é de outro curso.",
   "limite-atingido":
     "Esse aluno já recebeu essa medalha o máximo de vezes no período.",
   "medalha-nao-encontrada": "Essa medalha não existe mais.",
@@ -49,6 +49,21 @@ const MENSAGENS = {
   "premio-ja-postado": "Esse prêmio já tem um post.",
   "post-nao-encontrado": "Esse post não existe mais.",
   "remocao-nao-permitida": "Você não pode apagar este post.",
+  "foto-obrigatoria": "Escolha uma foto: ela é a comprovação do prêmio.",
+  "comprovacao-em-andamento":
+    "Esse post comprova um prêmio. Ele só sai quando o prêmio ficar definitivo.",
+  "evento-obrigatorio": "Escolha um evento ou digite o nome dele.",
+  "evento-ambiguo": "Escolha um evento da lista ou digite outro, não os dois.",
+  "evento-invalido": "Confira o nome e as datas do evento.",
+  "evento-nao-encontrado": "Esse evento não está disponível para você.",
+  "evento-nao-aceita-o-item": "Esse evento não vale para esse prêmio.",
+  "evento-nao-comecou": "Esse evento ainda não começou.",
+  "evento-de-semestre-encerrado":
+    "Esse evento é de um semestre que já terminou.",
+  "materia-obrigatoria": "Escolha a matéria da apresentação.",
+  "materia-nao-se-aplica": "Esse prêmio não pede matéria.",
+  "materia-nao-encontrada": "Você não cursava essa matéria na data do evento.",
+  "premio-ja-reivindicado": "Você já reivindicou esse prêmio para esse evento.",
   // Curtida, comentário e seguir (CodigosSociais.cs)
   "interacao-nao-permitida": "A instituição não curte nem comenta.",
   "comentario-vazio": "Escreva alguma coisa antes de enviar.",

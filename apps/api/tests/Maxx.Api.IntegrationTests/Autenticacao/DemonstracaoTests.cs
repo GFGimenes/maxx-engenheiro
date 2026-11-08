@@ -8,6 +8,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Demonstracao;
+using Maxx.Api.IntegrationTests.PremiosParticipacao;
 using Maxx.Application;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
@@ -18,6 +19,7 @@ using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -368,6 +370,22 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             await SalvarAsync(factory, Post.Publicar(aluno, "Nota 10!", null, medalha, DateTimeOffset.UtcNow).Post!);
         }
 
+        // Uma reivindicação de prêmio de participação de cada um, com evento digitado: o
+        // evento segura quem digitou, e o prêmio, a comprovação e o post seguram o aluno.
+        await SalvarAsync(factory, CatalogoRowMapper.ParaRow(CatalogoDeParticipacao.P01));
+        foreach (var nome in new[] { "Ana Paula", "Carla Dias" })
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var aluno = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == nome, Ct);
+            var agora = DateTimeOffset.UtcNow;
+            var evento = Evento.TextoLivre("Palestra de abertura", Hoje.AddDays(-1), Hoje.AddDays(-1), aluno);
+            var premio = PremioParticipacao.Reivindicar(CatalogoDeParticipacao.P01, 1, aluno, null, evento, null, null, agora).Premio!;
+            var upload = UploadPendente.Pedir(aluno, FinalidadeDoUpload.Post, "image/jpeg", 1000, 500, agora).Upload!;
+            var post = Post.Reivindicar(aluno, null, upload, premio, agora).Post!;
+            await SalvarAsync(factory, evento, premio, upload, post, Comprovacao.De(premio, post.Id));
+        }
+
         // Entre os dois: a Ana curte e comenta o post da Carla, a Carla curte o da Ana e
         // comenta o próprio, e cada uma segue a outra. Do lado da Carla fica só o comentário
         // dela no post dela; o resto toca a Ana e sai com ela.
@@ -376,7 +394,7 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
             var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
             var ana = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == "Ana Paula", Ct);
             var carla = await banco.Set<Usuario>().SingleAsync(usuario => usuario.NomeDeExibicao == "Carla Dias", Ct);
-            var doPost = await banco.Set<Post>().ToDictionaryAsync(post => post.AutorId, Ct);
+            var doPost = await banco.Set<Post>().Where(post => post.MedalhaId != null).ToDictionaryAsync(post => post.AutorId, Ct);
             var agora = DateTimeOffset.UtcNow;
             await SalvarAsync(
                 factory,
@@ -412,8 +430,13 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(restante.Id, (await db.Set<AceiteDeTermo>().SingleAsync(Ct)).UsuarioId);
         Assert.Equal(restante.Id, (await db.Set<Medalha>().SingleAsync(Ct)).AlunoId);
         Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
-        Assert.Equal(restante.Id, (await db.Set<UploadPendente>().SingleAsync(Ct)).UsuarioId);
-        Assert.Equal(restante.Id, (await db.Set<Post>().SingleAsync(Ct)).AutorId);
+        Assert.All(await db.Set<UploadPendente>().ToListAsync(Ct), upload => Assert.Equal(restante.Id, upload.UsuarioId));
+        Assert.Equal(2, await db.Set<UploadPendente>().CountAsync(Ct));
+        Assert.All(await db.Set<Post>().ToListAsync(Ct), post => Assert.Equal(restante.Id, post.AutorId));
+        Assert.Equal(2, await db.Set<Post>().CountAsync(Ct));
+        Assert.Equal(restante.Id, (await db.Set<PremioParticipacao>().SingleAsync(Ct)).AlunoId);
+        Assert.Equal(restante.Id, (await db.Set<Comprovacao>().SingleAsync(Ct)).AlunoId);
+        Assert.Equal(restante.Id, (await db.Set<Evento>().SingleAsync(Ct)).CriadoPorId);
         Assert.Empty(await db.Set<Curtida>().ToListAsync(Ct));
         Assert.Empty(await db.Set<Seguimento>().ToListAsync(Ct));
         Assert.Equal("Valeu!", (await db.Set<Comentario>().SingleAsync(Ct)).Texto);

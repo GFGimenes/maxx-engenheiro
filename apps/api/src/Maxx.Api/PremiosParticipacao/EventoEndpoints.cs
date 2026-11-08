@@ -1,6 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Maxx.Api.Autenticacao;
+using Maxx.Api.Posts;
+using Maxx.Application.Fotos;
+using Maxx.Application.Posts;
 using Maxx.Application.PremiosParticipacao;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -20,7 +23,42 @@ internal static class EventoEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        v1.MapPost("/reivindicacoes", ReivindicarAsync)
+            .WithName("ReivindicarPremioParticipacao")
+            .WithTags("Eventos")
+            .RequireAuthorization(Politicas.Aluno)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return v1;
+    }
+
+    // O post de reivindicação com o prêmio pendente (fluxos/02-post-com-comprovacao.md). A
+    // resposta é o post, como o feed o mostra, com a marca de pendente.
+    private static async Task<Created<PostResponse>> ReivindicarAsync(
+        ReivindicacaoRequest pedido,
+        ClaimsPrincipal principal,
+        ReivindicarHandler handler,
+        IConsultaDePosts consulta,
+        IArmazenamentoDeFotos armazenamento,
+        CancellationToken cancellationToken)
+    {
+        var alunoId = PostEndpoints.UsuarioId(principal);
+        var reivindicacao = await handler.ReivindicarAsync(
+            alunoId,
+            new PedidoDeReivindicacao(
+                pedido.Item,
+                pedido.EventoId,
+                pedido.EventoDigitado is { } digitado ? new EventoDigitado(digitado.Nome, digitado.Inicio, digitado.Fim) : null,
+                pedido.MateriaId,
+                pedido.UploadId,
+                pedido.Legenda),
+            cancellationToken);
+        var lido = await consulta.PostAsync(reivindicacao.Post.Id, alunoId, cancellationToken)
+            ?? throw new InvalidOperationException($"O post {reivindicacao.Post.Id} acabou de ser gravado e não foi lido.");
+        return TypedResults.Created($"/api/v1/posts/{lido.Id}", PostResponse.De(lido, armazenamento));
     }
 
     // item: o código do prêmio de participação; com ele, só os eventos que o aceitam.
@@ -38,6 +76,20 @@ internal static class EventoEndpoints
             .Select(evento => new EventoResponse(evento.Id, evento.Nome, evento.Inicio, evento.Fim, evento.ItensAceitos))]);
     }
 }
+
+// O evento é o id de um semeado (GET /v1/eventos) ou o digitado, nunca os dois; a matéria,
+// só na apresentação em sala. A foto é obrigatória: é a comprovação. Os limites de tamanho
+// são do domínio; aqui, só tetos brutos para o corpo.
+public sealed record ReivindicacaoRequest(
+    [property: Required, StringLength(16)] string Item,
+    Guid? EventoId,
+    EventoDigitadoRequest? EventoDigitado,
+    Guid? MateriaId,
+    Guid UploadId,
+    [property: StringLength(4000)] string? Legenda);
+
+// Datas em America/Sao_Paulo, inclusivas.
+public sealed record EventoDigitadoRequest([property: Required, StringLength(1000)] string Nome, DateOnly Inicio, DateOnly Fim);
 
 // Datas em America/Sao_Paulo, inclusivas. Itens: os códigos dos prêmios que o evento aceita.
 public sealed record EventoResponse(Guid Id, string Nome, DateOnly Inicio, DateOnly Fim, IReadOnlyList<string> Itens);

@@ -49,6 +49,7 @@ describe("mensagens de erro", () => {
         "limite-atingido",
         "tamanho-de-foto-invalido",
         "premio-ja-postado",
+        "premio-ja-reivindicado",
         "seguir-nao-permitido",
         "cursor-invalido",
         "busca-sem-criterio",

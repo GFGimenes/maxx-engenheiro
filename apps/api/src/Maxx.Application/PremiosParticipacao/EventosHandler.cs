@@ -25,7 +25,7 @@ public sealed class EventosHandler(IEventoRepository eventos, TimeProvider relog
 
         var hoje = FusoHorario.DataLocal(relogio.GetUtcNow());
         var ultimoEncerrado = await eventos.UltimoSemestreEncerradoAsync(hoje, cancellationToken);
-        var cursoId = await eventos.CursoDoAlunoAsync(alunoId, cancellationToken);
+        var cursoId = (await eventos.CursoDoAlunoAsync(alunoId, cancellationToken))?.Id;
 
         return [.. (await eventos.SemeadosAsync(cancellationToken))
             .Where(evento => evento.AbertoAoCurso(cursoId))
@@ -43,10 +43,12 @@ public interface IEventoRepository
 
     Task<ItemPremioParticipacao?> ItemAsync(string codigo, CancellationToken cancellationToken);
 
+    Task<Evento?> BuscarAsync(Guid id, CancellationToken cancellationToken);
+
     // O semestre letivo de fim mais recente antes da data, com os bimestres; nulo se nenhum
     // terminou ainda.
     Task<SemestreLetivo?> UltimoSemestreEncerradoAsync(DateOnly data, CancellationToken cancellationToken);
 
-    // O curso atual do aluno, pelo cadastro elegível.
-    Task<Guid?> CursoDoAlunoAsync(Guid alunoId, CancellationToken cancellationToken);
+    // O curso atual do aluno, pelo cadastro elegível; nulo para quem não é aluno.
+    Task<Curso?> CursoDoAlunoAsync(Guid alunoId, CancellationToken cancellationToken);
 }

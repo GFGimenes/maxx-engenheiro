@@ -100,6 +100,7 @@ builder.Services.AddScoped<Maxx.Application.Social.SeguimentoHandler>();
 builder.Services.AddScoped<Maxx.Application.Feed.FeedHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.EditarPerfilHandler>();
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.EventosHandler>();
+builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ReivindicarHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 
 var app = builder.Build();

@@ -3,6 +3,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Premios;
+using Maxx.Application.PremiosParticipacao;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Fotos;
 using Maxx.Domain.Premios;
@@ -56,7 +57,8 @@ public sealed record PostLido(
 public sealed record AutorDoPost(Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, string? ChaveDaFoto);
 
 // Tier e pontos do momento da concessão (ADR 0007); raridade, a atual. Matéria e bimestre
-// só para medalha.
+// na medalha; matéria também na apresentação em sala. Estado e evento só no prêmio de
+// participação (passo 8): reivindicado é a marca de pendente.
 public sealed record PremioDoPost(
     TipoDeItem Tipo,
     Guid Id,
@@ -66,7 +68,9 @@ public sealed record PremioDoPost(
     int Pontos,
     RaridadeAtual? Raridade,
     string? Materia,
-    int? Bimestre);
+    int? Bimestre,
+    EstadoDoPremioParticipacao? Estado = null,
+    string? Evento = null);
 
 // Publicação de post (produto.md 6.1). As regras são do domínio; aqui, buscar o que o
 // pedido cita, conferir no bucket que a foto chegou e gravar. A corrida de dois posts com o
@@ -142,7 +146,7 @@ public sealed class PublicarPostHandler(
     private static RecusaException PremioJaPostado(Guid medalhaId) =>
         new(TipoDeRecusa.Conflito, CodigosDoPost.PremioJaPostado, $"Medalha {medalhaId} já tem post.");
 
-    private static RecusaException Recusa(RecusaDaPublicacao recusa, Guid autorId) => recusa switch
+    internal static RecusaException Recusa(RecusaDaPublicacao recusa, Guid autorId) => recusa switch
     {
         RecusaDaPublicacao.AutorNaoPublica => new(TipoDeRecusa.Proibido, CodigosDoPost.PostNaoPermitido, $"{autorId} não publica."),
         RecusaDaPublicacao.LegendaLonga => new(TipoDeRecusa.Invalido, CodigosDoPost.LegendaLonga, "Legenda acima do limite."),
@@ -153,6 +157,7 @@ public sealed class PublicarPostHandler(
         RecusaDaPublicacao.PremioNaoEncontrado => new(
             TipoDeRecusa.NaoEncontrado, CodigosDoPost.PremioNaoEncontrado, $"Prêmio inexistente ou alheio para {autorId}."),
         RecusaDaPublicacao.PremioAnulado => new(TipoDeRecusa.Conflito, CodigosDoPost.PremioAnulado, "Prêmio anulado."),
+        RecusaDaPublicacao.FotoObrigatoria => new(TipoDeRecusa.Invalido, CodigosDoPost.FotoObrigatoria, "Reivindicação sem foto."),
         _ => throw new ArgumentOutOfRangeException(nameof(recusa), recusa, null),
     };
 }
@@ -164,6 +169,7 @@ public sealed class PublicarPostHandler(
 public sealed class RemoverPostHandler(
     IUsuarioRepository usuarios,
     IPostRepository posts,
+    IPremioParticipacaoRepository premios,
     IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
@@ -178,7 +184,20 @@ public sealed class RemoverPostHandler(
             throw new RecusaException(TipoDeRecusa.NaoEncontrado, CodigosDoPost.PostNaoEncontrado, $"Post {postId} não existe.");
         }
 
-        switch (post.ModoDeRemocaoPor(quem))
+        var modo = post.ModoDeRemocaoPor(quem);
+
+        // O post de reivindicação é a comprovação: enquanto o prêmio ainda pode ser decidido,
+        // ele não sai, nem pelo autor nem pela instituição (decisão do passo 8). A foto sairia
+        // do bucket junto, e a aprovação e a contestação dependem dela.
+        if (modo != ModoDeRemocao.NaoPermitida
+            && post.PremioParticipacaoId is { } premioId
+            && await premios.BuscarAsync(premioId, cancellationToken) is { PrendeOPost: true })
+        {
+            throw new RecusaException(
+                TipoDeRecusa.Conflito, CodigosDoPost.ComprovacaoEmAndamento, $"O post {postId} é a comprovação do prêmio {premioId}.");
+        }
+
+        switch (modo)
         {
             case ModoDeRemocao.Apagar:
                 posts.Apagar(post);

@@ -32,10 +32,56 @@ internal sealed class EventoRepository(MaxxDbContext db) : IEventoRepository
             .Where(semestre => semestre.Fim < data)
             .MaxBy(semestre => semestre.Fim);
 
-    public Task<Guid?> CursoDoAlunoAsync(Guid alunoId, CancellationToken cancellationToken) =>
+    public Task<Curso?> CursoDoAlunoAsync(Guid alunoId, CancellationToken cancellationToken) =>
         (from usuario in db.Set<Usuario>()
          join cadastro in db.Set<CadastroElegivel>() on usuario.CadastroElegivelId equals cadastro.Id
+         join curso in db.Set<Curso>() on cadastro.CursoId equals curso.Id
          where usuario.Id == alunoId
-         select cadastro.CursoId)
+         select curso)
+        .AsNoTracking()
         .SingleOrDefaultAsync(cancellationToken);
+
+    public Task<Evento?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<Evento>().SingleOrDefaultAsync(evento => evento.Id == id, cancellationToken);
+}
+
+internal sealed class PremioParticipacaoRepository(MaxxDbContext db) : IPremioParticipacaoRepository
+{
+    private static readonly string _tipoPremioParticipacao = NomeJson.De(TipoDeItem.PremioParticipacao);
+
+    public void Adicionar(Evento evento) => db.Add(evento);
+
+    public void Adicionar(PremioParticipacao premio) => db.Add(premio);
+
+    public void Adicionar(Comprovacao comprovacao) => db.Add(comprovacao);
+
+    public Task<PremioParticipacao?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<PremioParticipacao>().SingleOrDefaultAsync(premio => premio.Id == id, cancellationToken);
+
+    public async Task<ItemDePremioParticipacao?> ItemAsync(string codigo, CancellationToken cancellationToken)
+    {
+        var row = await db.Set<ItemCatalogoRow>().AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Codigo == codigo && item.Tipo == _tipoPremioParticipacao, cancellationToken);
+        return row is null ? null : new ItemDePremioParticipacao(CatalogoRowMapper.ParaPremioParticipacao(row), row.Versao);
+    }
+
+    public Task<bool> ChaveOcupadaAsync(string chave, CancellationToken cancellationToken) =>
+        db.Set<PremioParticipacao>().AnyAsync(
+            premio => premio.ChaveDeDeduplicacao == chave && premio.Estado != EstadoDoPremioParticipacao.Reprovado, cancellationToken);
+
+    public async Task<Materia?> MateriaCursadaAsync(Guid alunoId, Guid materiaId, DateOnly data, CancellationToken cancellationToken)
+    {
+        // O semestre que contém a data, pelos bimestres; e uma turma dele, da matéria, com
+        // matrícula do cadastro do aluno.
+        var semestres = SemestreVigente.Ids(db, data);
+        return await (
+                from usuario in db.Set<Usuario>()
+                join matricula in db.Set<Matricula>() on usuario.CadastroElegivelId equals matricula.AlunoId
+                join turma in db.Set<Turma>() on matricula.TurmaId equals turma.Id
+                join materia in db.Set<Materia>() on turma.MateriaId equals materia.Id
+                where usuario.Id == alunoId && materia.Id == materiaId && semestres.Contains(turma.SemestreLetivoId)
+                select materia)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

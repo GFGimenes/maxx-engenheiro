@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reivindicacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReivindicarPremioParticipacao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/professor/turmas": {
         parameters: {
             query?: never;
@@ -702,6 +718,13 @@ export interface components {
             nomeDeExibicao: string;
             foto: null | string;
         };
+        EventoDigitadoRequest: {
+            nome: string;
+            /** Format: date */
+            inicio: string;
+            /** Format: date */
+            fim: string;
+        };
         EventoResponse: {
             /** Format: uuid */
             id: string;
@@ -862,6 +885,8 @@ export interface components {
             materia: null | string;
             /** Format: int32 */
             bimestre: null | number;
+            estado: null | string;
+            evento: null | string;
         };
         PremioObtidoResponse: {
             /** Format: uuid */
@@ -923,6 +948,17 @@ export interface components {
         RegistroDeDemonstracaoResponse: {
             chaveDoDispositivo: string;
             sessao: components["schemas"]["SessaoResponse"];
+        };
+        ReivindicacaoRequest: {
+            item: string;
+            /** Format: uuid */
+            eventoId: null | string;
+            eventoDigitado: null | components["schemas"]["EventoDigitadoRequest"];
+            /** Format: uuid */
+            materiaId: null | string;
+            /** Format: uuid */
+            uploadId: string;
+            legenda: null | string;
         };
         SessaoResponse: {
             accessToken: string;
@@ -1303,6 +1339,66 @@ export interface operations {
             };
         };
     };
+    ReivindicarPremioParticipacao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReivindicacaoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     GetTurmasDoProfessor: {
         parameters: {
             query?: never;
@@ -1574,6 +1670,15 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
