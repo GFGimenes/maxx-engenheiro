@@ -52,7 +52,13 @@ internal static class PremiosEndpoints
                     ? new RaridadeResponse(ProfessorEndpoints.Nome(raridade.Nivel), raridade.Percentual)
                     : null,
                 [.. item.Obtidos.Select(obtido => new PremioObtidoResponse(
-                    obtido.Id, ProfessorEndpoints.Nome(obtido.Tier), obtido.Pontos, obtido.Materia, obtido.Bimestre, obtido.ObtidoEm))]))]);
+                    obtido.Id,
+                    ProfessorEndpoints.Nome(obtido.Tier),
+                    obtido.Pontos,
+                    obtido.Materia,
+                    obtido.Bimestre,
+                    obtido.ObtidoEm,
+                    obtido.PostId))]))]);
 }
 
 public sealed record PremiosDoAlunoResponse(int Pontos, IReadOnlyList<FamiliaResponse> Familias, IReadOnlyList<ItemDoAlunoResponse> Itens);
@@ -76,4 +82,5 @@ public sealed record ItemDoAlunoResponse(
 // Percentual dos alunos que têm o item, com uma casa: "x% dos alunos".
 public sealed record RaridadeResponse(string Nivel, double Percentual);
 
-public sealed record PremioObtidoResponse(Guid Id, string Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm);
+// PostId entrou no passo 7: o post que o prêmio rendeu, para o app não oferecer de novo.
+public sealed record PremioObtidoResponse(Guid Id, string Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm, Guid? PostId);

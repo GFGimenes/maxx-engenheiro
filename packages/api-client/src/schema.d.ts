@@ -804,6 +804,8 @@ export interface components {
             bimestre: null | number;
             /** Format: date-time */
             obtidoEm: string;
+            /** Format: uuid */
+            postId: null | string;
         };
         PremiosDoAlunoResponse: {
             /** Format: int32 */

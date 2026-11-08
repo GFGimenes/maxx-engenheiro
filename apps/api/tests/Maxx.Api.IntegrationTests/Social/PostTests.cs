@@ -206,7 +206,11 @@ public sealed class PostTests(PostgresFixture postgres, ArmazenamentoFixture arm
         var post = await PublicadoAsync(ana, "Nota 10!", (await FotoEnviadaAsync(ana)).Id, medalha);
         var chave = Assert.Single(await mundo.LinhasAsync<Post>()).ChaveDaFotoDoFeed!;
 
+        // O prêmio aponta para o post que rendeu, e deixa de apontar quando ele sai.
+        Assert.Equal(post.Id, await PostDoPremioAsync(ana, medalha));
+
         Assert.Equal(HttpStatusCode.NoContent, (await RemoverAsync(ana, post.Id)).StatusCode);
+        Assert.Null(await PostDoPremioAsync(ana, medalha));
 
         Assert.Empty(await mundo.LinhasAsync<Post>());
         await AssertRecusaAsync(await ana.GetAsync(new Uri($"/api/v1/posts/{post.Id}", UriKind.Relative), Ct), HttpStatusCode.NotFound, "post-nao-encontrado");
@@ -285,6 +289,10 @@ public sealed class PostTests(PostgresFixture postgres, ArmazenamentoFixture arm
         Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
         return (await resposta.Content.ReadFromJsonAsync<PostResponse>(Ct))!;
     }
+
+    private static async Task<Guid?> PostDoPremioAsync(HttpClient client, Guid medalha) =>
+        (await client.GetFromJsonAsync<Premios.PremiosDoAlunoResponse>("/api/v1/eu/premios", Ct))!
+            .Itens.SelectMany(item => item.Obtidos).Single(obtido => obtido.Id == medalha).PostId;
 
     private static Task<HttpResponseMessage> RemoverAsync(HttpClient client, Guid post) =>
         client.DeleteAsync(new Uri($"/api/v1/posts/{post}", UriKind.Relative), Ct);

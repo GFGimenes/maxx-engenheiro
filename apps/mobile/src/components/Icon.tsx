@@ -123,6 +123,18 @@ const ICONES = {
     { d: "M18 6 6 18", modo: "aberto" },
     { d: "m6 6 12 12", modo: "aberto" },
   ],
+  // image do Lucide: a moldura vira massa no preenchido, sol e montanha são desenho interno.
+  imagem: [
+    { x: 3, y: 3, width: 18, height: 18, rx: 2 },
+    { cx: 9, cy: 9, r: 2, modo: "detalhe" },
+    { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", modo: "detalhe" },
+  ],
+  // square-plus do Lucide: o "+" do cabeçalho do feed, que abre o novo post.
+  novo: [
+    { x: 3, y: 3, width: 18, height: 18, rx: 2 },
+    { d: "M8 12h8", modo: "detalhe" },
+    { d: "M12 8v8", modo: "detalhe" },
+  ],
   inbox: [
     {
       d: "M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",

@@ -59,6 +59,7 @@ export function TextField({
         testID="campo-caixa"
         style={[
           styles.caixa,
+          input.multiline && styles.caixaDeVariasLinhas,
           {
             borderWidth: borda,
             borderColor: corDaBorda,
@@ -89,6 +90,7 @@ export function TextField({
           }}
           style={[
             styles.entrada,
+            input.multiline && styles.entradaDeVariasLinhas,
             noOutline,
             { color: disabled ? colors.ink3 : colors.ink },
           ]}
@@ -172,6 +174,18 @@ const styles = StyleSheet.create({
     borderRadius: raios.campos,
     flexDirection: "row",
     alignItems: "center",
+  },
+  // Legenda e comentário: cresce para baixo, com o texto começando no topo.
+  caixaDeVariasLinhas: {
+    height: undefined,
+    minHeight: 96,
+    alignItems: "stretch",
+  },
+  entradaDeVariasLinhas: {
+    height: undefined,
+    minHeight: 96,
+    paddingVertical: 12,
+    textAlignVertical: "top",
   },
   // 16 fora da escala: abaixo disso, o Safari do iPhone dá zoom na tela ao focar o campo.
   entrada: {

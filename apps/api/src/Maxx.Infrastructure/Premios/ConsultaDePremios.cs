@@ -3,6 +3,7 @@ using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Domain.Social;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
@@ -32,11 +33,21 @@ internal sealed class ConsultaDePremios(MaxxDbContext db) : IConsultaDePremios
                 join bimestre in db.Set<Bimestre>() on medalha.BimestreId equals bimestre.Id
                 where medalha.AlunoId == alunoId && medalha.AnuladaEm == null
                 orderby medalha.ConcedidaEm descending
-                select new { medalha.Id, medalha.ItemCodigo, medalha.Tier, medalha.Pontos, Materia = materia.Nome, bimestre.Numero, medalha.ConcedidaEm })
+                select new
+                {
+                    medalha.Id,
+                    medalha.ItemCodigo,
+                    medalha.Tier,
+                    medalha.Pontos,
+                    Materia = materia.Nome,
+                    bimestre.Numero,
+                    medalha.ConcedidaEm,
+                    PostId = db.Set<Post>().Where(post => post.MedalhaId == medalha.Id && post.RemovidoEm == null).Select(post => (Guid?)post.Id).FirstOrDefault(),
+                })
             .ToListAsync(cancellationToken);
         var obtidos = medalhas.ToLookup(
             medalha => medalha.ItemCodigo,
-            medalha => new PremioObtido(medalha.Id, medalha.Tier, medalha.Pontos, medalha.Materia, medalha.Numero, medalha.ConcedidaEm));
+            medalha => new PremioObtido(medalha.Id, medalha.Tier, medalha.Pontos, medalha.Materia, medalha.Numero, medalha.ConcedidaEm, medalha.PostId));
 
         var raridades = await db.Set<RaridadeDoItemRow>().AsNoTracking()
             .ToDictionaryAsync(linha => linha.ItemCodigo, cancellationToken);

@@ -12,7 +12,8 @@ import { ThemePreferenceControl } from "../theme/ThemePreferenceControl";
 import { useTheme } from "../theme/ThemeProvider";
 
 // O início até o feed chegar, no passo 7: quem entrou, o tema e a saída. Para o professor,
-// a entrada das turmas e da concessão de medalha no passo 6.
+// a entrada das turmas e da concessão de medalha no passo 6; para o aluno, o novo post, até
+// o "+" do cabeçalho do feed.
 export function InicioProvisorio() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -43,6 +44,9 @@ export function InicioProvisorio() {
               Em breve, o seu feed aparece aqui.
             </Text>
           </View>
+        )}
+        {eu.isSuccess && eu.data.papeis.includes("aluno") && (
+          <Button label="Novo post" onPress={() => router.push("/novo-post")} />
         )}
         {eu.isSuccess && eu.data.papeis.includes("professor") && (
           <Button
