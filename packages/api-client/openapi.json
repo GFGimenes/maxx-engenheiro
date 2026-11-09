@@ -3300,6 +3300,121 @@
         ]
       }
     },
+    "/api/v1/instituicao/demonstracao/lotes": {
+      "get": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "GetLotesDaDemonstracao",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LoteDaDemonstracaoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/instituicao/demonstracao/lotes/{lote}/purga": {
+      "post": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "PurgarLoteDaDemonstracao",
+        "parameters": [
+          {
+            "name": "lote",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurgaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -5366,6 +5481,36 @@
           }
         }
       },
+      "LoteDaDemonstracaoResponse": {
+        "required": [
+          "lote",
+          "alunos",
+          "primeiroEm",
+          "ultimoEm",
+          "vigente"
+        ],
+        "type": "object",
+        "properties": {
+          "lote": {
+            "type": "string"
+          },
+          "alunos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "primeiroEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ultimoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vigente": {
+            "type": "boolean"
+          }
+        }
+      },
       "MateriaResponse": {
         "required": [
           "id",
@@ -6319,6 +6464,43 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "PurgaRequest": {
+        "required": [
+          "confirmacao"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmacao": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PurgaResponse": {
+        "required": [
+          "lote",
+          "alunos",
+          "fotos"
+        ],
+        "type": "object",
+        "properties": {
+          "lote": {
+            "type": "string"
+          },
+          "alunos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fotos": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

@@ -81,7 +81,37 @@ internal static class InstituicaoEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // A purga da demonstração por lote (D14 do passo 7). Mapeada sempre, com a flag da
+        // demonstração ligada ou não: a purga é depois da avaliação, com a flag já desligada.
+        var lotes = v1.MapGroup("/instituicao/demonstracao/lotes").WithTags("Instituicao").RequireAuthorization(Politicas.Instituicao);
+
+        lotes.MapGet("/", LotesAsync)
+            .WithName("GetLotesDaDemonstracao")
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        lotes.MapPost("/{lote}/purga", PurgarAsync)
+            .WithName("PurgarLoteDaDemonstracao")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return v1;
+    }
+
+    private static async Task<Ok<IReadOnlyList<LoteDaDemonstracaoResponse>>> LotesAsync(
+        ClaimsPrincipal principal, PurgaDaDemonstracaoHandler handler, CancellationToken cancellationToken) =>
+        TypedResults.Ok<IReadOnlyList<LoteDaDemonstracaoResponse>>([.. (await handler.LotesAsync(PostEndpoints.UsuarioId(principal), cancellationToken))
+            .Select(lote => new LoteDaDemonstracaoResponse(lote.Lote, lote.Alunos, lote.PrimeiroEm, lote.UltimoEm, lote.Vigente))]);
+
+    private static async Task<Ok<PurgaResponse>> PurgarAsync(
+        [StringLength(64)] string lote,
+        PurgaRequest pedido,
+        ClaimsPrincipal principal,
+        PurgaDaDemonstracaoHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var resultado = await handler.PurgarAsync(PostEndpoints.UsuarioId(principal), lote, pedido.Confirmacao, cancellationToken);
+        return TypedResults.Ok(new PurgaResponse(resultado.Lote, resultado.Alunos, resultado.Fotos));
     }
 
     private static async Task<Created<PremioConcedidoResponse>> ConcederAsync(
@@ -186,6 +216,15 @@ internal static class InstituicaoEndpoints
 public sealed record EmailRequest([property: StringLength(320)] string? Email);
 
 public sealed record TrocaDeCursoRequest(Guid CursoId, int Semestre);
+
+// O nome do lote digitado de novo, igual: a purga não volta atrás.
+public sealed record PurgaRequest([property: StringLength(64)] string? Confirmacao);
+
+// Vigente: o lote que a configuração grava agora em cada aluno de demonstração novo.
+public sealed record LoteDaDemonstracaoResponse(string Lote, int Alunos, DateTimeOffset PrimeiroEm, DateTimeOffset UltimoEm, bool Vigente);
+
+// Fotos: os objetos do bucket (cada derivada conta uma) que foram para a fila de remoção.
+public sealed record PurgaResponse(string Lote, int Alunos, int Fotos);
 
 // O evento é o id de um semeado ou o digitado, nunca os dois; a matéria, só na apresentação
 // em sala. Sem foto: a concessão direta não tem comprovação.

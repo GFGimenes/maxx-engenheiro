@@ -105,6 +105,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaDoMural, ConsultaDoMural>();
         services.AddScoped<IAlunosDaInstituicaoRepository, AlunosDaInstituicaoRepository>();
         services.AddScoped<IConsultaDaInstituicao, ConsultaDaInstituicao>();
+        services.AddScoped<IPurgaDaDemonstracao, PurgaDaDemonstracaoRepository>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();

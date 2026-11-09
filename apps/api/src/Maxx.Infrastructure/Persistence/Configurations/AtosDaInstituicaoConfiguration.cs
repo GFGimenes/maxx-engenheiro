@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Maxx.Infrastructure.Persistence.Configurations;
 
-// Os registros dos atos da instituição sobre a linha do aluno (passo 12, P5). Saem em
-// cascata com a linha, que só a purga da demonstração apaga; quem fez segura a conta.
+// Os registros dos atos da instituição (passo 12, P5). Os da linha do aluno saem em cascata
+// com a linha, que só a purga da demonstração apaga; quem fez segura a conta. O da purga
+// fica: os dados do lote saem, o registro de que saíram, não.
 internal sealed class CorrecaoDeEmailConfiguration : IEntityTypeConfiguration<CorrecaoDeEmail>
 {
     public void Configure(EntityTypeBuilder<CorrecaoDeEmail> builder)
@@ -51,6 +52,22 @@ internal sealed class TrocaDeCursoConfiguration : IEntityTypeConfiguration<Troca
         builder.HasOne<Usuario>()
             .WithMany()
             .HasForeignKey(troca => troca.TrocadoPorId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class PurgaDaDemonstracaoConfiguration : IEntityTypeConfiguration<PurgaDaDemonstracao>
+{
+    public void Configure(EntityTypeBuilder<PurgaDaDemonstracao> builder)
+    {
+        builder.ToTable("purga_da_demonstracao", table =>
+            table.HasCheckConstraint("ck_purga_da_demonstracao_contagens", "alunos >= 1 AND fotos >= 0"));
+        builder.HasKey(purga => purga.Id);
+        builder.Property(purga => purga.Id).ValueGeneratedNever();
+        builder.Property(purga => purga.Lote).HasMaxLength(64).IsRequired();
+        builder.HasOne<Usuario>()
+            .WithMany()
+            .HasForeignKey(purga => purga.PurgadoPorId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

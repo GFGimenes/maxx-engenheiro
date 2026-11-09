@@ -54,13 +54,18 @@ internal sealed class MundoSocial : IAsyncDisposable
 
     public Guid Id(string email) => _ids[email];
 
+    // configuracao: chaves a mais, por cima das do bucket (o lote da demonstração, por exemplo).
     public static async Task<MundoSocial> CriarAsync(
-        PostgresFixture postgres, ArmazenamentoFixture armazenamento, Action<IServiceCollection>? servicos = null)
+        PostgresFixture postgres,
+        ArmazenamentoFixture armazenamento,
+        Action<IServiceCollection>? servicos = null,
+        IReadOnlyDictionary<string, string>? configuracao = null)
     {
         var relogio = new RelogioDeTeste();
         var factory = new MaxxApiFactory(
             await postgres.CreateDatabaseAsync(),
-            configuracao: armazenamento.Configuracao,
+            configuracao: armazenamento.Configuracao.Concat(configuracao ?? new Dictionary<string, string>())
+                .ToDictionary(par => par.Key, par => par.Value),
             servicos: colecao =>
             {
                 colecao.Replace(ServiceDescriptor.Singleton<TimeProvider>(relogio));

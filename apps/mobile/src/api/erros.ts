@@ -102,6 +102,8 @@ const MENSAGENS = {
   "email-em-uso": "Esse e-mail já é de outra pessoa da base.",
   "mesmo-curso": "O aluno já é desse curso.",
   "semestre-invalido": "Esse curso não tem esse semestre.",
+  "confirmacao-invalida": "Digite o nome do lote igual ao da lista.",
+  "lote-nao-encontrado": "Esse lote não tem mais ninguém para purgar.",
   // Paginação (CodigosDaPaginacao.cs)
   "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)

@@ -19,4 +19,10 @@ public static class CodigosDaInstituicao
 
     // O semestre do aluno não existe no curso novo.
     public const string SemestreInvalido = "semestre-invalido";
+
+    // A purga pede o nome do lote digitado de novo, igual (P6).
+    public const string ConfirmacaoDaPurgaInvalida = "confirmacao-invalida";
+
+    // Nenhum aluno de demonstração com esse lote.
+    public const string LoteNaoEncontrado = "lote-nao-encontrado";
 }

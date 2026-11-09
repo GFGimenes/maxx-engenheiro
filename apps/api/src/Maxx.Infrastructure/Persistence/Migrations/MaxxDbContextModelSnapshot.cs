@@ -672,6 +672,46 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Identidade.PurgaDaDemonstracao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Alunos")
+                        .HasColumnType("integer")
+                        .HasColumnName("alunos");
+
+                    b.Property<int>("Fotos")
+                        .HasColumnType("integer")
+                        .HasColumnName("fotos");
+
+                    b.Property<string>("Lote")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("lote");
+
+                    b.Property<DateTimeOffset>("PurgadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("purgado_em");
+
+                    b.Property<Guid>("PurgadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("purgado_por_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_purga_da_demonstracao");
+
+                    b.HasIndex("PurgadoPorId")
+                        .HasDatabaseName("ix_purga_da_demonstracao_purgado_por_id");
+
+                    b.ToTable("purga_da_demonstracao", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_purga_da_demonstracao_contagens", "alunos >= 1 AND fotos >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Identidade.RecuperacaoDeSenha", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2334,6 +2374,16 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_prefixo_reservado_usuario_usuario_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Identidade.PurgaDaDemonstracao", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("PurgadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_purga_da_demonstracao_usuario_purgado_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Identidade.RecuperacaoDeSenha", b =>

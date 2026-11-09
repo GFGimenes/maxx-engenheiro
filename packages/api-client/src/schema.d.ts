@@ -900,6 +900,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/instituicao/demonstracao/lotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetLotesDaDemonstracao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instituicao/demonstracao/lotes/{lote}/purga": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PurgarLoteDaDemonstracao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -1451,6 +1483,16 @@ export interface components {
             identificador: string;
             senha: string;
         };
+        LoteDaDemonstracaoResponse: {
+            lote: string;
+            /** Format: int32 */
+            alunos: number;
+            /** Format: date-time */
+            primeiroEm: string;
+            /** Format: date-time */
+            ultimoEm: string;
+            vigente: boolean;
+        };
         MateriaResponse: {
             /** Format: uuid */
             id: string;
@@ -1682,6 +1724,16 @@ export interface components {
             conquistaId?: null | string;
             /** Format: uuid */
             premioParticipacaoId?: null | string;
+        };
+        PurgaRequest: {
+            confirmacao: null | string;
+        };
+        PurgaResponse: {
+            lote: string;
+            /** Format: int32 */
+            alunos: number;
+            /** Format: int32 */
+            fotos: number;
         };
         RankingResponse: {
             escopo: string;
@@ -4231,6 +4283,88 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetLotesDaDemonstracao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoteDaDemonstracaoResponse"][];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PurgarLoteDaDemonstracao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lote: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurgaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgaResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
