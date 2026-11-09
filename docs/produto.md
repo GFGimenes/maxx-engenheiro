@@ -511,26 +511,53 @@ nome de exibição e a parte do arroba antes do hífen.
 
 ## 7. Mural de avisos
 
-Três escopos: faculdade, curso e turma. A instituição publica para faculdade e para
-curso; o professor publica para uma ou mais turmas suas, na mesma publicação. O aluno vê
-o mural combinado, filtrado pelos vínculos dele.
+Três escopos: faculdade, curso e turma. A instituição publica para a faculdade ou para um
+ou mais cursos; o professor publica para uma ou mais turmas suas do semestre vigente, na
+mesma publicação. O aluno vê o mural combinado, filtrado pelos vínculos dele.
 
-Aviso é texto com uma imagem opcional, somente leitura: não tem comentário, não tem
-fixação e não tem expiração na fase 1. Gera notificação. A leitura é registrada, e é o
-que apaga a bolinha dourada da aba Mural.
+Aviso é título (de 3 a 120 caracteres), texto (de 1 a 2.000) e uma imagem opcional,
+somente leitura: não tem comentário, não tem fixação, não tem expiração, não é editado e
+não é removido na fase 1. Gera notificação. A leitura é registrada, e é o que apaga a
+bolinha dourada da aba Mural.
+
+Quem vê o quê (passo 10):
+
+| Quem | Vê no mural |
+|---|---|
+| Aluno | Os avisos da faculdade, do curso atual e das turmas em que tem matrícula, de qualquer semestre |
+| Ex-aluno | Os mesmos vínculos: a faculdade, o curso em que estava e as turmas antigas |
+| Professor | Os avisos da faculdade e os que ele publicou |
+| Instituição | Todos |
+
+O aviso não lido aparece aberto, com a bolinha dourada; o lido, recolhido, só com o
+título. Abrir o aviso inteiro registra a leitura e apaga também a notificação dele; "Ler
+todos" marca como lido todo o mural de quem pede.
+
+A notificação de aviso novo vai para os destinatários do instante da publicação: o aluno
+ativo alcançado pelo escopo e, no aviso da faculdade, o professor. O ex-aluno lê o mural,
+mas não é notificado; a instituição e o autor também não.
 
 ---
 
 ## 8. Notificações
 
-Registro no banco, mostrado no sininho do cabeçalho do feed, em qualquer plataforma.
-Push nativo é evolução de fase 2.
+Registro no banco, mostrado no sininho do cabeçalho do feed e do Mural, em qualquer
+plataforma. Push nativo é evolução de fase 2.
 
 Geram notificação: medalha recebida, comprovação aprovada ou reprovada, contestação
 aberta, decisão de contestação, prêmio revogado sem contestação (pela remoção do post pela
 instituição, seção 4.7), conquista obtida, conquista removida pelo recálculo (seção 4.9),
 aviso novo. Bolinha dourada de novidade aparece nas abas Mural (aviso não lido) e Troféus
 (prêmio novo).
+
+Abrir o sininho marca como lidas todas as notificações que ele mostrou. Tocar numa leva ao
+que ela trata: medalha e conquista, a Troféus; aprovação, contestação e decisão, ao post do
+prêmio; reprovação e revogação, a Troféus, onde ficam as reivindicações com o motivo; aviso
+novo, ao aviso.
+
+Prêmio novo, para a bolinha de Troféus, é a medalha, o prêmio de participação aprovado ou a
+conquista obtida depois da última vez que o aluno abriu a aba. Abrir Troféus apaga a
+bolinha sem ler o sininho, e abrir o sininho não apaga a bolinha de Troféus.
 
 ---
 
@@ -576,6 +603,8 @@ Seguem a identidade visual, sem prancheta:
 6. Lista de turmas e alunos do professor
 7. Modal de concessão de medalha
 8. Área web da instituição
+9. Tela de notificações, aberta pelo sininho
+10. Novo aviso do professor, pelo "+" do Mural
 
 ### 10.2 Área web da instituição
 

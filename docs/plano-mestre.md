@@ -244,6 +244,15 @@ passo em `decisoes/README.md`, Conquistas (passo 9).
 - Do passo 9: o texto das notificações de conquista obtida e de conquista removida pelo
   recálculo, já gravadas pelo worker.
 - Bolinha de prêmio novo na aba Troféus.
+- Entrou também, aprovado no plano do passo: o título do aviso (a prancheta tem título e
+  corpo), o "Ler todos" e o sininho no cabeçalho do Mural, que estão na prancheta; o perfil
+  do professor com os avisos que publicou (`produto.md` 2.1); a tela de notificações e o
+  novo aviso do professor como superfícies sem prancheta.
+
+Ficam pendentes: a tela da instituição para publicar aviso de faculdade e de curso, com a
+API pronta, e os avisos no seed de demonstração (passo 12); o p95 do mural com ETag e das
+novidades perguntadas a cada 60 s (passo 13). Decisões do passo em `decisoes/README.md`,
+Mural e notificações (passo 10).
 
 ### Passo 11. Rankings
 
@@ -282,13 +291,21 @@ passo em `decisoes/README.md`, Conquistas (passo 9).
   semeados (reavaliação e fechamento), e não gravadas à mão: é o que mantém evidências e
   progresso coerentes. A anulação pela área web enfileira o mesmo recálculo do comando
   administrativo.
+- Do passo 10: a publicação de aviso de faculdade e de curso pela área web usa
+  `POST /v1/avisos`, que já recebe os dois escopos e um ou mais cursos; a foto sobe pela
+  finalidade `aviso` do upload. Sugestão para o plano do passo 12, ainda não decidida: os
+  avisos do seed nascerem pela mesma publicação, para a notificação de aviso novo ir aos
+  destinatários pelo worker, como as conquistas do seed nascem do worker.
 
 ### Passo 13. Endurecimento e ensaio
 
 - k6 a 2.000 usuários virtuais, p95 medido em feed, perfil e ranking. Micro-cache da
   primeira página do feed só se o número pedir. Do passo 7: o p95 do trecho de
   recomendação, que ordena sem índice; se o planejador escolhe o índice do feed com volume
-  real (o teste dele desliga a varredura); e se a busca usa os índices de trigramas.
+  real (o teste dele desliga a varredura); e se a busca usa os índices de trigramas. Do
+  passo 10: o p95 do mural, com a ETag, e o das novidades, que cada aluno pergunta ao
+  voltar ao foco e a cada 60 s (a 2.000 usuários, cerca de 33 pedidos por segundo só
+  delas).
 - CSP do build web liberando o domínio da CDN das fotos em `img-src` e o endpoint do R2 em
   `connect-src`, para o PUT direto do navegador.
 - R2 de verdade: rodar uma vez o `VerificacaoDoR2Tests`, que confere tipo e tamanho presos
