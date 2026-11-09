@@ -1,5 +1,5 @@
 using Maxx.Application.Fila;
-using Maxx.Application.Medalhas;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
@@ -61,11 +61,10 @@ public sealed class ReavaliarConquistasHandler(
                 conquista, instancia, aluno, calendario, fatos, ativas, podeConceder, agora, cancellationToken);
         }
 
-        // Conquista concedida muda o numerador da raridade (ADR 0005). O ranking entra no
-        // passo 11.
+        // Conquista concedida muda a pontuação e o numerador da raridade (ADR 0005).
         if (concedeu)
         {
-            fila.Enfileirar(new RecalcularRaridade());
+            fila.PedirRecalculos();
         }
 
         await unitOfWork.SalvarAsync(cancellationToken);

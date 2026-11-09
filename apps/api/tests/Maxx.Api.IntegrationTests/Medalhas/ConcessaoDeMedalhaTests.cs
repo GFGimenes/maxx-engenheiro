@@ -6,6 +6,7 @@ using Maxx.Api.Autenticacao;
 using Maxx.Api.Medalhas;
 using Maxx.Application.Conquistas;
 using Maxx.Application.Medalhas;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Identidade;
@@ -105,7 +106,7 @@ public sealed class ConcessaoDeMedalhaTests(PostgresFixture postgres) : IClassFi
 
         var trabalhos = await db.Set<Trabalho>().OrderBy(trabalho => trabalho.Id).ToListAsync(Ct);
         Assert.Equal(
-            [NotificarMedalhaRecebida.Tipo, ReavaliarConquistas.Tipo, RecalcularRaridade.Tipo], trabalhos.Select(trabalho => trabalho.Tipo));
+            [NotificarMedalhaRecebida.Tipo, ReavaliarConquistas.Tipo, RecalcularRanking.Tipo, RecalcularRaridade.Tipo], trabalhos.Select(trabalho => trabalho.Tipo));
         using var carga = JsonDocument.Parse(trabalhos[0].Carga);
         Assert.Equal(medalha.Id, carga.RootElement.GetProperty("medalhaId").GetGuid());
         using var reavaliacao = JsonDocument.Parse(trabalhos[1].Carga);

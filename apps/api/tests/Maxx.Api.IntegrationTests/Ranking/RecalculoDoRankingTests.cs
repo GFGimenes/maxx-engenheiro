@@ -94,6 +94,9 @@ public sealed class RecalculoDoRankingTests(PostgresFixture postgres) : IClassFi
         await mundo.AnularAsync(anulada);
         await ContestarAsync(mundo, premio.Id);
 
+        // A concessão já pediu o recálculo e o worker o rodou no esvaziar: passada a janela de
+        // 10 s, o pedido de agora calcula em vez de ficar adiado.
+        mundo.Relogio.Avancar(TimeSpan.FromSeconds(10));
         await RecalcularAsync(mundo);
 
         var conquistas = (await mundo.LinhasAsync<Conquista>()).Where(conquista => conquista.EstaAtiva).ToList();
