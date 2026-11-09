@@ -48,6 +48,7 @@ const MENSAGENS = {
   "premio-anulado": "Esse prêmio foi anulado.",
   "premio-ja-postado": "Esse prêmio já tem um post.",
   "conquista-removida": "Essa conquista foi removida.",
+  "premio-indisponivel": "Esse prêmio não está valendo agora.",
   "mais-de-um-premio": "Escolha um prêmio só para o post.",
   "post-nao-encontrado": "Esse post não existe mais.",
   "remocao-nao-permitida": "Você não pode apagar este post.",

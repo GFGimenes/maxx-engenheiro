@@ -122,6 +122,7 @@ public static class DependencyInjection
         services.AddTrabalho<LimparUploadAbandonado, LimparUploadAbandonadoHandler>();
         services.AddTrabalho<RemoverFotos, RemoverFotosHandler>();
         services.AddTrabalho<NotificarComprovacaoAprovada, NotificarComprovacaoHandler>();
+        services.AddTrabalho<NotificarPremioConcedido, NotificarComprovacaoHandler>();
         services.AddTrabalho<NotificarComprovacaoReprovada, NotificarComprovacaoHandler>();
         services.AddTrabalho<TornarPremioDefinitivo, TornarPremioDefinitivoHandler>();
         services.AddTrabalho<NotificarContestacaoAberta, NotificarContestacaoHandler>();

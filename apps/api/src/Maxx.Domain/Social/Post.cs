@@ -87,7 +87,21 @@ public sealed class Post
     // confirmado e sai do alcance da limpeza. O prêmio é a medalha ou a conquista, nunca os
     // dois.
     public static ResultadoDaPublicacao Publicar(
-        Usuario autor, string? legenda, UploadPendente? upload, Medalha? medalha, Conquista? conquista, DateTimeOffset agora)
+        Usuario autor, string? legenda, UploadPendente? upload, Medalha? medalha, Conquista? conquista, DateTimeOffset agora) =>
+        Publicar(autor, legenda, upload, medalha, conquista, null, agora);
+
+    // O prêmio de participação entra aqui só pela concessão direta da instituição (passo 12,
+    // P2), que não tem post de reivindicação: o aluno o posta como posta a medalha. Só o que
+    // pontua (válido ou definitivo); o reivindicado já tem o post dele, e o índice único
+    // garante um post por prêmio.
+    public static ResultadoDaPublicacao Publicar(
+        Usuario autor,
+        string? legenda,
+        UploadPendente? upload,
+        Medalha? medalha,
+        Conquista? conquista,
+        PremioParticipacao? premioParticipacao,
+        DateTimeOffset agora)
     {
         ArgumentNullException.ThrowIfNull(autor);
 
@@ -96,7 +110,7 @@ public sealed class Post
             return Recusa(recusa);
         }
 
-        if (medalha is not null && conquista is not null)
+        if (new object?[] { medalha, conquista, premioParticipacao }.Count(premio => premio is not null) > 1)
         {
             return Recusa(RecusaDaPublicacao.MaisDeUmPremio);
         }
@@ -114,6 +128,19 @@ public sealed class Post
             }
         }
 
+        if (premioParticipacao is not null)
+        {
+            if (premioParticipacao.AlunoId != autor.Id)
+            {
+                return Recusa(RecusaDaPublicacao.PremioNaoEncontrado);
+            }
+
+            if (!premioParticipacao.Pontua)
+            {
+                return Recusa(RecusaDaPublicacao.PremioIndisponivel);
+            }
+        }
+
         if (medalha is not null)
         {
             if (medalha.AlunoId != autor.Id)
@@ -127,13 +154,13 @@ public sealed class Post
             }
         }
 
-        if (legenda is null && upload is null && medalha is null && conquista is null)
+        if (legenda is null && upload is null && medalha is null && conquista is null && premioParticipacao is null)
         {
             return Recusa(RecusaDaPublicacao.Vazio);
         }
 
         upload?.Confirmar(agora);
-        return new(new Post(autor.Id, legenda, upload, medalha, null, conquista, agora), null);
+        return new(new Post(autor.Id, legenda, upload, medalha, premioParticipacao, conquista, agora), null);
     }
 
     // O post de reivindicação (produto.md 4.7): a foto é obrigatória, porque é a
@@ -272,6 +299,10 @@ public enum RecusaDaPublicacao
 
     // Medalha e conquista no mesmo post: um prêmio por post.
     MaisDeUmPremio,
+
+    // O prêmio de participação que não pontua agora: em averiguação, revogado ou ainda
+    // reivindicado (passo 12).
+    PremioIndisponivel,
 }
 
 public enum ModoDeRemocao

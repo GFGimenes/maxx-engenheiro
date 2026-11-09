@@ -35,8 +35,8 @@ public sealed class ReivindicarHandler(
             ?? throw new RecusaException(
                 TipoDeRecusa.NaoEncontrado, CodigosDoPremioParticipacao.ItemNaoEncontrado, $"{pedido.Item} não é prêmio de participação.");
         var curso = await eventos.CursoDoAlunoAsync(alunoId, cancellationToken);
-        var evento = await EventoAsync(aluno, pedido, cancellationToken);
-        var materia = await MateriaAsync(alunoId, pedido.MateriaId, evento, cancellationToken);
+        var evento = await EventoDoPedidoAsync(eventos, aluno, pedido.EventoId, pedido.EventoDigitado, cancellationToken);
+        var materia = await MateriaDoPedidoAsync(premios, alunoId, pedido.MateriaId, evento, cancellationToken);
         var agora = relogio.GetUtcNow();
         var ultimoEncerrado = await eventos.UltimoSemestreEncerradoAsync(FusoHorario.DataLocal(agora), cancellationToken);
 
@@ -95,10 +95,12 @@ public sealed class ReivindicarHandler(
     }
 
     // Um entre o semeado, pelo id, e o digitado, com nome e período. O semeado de outro curso
-    // é recusado pelo domínio, como se não existisse.
-    private async Task<Evento> EventoAsync(Domain.Identidade.Usuario aluno, PedidoDeReivindicacao pedido, CancellationToken cancellationToken)
+    // é recusado pelo domínio, como se não existisse. O digitado é de quem pede: o aluno na
+    // reivindicação, a instituição na concessão direta (passo 12).
+    internal static async Task<Evento> EventoDoPedidoAsync(
+        IEventoRepository eventos, Domain.Identidade.Usuario autor, Guid? eventoId, EventoDigitado? eventoDigitado, CancellationToken cancellationToken)
     {
-        switch (pedido.EventoId, pedido.EventoDigitado)
+        switch (eventoId, eventoDigitado)
         {
             case (null, null):
                 throw new RecusaException(TipoDeRecusa.Invalido, CodigosDoPremioParticipacao.EventoObrigatorio, "Reivindicação sem evento.");
@@ -112,7 +114,7 @@ public sealed class ReivindicarHandler(
             case (null, { } digitado):
                 try
                 {
-                    return Evento.TextoLivre(digitado.Nome, digitado.Inicio, digitado.Fim, aluno);
+                    return Evento.TextoLivre(digitado.Nome, digitado.Inicio, digitado.Fim, autor);
                 }
                 catch (DomainException ex)
                 {
@@ -123,7 +125,8 @@ public sealed class ReivindicarHandler(
 
     // A matéria da apresentação em sala: uma turma dela em que o aluno estava matriculado no
     // semestre que contém a data do evento. Se a matéria cabe no item é pergunta do domínio.
-    private async Task<Materia?> MateriaAsync(Guid alunoId, Guid? materiaId, Evento evento, CancellationToken cancellationToken)
+    internal static async Task<Materia?> MateriaDoPedidoAsync(
+        IPremioParticipacaoRepository premios, Guid alunoId, Guid? materiaId, Evento evento, CancellationToken cancellationToken)
     {
         if (materiaId is not { } id)
         {
@@ -135,10 +138,10 @@ public sealed class ReivindicarHandler(
                 TipoDeRecusa.NaoEncontrado, CodigosDoPremioParticipacao.MateriaNaoEncontrada, $"Aluno {alunoId} não cursava {id} em {evento.Inicio}.");
     }
 
-    private static RecusaException JaReivindicado(PremioParticipacao premio) =>
+    internal static RecusaException JaReivindicado(PremioParticipacao premio) =>
         new(TipoDeRecusa.Conflito, CodigosDoPremioParticipacao.PremioJaReivindicado, $"Chave {premio.ChaveDeDeduplicacao} ocupada.");
 
-    private static RecusaException Recusa(RecusaDaReivindicacao recusa, Guid alunoId) => recusa switch
+    internal static RecusaException Recusa(RecusaDaReivindicacao recusa, Guid alunoId) => recusa switch
     {
         RecusaDaReivindicacao.ExAluno => new(TipoDeRecusa.Conflito, CodigosDoPremioParticipacao.ExAluno, $"{alunoId} é ex-aluno."),
         RecusaDaReivindicacao.EventoNaoEncontrado => new(

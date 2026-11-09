@@ -115,6 +115,7 @@ builder.Services.AddScoped<Maxx.Application.Mural.PublicarAvisoHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.MuralHandler>();
 builder.Services.AddScoped<Maxx.Application.Notificacoes.NotificacoesHandler>();
 builder.Services.AddScoped<Maxx.Application.Instituicao.AtosSobreOAlunoHandler>();
+builder.Services.AddScoped<Maxx.Application.Instituicao.ConcessaoDiretaHandler>();
 
 var app = builder.Build();
 

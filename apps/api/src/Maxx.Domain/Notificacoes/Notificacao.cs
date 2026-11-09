@@ -58,6 +58,19 @@ public sealed class Notificacao
         return new Notificacao(premio.AlunoId, TipoDeNotificacao.ComprovacaoAprovada, premio.Id, agora);
     }
 
+    // Prêmio concedido direto pela instituição (passo 12, P2): já nasce aprovado, sem
+    // comprovação. Leva a Troféus.
+    public static Notificacao PremioConcedido(PremioParticipacao premio, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(premio);
+        if (premio.AprovadoEm is null)
+        {
+            throw new DomainException($"O prêmio {premio.Id} não foi aprovado.");
+        }
+
+        return new Notificacao(premio.AlunoId, TipoDeNotificacao.PremioConcedido, premio.Id, agora);
+    }
+
     // Comprovação reprovada: o motivo o app lê do prêmio.
     public static Notificacao ComprovacaoReprovada(PremioParticipacao premio, DateTimeOffset agora)
     {
@@ -148,4 +161,7 @@ public enum TipoDeNotificacao
     // Aviso novo no mural (passo 10). Gravada em lote pelo worker, uma por destinatário
     // fixado na publicação, sem passar por uma fábrica daqui: a referência é o aviso.
     AvisoNovo,
+
+    // Prêmio de participação concedido direto pela instituição (passo 12).
+    PremioConcedido,
 }

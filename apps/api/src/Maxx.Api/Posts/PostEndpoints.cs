@@ -47,7 +47,13 @@ internal static class PostEndpoints
         CancellationToken cancellationToken)
     {
         var post = await handler.PublicarAsync(
-            UsuarioId(principal), pedido.Legenda, pedido.UploadId, pedido.MedalhaId, pedido.ConquistaId, cancellationToken);
+            UsuarioId(principal),
+            pedido.Legenda,
+            pedido.UploadId,
+            pedido.MedalhaId,
+            pedido.ConquistaId,
+            pedido.PremioParticipacaoId,
+            cancellationToken);
         var lido = await consulta.PostAsync(post.Id, UsuarioId(principal), cancellationToken)
             ?? throw new InvalidOperationException($"O post {post.Id} acabou de ser gravado e não foi lido.");
         return TypedResults.Created($"/api/v1/posts/{post.Id}", PostResponse.De(lido, armazenamento));
@@ -81,9 +87,10 @@ internal static class PostEndpoints
 
 // Ao menos um dos três; quem decide é o domínio. O limite da legenda é em caracteres,
 // contando um emoji como um, e também do domínio: aqui só um teto bruto para o corpo.
-// ConquistaId entrou no passo 9, só como acréscimo: o prêmio é a medalha ou a conquista.
+// Um prêmio só: a medalha, a conquista (passo 9) ou o prêmio de participação concedido direto
+// pela instituição (passo 12). Os dois últimos entraram como acréscimo.
 public sealed record PublicarPostRequest(
-    [property: StringLength(4000)] string? Legenda, Guid? UploadId, Guid? MedalhaId, Guid? ConquistaId = null);
+    [property: StringLength(4000)] string? Legenda, Guid? UploadId, Guid? MedalhaId, Guid? ConquistaId = null, Guid? PremioParticipacaoId = null);
 
 public sealed record PostResponse(
     Guid Id,

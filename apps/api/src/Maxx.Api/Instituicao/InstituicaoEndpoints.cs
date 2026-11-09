@@ -3,8 +3,11 @@ using System.Security.Claims;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Medalhas;
 using Maxx.Api.Posts;
+using Maxx.Api.PremiosParticipacao;
 using Maxx.Application.Fotos;
 using Maxx.Application.Instituicao;
+using Maxx.Application.Medalhas;
+using Maxx.Application.PremiosParticipacao;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Maxx.Api.Instituicao;
@@ -47,7 +50,82 @@ internal static class InstituicaoEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        // A concessão direta de prêmio de participação (passo 12, P2), com os eventos e as
+        // matérias que ela oferece para o aluno.
+        alunos.MapPost("/{cadastroId:guid}/premios-participacao", ConcederAsync)
+            .WithName("ConcederPremioParticipacao")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        alunos.MapGet("/{cadastroId:guid}/eventos", EventosAsync)
+            .WithName("GetEventosParaConcessao")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        alunos.MapGet("/{cadastroId:guid}/materias", MateriasAsync)
+            .WithName("GetMateriasParaConcessao")
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        // A anulação pela área web: o mesmo ato do comando administrativo. Anular de novo não
+        // muda nada e responde igual.
+        v1.MapPost("/instituicao/medalhas/{medalhaId:guid}/anulacao", AnularAsync)
+            .WithName("AnularMedalha")
+            .WithTags("Instituicao")
+            .RequireAuthorization(Politicas.Instituicao)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return v1;
+    }
+
+    private static async Task<Created<PremioConcedidoResponse>> ConcederAsync(
+        Guid cadastroId,
+        ConcessaoRequest pedido,
+        ClaimsPrincipal principal,
+        ConcessaoDiretaHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var premio = await handler.ConcederAsync(
+            PostEndpoints.UsuarioId(principal),
+            cadastroId,
+            new PedidoDeConcessao(
+                pedido.Item,
+                pedido.EventoId,
+                pedido.EventoDigitado is { } digitado ? new EventoDigitado(digitado.Nome, digitado.Inicio, digitado.Fim) : null,
+                pedido.MateriaId),
+            cancellationToken);
+        return TypedResults.Created(
+            (string?)null,
+            new PremioConcedidoResponse(
+                premio.Id, premio.AlunoId, premio.ItemCodigo, ProfessorEndpoints.Nome(premio.Tier), premio.Pontos, premio.AprovadoEm!.Value));
+    }
+
+    // item: o código do prêmio de participação; com ele, só os eventos que o aceitam.
+    private static async Task<Ok<IReadOnlyList<EventoResponse>>> EventosAsync(
+        Guid cadastroId,
+        ClaimsPrincipal principal,
+        ConcessaoDiretaHandler handler,
+        CancellationToken cancellationToken,
+        [StringLength(16)] string? item = null) =>
+        TypedResults.Ok<IReadOnlyList<EventoResponse>>([.. (await handler.EventosAsync(PostEndpoints.UsuarioId(principal), cadastroId, item, cancellationToken))
+            .Select(evento => new EventoResponse(evento.Id, evento.Nome, evento.Inicio, evento.Fim, evento.ItensAceitos))]);
+
+    private static async Task<Ok<IReadOnlyList<MateriaResponse>>> MateriasAsync(
+        Guid cadastroId, ClaimsPrincipal principal, ConcessaoDiretaHandler handler, CancellationToken cancellationToken) =>
+        TypedResults.Ok<IReadOnlyList<MateriaResponse>>([.. (await handler.MateriasAsync(PostEndpoints.UsuarioId(principal), cadastroId, cancellationToken))
+            .Select(materia => new MateriaResponse(materia.Id, materia.Nome))]);
+
+    private static async Task<NoContent> AnularAsync(
+        Guid medalhaId, ClaimsPrincipal principal, AnularMedalhaHandler handler, CancellationToken cancellationToken)
+    {
+        await handler.AnularPelaAreaAsync(PostEndpoints.UsuarioId(principal), medalhaId, cancellationToken);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Ok<IReadOnlyList<AlunoDaBaseResponse>>> BuscarAsync(
@@ -108,6 +186,18 @@ internal static class InstituicaoEndpoints
 public sealed record EmailRequest([property: StringLength(320)] string? Email);
 
 public sealed record TrocaDeCursoRequest(Guid CursoId, int Semestre);
+
+// O evento é o id de um semeado ou o digitado, nunca os dois; a matéria, só na apresentação
+// em sala. Sem foto: a concessão direta não tem comprovação.
+public sealed record ConcessaoRequest(
+    [property: Required, StringLength(16)] string Item,
+    Guid? EventoId,
+    EventoDigitadoRequest? EventoDigitado,
+    Guid? MateriaId);
+
+// Tier em camelCase, como no catálogo. ConcedidoEm: o instante da aprovação, que é o do
+// desempate no ranking.
+public sealed record PremioConcedidoResponse(Guid Id, Guid AlunoId, string Item, string Tier, int Pontos, DateTimeOffset ConcedidoEm);
 
 // Conta nula: está na base e ainda não se cadastrou. Demonstracao: linha criada pela
 // demonstração, não pela faculdade.

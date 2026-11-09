@@ -91,9 +91,7 @@ public sealed class AtosSobreOAlunoHandler(
     public async Task MarcarExAlunoAsync(Guid quemId, Guid cadastroId, CancellationToken cancellationToken)
     {
         var quem = await InstituicaoAsync(usuarios, quemId, cancellationToken);
-        _ = await alunos.CadastroDeAlunoAsync(cadastroId, cancellationToken) ?? throw AlunoNaoEncontrado(cadastroId);
-        var conta = await alunos.ContaAsync(cadastroId, cancellationToken)
-            ?? throw new RecusaException(TipoDeRecusa.Conflito, CodigosDaInstituicao.AlunoSemConta, $"Cadastro {cadastroId} sem conta.");
+        var conta = await ContaDoAlunoAsync(alunos, cadastroId, cancellationToken);
         if (conta.EhExAluno)
         {
             throw ExAluno(cadastroId);
@@ -146,6 +144,14 @@ public sealed class AtosSobreOAlunoHandler(
         return quem.Papeis.HasFlag(Papeis.Instituicao)
             ? quem
             : throw new RecusaException(TipoDeRecusa.Proibido, CodigosDaMedalha.ForaDoEscopo, $"{quemId} não é da instituição.");
+    }
+
+    // A conta do aluno da linha: 404 sem a linha, 409 sem conta. Prêmio e ex-aluno pedem conta.
+    internal static async Task<Usuario> ContaDoAlunoAsync(IAlunosDaInstituicaoRepository alunos, Guid cadastroId, CancellationToken cancellationToken)
+    {
+        _ = await alunos.CadastroDeAlunoAsync(cadastroId, cancellationToken) ?? throw AlunoNaoEncontrado(cadastroId);
+        return await alunos.ContaAsync(cadastroId, cancellationToken)
+            ?? throw new RecusaException(TipoDeRecusa.Conflito, CodigosDaInstituicao.AlunoSemConta, $"Cadastro {cadastroId} sem conta.");
     }
 
     private async Task SalvarAsync(Guid cadastroId, CancellationToken cancellationToken)

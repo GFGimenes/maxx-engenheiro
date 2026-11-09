@@ -1061,7 +1061,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notificacao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado', 'conquistaObtida', 'conquistaRemovida', 'avisoNovo')");
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado', 'conquistaObtida', 'conquistaRemovida', 'avisoNovo', 'premioConcedido')");
                         });
                 });
 
