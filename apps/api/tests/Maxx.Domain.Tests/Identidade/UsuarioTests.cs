@@ -301,4 +301,21 @@ public class UsuarioTests
         Assert.False(ana.EhDemonstracao);
         Assert.Null(ana.HashDaChaveDoDispositivo);
     }
+
+    [Fact]
+    public void Trofeus_vistos_comeca_vazio_e_so_anda_para_a_frente()
+    {
+        var ana = Ana();
+        Assert.Null(ana.TrofeusVistoEm);
+
+        ana.MarcarTrofeusVistos(_agora.AddMinutes(5));
+        Assert.Equal(_agora.AddMinutes(5), ana.TrofeusVistoEm);
+
+        // Um pedido atrasado não volta o marcador e não reacende prêmio já visto.
+        ana.MarcarTrofeusVistos(_agora.AddMinutes(1));
+        Assert.Equal(_agora.AddMinutes(5), ana.TrofeusVistoEm);
+
+        ana.MarcarTrofeusVistos(_agora.AddMinutes(9));
+        Assert.Equal(_agora.AddMinutes(9), ana.TrofeusVistoEm);
+    }
 }

@@ -173,7 +173,7 @@ internal static class PerfilEndpoints
 
     // ETag do conteúdo, com 304 quando o app já tem a versão (decisoes/README.md, Cache). A
     // resposta depende de quem pede (RA, "eu sigo"): private, nunca em cache compartilhado.
-    private static IResult ComEtag<T>(HttpContext http, T corpo, bool aceitar304 = true)
+    internal static IResult ComEtag<T>(HttpContext http, T corpo, bool aceitar304 = true)
     {
         var opcoes = http.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions;
         var etag = $"W/\"{Convert.ToBase64String(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(corpo, opcoes)))[..22]}\"";

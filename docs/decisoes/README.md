@@ -125,6 +125,7 @@ CREATE TEMP TABLE alvo ON COMMIT DROP AS
 DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM leitura_de_aviso WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM curtida WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
@@ -533,12 +534,85 @@ participação, todas as matérias, conquista removida e o post dela, progresso 
 | Limite | Onde é tratado |
 |---|---|
 | O ranking não é recalculado pela conquista concedida ou removida: a tabela de ranking não existe ainda | Passo 11 |
-| O texto das notificações de conquista e a bolinha de Troféus | Passo 10 |
+| O texto das notificações de conquista e a bolinha de Troféus | Resolvido no passo 10: os textos estão em `notificacoes/textos.ts` do app, e a bolinha segue o marcador `trofeus_visto_em` |
 | A regra customizada não é disparada por fato nem tem progresso | Aceito: nenhuma conquista da fase 1 usa |
 | O fato que fica contável depois do fechamento não se reproduz pelo fluxo com o catálogo da fase 1 (as de fechamento contam medalha, concedida só no bimestre da data); o teste isola o mecanismo | Aceito |
 | O post de conquista no feed não mostra a instância, só o nome, o tier e os pontos | Aceito |
 | Conquistas no seed de demonstração | Passo 12 |
 | A suíte local da API disputa recurso com a pilha do compose de pé (o teste do migrador passa de 1 min); para a suíte local, pilha parada | Ocorrência de ambiente |
+
+## Mural e notificações (passo 10)
+
+O aviso nos três escopos, a leitura do mural, o sininho, a tela de notificações e as
+bolinhas das abas. As decisões D1 a D7 foram fechadas no plano do passo, com as nove
+perguntas dele; as demais, nas etapas. As regras de produto que nasceram aqui estão em
+`produto.md` 7 (título e texto, quem vê o quê, leitura, destinatários da notificação), 8
+(sininho também no Mural, leitura ao abrir, destinos, prêmio novo) e 10.1 (tela de
+notificações e novo aviso do professor).
+
+### Aviso e publicação
+
+| Decisão | Detalhe |
+|---|---|
+| Modelo (D1) | `aviso` (autor, escopo, título, texto, as duas chaves da foto, publicado em), com os alvos em `aviso_turma` e `aviso_curso`, um aviso para N alvos. Quem publicou e quando ficam no próprio aviso. Título de 3 a 120 e texto de 1 a 2.000 caracteres, contando um emoji como um, também por check no banco (`char_length`) |
+| Rota | `POST /v1/avisos` com `escopo` (`faculdade`, `curso`, `turma`) e `turmaIds` ou `cursoIds`. Lista do escopo errado ou alvo na faculdade: 400 `alvos-do-aviso-invalidos`. Códigos em `CodigosDoMural.cs` |
+| Papel e escopo (D3) | O domínio decide o papel: instituição na faculdade e no curso, professor na turma, a conta que acumula os dois nos três; aluno recebe 403 `aviso-nao-permitido`. O papel é conferido antes do escopo. A turma, no banco, contra `vinculo_professor` e o semestre vigente: uma turma de fora recusa o aviso inteiro (403 `fora-do-escopo`). Curso inexistente: 404 `curso-nao-encontrado` |
+| Foto (D2) | Finalidade `aviso` no `POST /v1/uploads`, de professor e instituição, com as mesmas derivadas e o mesmo limite do post. Confirmada pelo HEAD das duas na publicação. Sem edição e sem remoção de aviso, a foto só sai pela limpeza do upload abandonado |
+| Distribuição (D4) | `notificar-aviso-novo`, enfileirado na transação da publicação. O worker grava todas as notificações num `INSERT ... SELECT ... ON CONFLICT DO NOTHING` sobre o índice único da notificação: idempotente e sem passar dos 60 s num aviso da faculdade |
+| Destinatários | Fixados no instante da publicação: conta criada até ele, e aluno ativo nele (quem virou ex-aluno depois ainda recebe). Aluno pelo escopo (todos na faculdade, o curso atual no curso, a matrícula na turma); professor só na faculdade. Nunca o autor nem a instituição; o ex-aluno não é notificado. Prova reversa: sem a condição da conta criada, o teste dos destinatários falha |
+
+### Leitura do mural
+
+| Decisão | Detalhe |
+|---|---|
+| Visibilidade | Uma regra só (`ConsultaDoMural.Visiveis`), para a lista, o aviso aberto, a leitura e o "Ler todos": a instituição vê tudo; os outros, a faculdade, o que publicaram, o curso atual (do cadastro) e as turmas em que têm matrícula, de qualquer semestre. O professor, sem curso nem matrícula, vê a faculdade e os dele |
+| Rotas | `GET /v1/mural?escopo=&cursor=`, 20 por página por cursor `(publicado_em, id)`; `GET /v1/avisos/{id}`; `PUT /v1/avisos/{id}/leitura`; `POST /v1/mural/leitura` ("Ler todos"); `GET /v1/perfis/{id}/avisos`, os do professor pela mesma regra, 404 `usuario-nao-encontrado` para perfil inexistente, como a grade de posts. Aviso fora do mural responde 404 `aviso-nao-encontrado`, como o que não existe |
+| Resposta | O autor com `instituicao` (o app mostra "UniMax"; a conta de professor e instituição, publicando para turma, aparece pelo nome), as matérias das turmas ou as siglas dos cursos, a foto e `lido`, deste leitor |
+| Leitura | `leitura_de_aviso` (usuário, aviso, lida em), chave `(usuario_id, aviso_id)`, sem cascata do usuário. Gravada com `ON CONFLICT DO NOTHING`: ler de novo não muda o instante. Na mesma transação, a notificação de aviso novo daquele aviso fica lida. Prova reversa: sem o filtro do mural, o "Ler todos" marca avisos de fora e o teste falha |
+| ETag | No mural e no aviso aberto, fraca e do conteúdo, como no perfil (`Cache-Control: private, no-cache`); a leitura muda a ETag. O p95 fica para o k6 do passo 13, como o do perfil |
+| Purga | O SQL apaga `leitura_de_aviso` do lote antes do usuário; o aviso não é do lote e fica |
+
+### Notificações e novidades
+
+| Decisão | Detalhe |
+|---|---|
+| Lista | `GET /v1/eu/notificacoes`, só as de quem pede, 20 por página por cursor `(criada_em, id)`. Cada uma com tipo, referência, quando, se foi lida e o que a frase pede: o nome do item, o motivo (reprovação e revogação), a decisão (`confirmada` ou `revogada`), o post do prêmio que ainda está no ar e o título do aviso. Uma consulta por tipo de referência, nunca uma por linha |
+| Leitura | `POST /v1/eu/notificacoes/leitura` com `ate`, opcional: marca as criadas até ele, e a que chegou depois de o sininho abrir fica acesa. Sem corpo, todas as de agora. Acréscimo aprovado na etapa 3. Prova reversa: sem o limite, a notificação nova é marcada e o teste falha |
+| Novidades (D5) | `GET /v1/eu/novidades` com três booleanos: sininho (notificação não lida), mural (aviso do mural não lido) e troféus (só aluno: medalha ativa, prêmio de participação aprovado e ainda válido ou definitivo, ou conquista não removida, depois do marcador). Um aluno novo vê a bolinha do Mural acesa pelos avisos antigos da faculdade; "Ler todos" a apaga |
+| Marcador de Troféus | `usuario.trofeus_visto_em`, por `PUT /v1/eu/trofeus/visto`, que só anda para a frente (`Usuario.MarcarTrofeusVistos`). Separado do sininho: abrir um não lê o outro. O prêmio de participação acende a bolinha pela aprovação; a contestação confirmada não acende de novo |
+| Texto | Do app, pelo tipo, em `notificacoes/textos.ts`, com o destino de cada toque. Tipo que o app ainda não conhece vira "Você tem uma novidade.", sem destino. Um teste do app lê o enum `TipoDeNotificacao` do C# e falha se algum tipo ficar sem texto |
+
+### Cliente
+
+| Decisão | Detalhe |
+|---|---|
+| Aba Mural | Logo, sininho, "Mural" com "Ler todos", chips Todos, Faculdade, Curso e Professores (o escopo turma), e os cartões em `surface` com raio 16. O não lido vem aberto, com a bolinha, o título em negrito e "não lido" no rótulo de acessibilidade; o lido, recolhido, e tocar o abre ali mesmo, sem registrar leitura. "Abrir" leva a `/aviso/:id` |
+| "Ler todos" | Segue a bolinha do Mural (`novidades.mural`), que é do mural inteiro, e não a lista do chip; sem as novidades, a lista |
+| Aviso aberto | Cabeçalho com voltar, rótulo, data dd/mm em São Paulo (UTC-3 fixo, sem depender do `Intl`), título, autor, a foto quadrada e o texto. Abrir registra a leitura uma vez |
+| Novo aviso | `/novo-aviso`, pelo "+" do Mural, só para quem tem papel de professor: as turmas vigentes dele em chips de seleção múltipla, título e texto com contador e a foto opcional, com só "Remover foto" (tocar na foto troca). A conta de professor e instituição publica só para turmas pelo app; faculdade e curso ficam para a área web (passo 12). A foto já enviada é reaproveitada se o aviso falhar, como no post |
+| Sininho | No cabeçalho do feed, à direita do "+", e no do Mural, com a bolinha de halo como a das abas e "com novidade" no rótulo. A tela de notificações marca como lido até a mais nova mostrada, e o que era novo segue em destaque enquanto ela está aberta. Tempo relativo como no feed |
+| Bolinhas | Das novidades, perguntadas ao voltar ao foco e a cada 60 s; abrir Troféus, como aluno, chama o marcador |
+| Ícones | `sino` (bell), `abrir` (chevron-down) e `lerTodos` (check-check) do Lucide. `navegacao/EmBreve.tsx` saiu, sem mais uso |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxos | Só no celular, claro e escuro, cada execução com a sua professora e o seu aluno: a professora publica pela tela para duas turmas dela (a segunda vinculada no Postgres), o aluno vê as bolinhas do Mural e do sininho, abre o aviso, usa "Ler todos" e abre o sininho; uma medalha pela API acende o sininho e Troféus, e o toque na notificação leva a Troféus |
+| Isolamento | As turmas vigentes são as mesmas para todas as execuções, e o aviso de uma chega ao aluno da outra. O aluno começa com tudo lido pela API, o aviso dele é conferido pelo título, e as bolinhas são apagadas por "Ler todos" e pelo sininho, que leem tudo |
+| Espera | A tela é recarregada até a bolinha aparecer, por até 30 s: a notificação é gravada no worker |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| Os destinatários do aviso de curso são lidos pelo curso atual: quem trocar de curso entre a publicação e o trabalho do worker (segundos) é lido pelo curso novo | Aceito |
+| A tela de aviso de faculdade e de curso da instituição | Passo 12, com a API pronta |
+| Avisos no seed de demonstração | Passo 12 |
+| O p95 do mural com ETag e das novidades perguntadas a cada 60 s por usuário | k6 do passo 13 |
+| Sem push: a bolinha só acende quando o app pergunta (foco ou 60 s) | Fase 2, push nativo |
+| Na suíte e2e inteira rodada localmente (Windows, pilha no ar há horas, banco com os dados de muitas rodadas), o e2e da medalha estoura os 30 s: a página do aluno não volta a desenhar depois do recarregamento que segue a anulação. Sozinho, passa; na CI, passou de primeira em todas as etapas do passo, entre 12 e 16 s | Ocorrência de ambiente; acompanhar no passo 13 |
+| Medalhas concedidas em sequência rápida: a reavaliação da primeira roda com as outras já gravadas e pode conceder a conquista antes de as outras medalhas serem notificadas; no sininho, a conquista obtida aparece entre as medalhas | Aceito: o avaliador conta os fatos do momento |
 
 ## Processo e qualidade
 

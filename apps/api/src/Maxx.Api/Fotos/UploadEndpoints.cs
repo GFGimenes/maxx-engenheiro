@@ -31,7 +31,12 @@ internal static class UploadEndpoints
         PedirUploadHandler handler,
         CancellationToken cancellationToken)
     {
-        var finalidade = pedido.Finalidade == PedidoDeUploadRequest.FotoDePerfil ? FinalidadeDoUpload.FotoDePerfil : FinalidadeDoUpload.Post;
+        var finalidade = pedido.Finalidade switch
+        {
+            PedidoDeUploadRequest.FotoDePerfil => FinalidadeDoUpload.FotoDePerfil,
+            PedidoDeUploadRequest.Aviso => FinalidadeDoUpload.Aviso,
+            _ => FinalidadeDoUpload.Post,
+        };
         var assinado = await handler.PedirAsync(
             UsuarioId(principal), finalidade, pedido.TipoDeConteudo, pedido.TamanhoDoFeed, pedido.TamanhoDaGrade, cancellationToken);
         return TypedResults.Created((string?)null, UploadResponse.De(assinado));
@@ -45,18 +50,21 @@ internal static class UploadEndpoints
 }
 
 // O tipo e os tamanhos exatos, em bytes, das duas derivadas que o app já gerou: é o que vai
-// preso na assinatura. Os limites são do domínio (UploadPendente); aqui só a forma.
+// preso na assinatura. Os limites são do domínio (UploadPendente); aqui só a forma. A
+// finalidade "aviso" entrou no passo 10, só como acréscimo.
 public sealed record PedidoDeUploadRequest(
-    [property: Required, AllowedValues(PedidoDeUploadRequest.Post, PedidoDeUploadRequest.FotoDePerfil)] string Finalidade,
+    [property: Required, AllowedValues(PedidoDeUploadRequest.Post, PedidoDeUploadRequest.FotoDePerfil, PedidoDeUploadRequest.Aviso)]
+    string Finalidade,
     [property: Required, StringLength(100)] string TipoDeConteudo,
     long TamanhoDoFeed,
     long TamanhoDaGrade)
 {
     public const string Post = "post";
     public const string FotoDePerfil = "fotoDePerfil";
+    public const string Aviso = "aviso";
 }
 
-// Id para confirmar depois (no post ou na foto de perfil) e as duas URLs. O PUT de cada uma
+// Id para confirmar depois (no post, na foto de perfil ou no aviso) e as duas URLs. O PUT de cada uma
 // leva exatamente o content-type e o corpo do tamanho informados, antes de expiraEm.
 public sealed record UploadResponse(Guid Id, DateTimeOffset ExpiraEm, EnvioResponse Feed, EnvioResponse Grade)
 {

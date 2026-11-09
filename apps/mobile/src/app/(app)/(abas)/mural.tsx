@@ -1,3 +1,3 @@
-import { MuralEmBreve } from "../../../navegacao/EmBreve";
+import { MuralScreen } from "../../../mural/MuralScreen";
 
-export default MuralEmBreve;
+export default MuralScreen;

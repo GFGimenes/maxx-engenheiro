@@ -79,6 +79,11 @@ public sealed class Usuario
 
     public bool EhDemonstracao => LoteDaDemonstracao is not null;
 
+    // Quando o usuário abriu a aba Troféus pela última vez (passo 10, pergunta 5). Prêmio
+    // obtido depois disso acende a bolinha da aba; é um marcador próprio, separado do
+    // sininho: abrir Troféus não lê notificação nenhuma.
+    public DateTimeOffset? TrofeusVistoEm { get; private set; }
+
     // Todo prefixo que o usuário já teve, o atual inclusive. Nenhum volta a ser de outro.
     public IReadOnlyCollection<PrefixoReservado> PrefixosReservados => _prefixosReservados.AsReadOnly();
 
@@ -239,6 +244,16 @@ public sealed class Usuario
 
         ExAlunoDesde = agora;
         Sufixo = Identidade.Sufixo.ExAluno;
+    }
+
+    // Só anda para a frente: um pedido atrasado, de outra aba ou de outro aparelho, não
+    // reacende a bolinha de um prêmio já visto.
+    public void MarcarTrofeusVistos(DateTimeOffset agora)
+    {
+        if (TrofeusVistoEm is null || agora > TrofeusVistoEm)
+        {
+            TrofeusVistoEm = agora;
+        }
     }
 
     // Público para a borda conferir antes de montar o usuário.

@@ -160,7 +160,7 @@ PR pequeno e de assunto único.
 - Todo erro em tela vira mensagem amigável. O usuário nunca deve sentir que o app travou.
 - Superfície sem prancheta desenhada segue a identidade visual: entrada da demonstração,
   aceite de termos, busca, editar perfil, perfil do professor, turmas do professor, modal
-  de medalha, área web da instituição.
+  de medalha, área web da instituição, tela de notificações, novo aviso do professor.
 
 ## Texto em docs
 

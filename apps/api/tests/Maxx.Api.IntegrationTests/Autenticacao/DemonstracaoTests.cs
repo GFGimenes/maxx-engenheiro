@@ -475,6 +475,21 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
                 ]);
         }
 
+        // Um aviso da Renata para a turma, lido pelas duas (passo 10): a leitura segura o
+        // usuário, sem cascata. O aviso não é do lote e fica.
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var banco = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            var agora = DateTimeOffset.UtcNow;
+            var aviso = Maxx.Domain.Mural.Aviso.Publicar(
+                contaDaRenata, Maxx.Domain.Mural.EscopoDoAviso.Turma, [turma], "Prova remarcada", "Passou para sexta.", null, agora).Aviso!;
+            var leitoras = await banco.Set<Usuario>()
+                .Where(usuario => usuario.NomeDeExibicao == "Ana Paula" || usuario.NomeDeExibicao == "Carla Dias")
+                .Select(usuario => usuario.Id)
+                .ToListAsync(Ct);
+            await SalvarAsync(factory, [aviso, .. leitoras.Select(leitora => new Maxx.Domain.Mural.LeituraDeAviso(leitora, aviso.Id, agora))]);
+        }
+
         var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);
         var purga = Regex.Match(readme, @"```sql\s+(BEGIN;.*?COMMIT;)\s+```", RegexOptions.Singleline, TimeSpan.FromSeconds(5));
         Assert.True(purga.Success);
@@ -497,6 +512,8 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(1, await db.Set<EvidenciaDaConquista>().CountAsync(Ct));
         Assert.Equal(restante.Id, (await db.Set<ProgressoDeConquistaRow>().SingleAsync(Ct)).AlunoId);
         Assert.Equal(restante.Id, (await db.Set<Notificacao>().SingleAsync(Ct)).UsuarioId);
+        Assert.Equal(restante.Id, (await db.Set<Maxx.Domain.Mural.LeituraDeAviso>().SingleAsync(Ct)).UsuarioId);
+        Assert.Equal(1, await db.Set<Maxx.Domain.Mural.Aviso>().CountAsync(Ct));
         Assert.All(await db.Set<UploadPendente>().ToListAsync(Ct), upload => Assert.Equal(restante.Id, upload.UsuarioId));
         Assert.Equal(2, await db.Set<UploadPendente>().CountAsync(Ct));
         Assert.All(await db.Set<Post>().ToListAsync(Ct), post => Assert.Equal(restante.Id, post.AutorId));
