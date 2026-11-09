@@ -2,6 +2,7 @@ import type { components } from "@maxx/api-client";
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 
@@ -83,5 +84,58 @@ export function useRevogar() {
       }
     },
     onSettled: atualizar,
+  });
+}
+
+export type LoteDaDemonstracao =
+  components["schemas"]["LoteDaDemonstracaoResponse"];
+
+// Os lotes de demonstração no banco, do mais recente ao mais antigo, com o vigente marcado.
+export function useLotes() {
+  const client = useApiClient();
+
+  return useQuery({
+    queryKey: ["instituicao", "lotes"],
+    queryFn: async () => {
+      const { data, error } = await client.GET(
+        "/api/v1/instituicao/demonstracao/lotes",
+      );
+      if (!data) {
+        throw FalhaDaApi.doCorpo(error);
+      }
+      return data;
+    },
+  });
+}
+
+// A purga de um lote, com o nome dele digitado de novo (P6 do passo 12). Purgado, o lote sai
+// da lista; ranking, raridade e o feed mudam pelo worker.
+export function usePurgar() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      lote,
+      confirmacao,
+    }: {
+      lote: string;
+      confirmacao: string;
+    }) => {
+      const { data, error } = await client.POST(
+        "/api/v1/instituicao/demonstracao/lotes/{lote}/purga",
+        { params: { path: { lote } }, body: { confirmacao } },
+      );
+      if (!data) {
+        throw FalhaDaApi.doCorpo(error);
+      }
+      return data;
+    },
+    onSuccess: () =>
+      Promise.all(
+        [["instituicao", "lotes"], ["feed"], ["perfil"]].map((queryKey) =>
+          queryClient.invalidateQueries({ queryKey }),
+        ),
+      ),
   });
 }

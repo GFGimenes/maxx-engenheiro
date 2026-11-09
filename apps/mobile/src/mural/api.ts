@@ -105,8 +105,14 @@ export function useLerTodos() {
   });
 }
 
+// Para quem: as turmas do professor, ou a faculdade ou os cursos, da instituição (passo 12).
+export type AlvoDoAviso =
+  | { escopo: "turma"; turmaIds: string[] }
+  | { escopo: "faculdade" }
+  | { escopo: "curso"; cursoIds: string[] };
+
 export interface NovoAviso {
-  turmaIds: string[];
+  alvo: AlvoDoAviso;
   titulo: string;
   texto: string;
   derivadas: Derivadas | null;
@@ -119,8 +125,9 @@ const FOTO_PERDIDA = new Set([
   "foto-nao-enviada",
 ]);
 
-// Publicar o aviso do professor para as turmas dele (produto.md 7): sobe a foto, se houver,
-// e cria o aviso com o id do upload. Se o aviso falhar por outro motivo, a foto já enviada
+// Publicar o aviso (produto.md 7): do professor para as turmas dele, ou da instituição para a
+// faculdade ou para um ou mais cursos. Sobe a foto, se houver, e cria o aviso com o id do
+// upload. Se o aviso falhar por outro motivo, a foto já enviada
 // é reaproveitada na próxima tentativa, como no novo post, sem gastar o limite de upload.
 export function usePublicarAviso() {
   const client = useApiClient();
@@ -130,7 +137,7 @@ export function usePublicarAviso() {
   );
 
   return useMutation({
-    mutationFn: async ({ turmaIds, titulo, texto, derivadas }: NovoAviso) => {
+    mutationFn: async ({ alvo, titulo, texto, derivadas }: NovoAviso) => {
       let uploadId: string | null = null;
       if (derivadas) {
         uploadId =
@@ -141,7 +148,7 @@ export function usePublicarAviso() {
       }
 
       const { data, error } = await client.POST("/api/v1/avisos", {
-        body: { escopo: "turma", turmaIds, titulo, texto, uploadId },
+        body: { ...alvo, titulo, texto, uploadId },
       });
       if (!data) {
         const falha = FalhaDaApi.doCorpo(error);

@@ -14,8 +14,7 @@ interface Entrada {
   destino: Href;
 }
 
-// O que a área da instituição oferece (produto.md 10.2). Avisos e a purga chegam na etapa 9
-// do passo 12.
+// O que a área da instituição oferece (produto.md 10.2).
 const ENTRADAS: Entrada[] = [
   {
     titulo: "Alunos",
@@ -34,6 +33,18 @@ const ENTRADAS: Entrada[] = [
     descricao: "Prêmios em averiguação: confirmar ou revogar.",
     icone: "taca",
     destino: "/instituicao/contestacoes",
+  },
+  {
+    titulo: "Novo aviso",
+    descricao: "Para a faculdade ou para um ou mais cursos.",
+    icone: "newspaper",
+    destino: "/instituicao/novo-aviso",
+  },
+  {
+    titulo: "Purgar demonstração",
+    descricao: "Tirar do banco os dados de um lote da demonstração.",
+    icone: "fechar",
+    destino: "/instituicao/purga",
   },
 ];
 
