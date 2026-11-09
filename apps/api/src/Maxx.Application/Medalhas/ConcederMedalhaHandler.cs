@@ -1,5 +1,6 @@
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autorizacao;
+using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Domain.Premios;
 
@@ -81,6 +82,7 @@ public sealed class ConcederMedalhaHandler(
 
         medalhas.Adicionar(medalha);
         fila.Enfileirar(new NotificarMedalhaRecebida(medalha.Id));
+        fila.Enfileirar(ReavaliarConquistas.PelaMedalha(medalha.AlunoId, medalha.Id));
         fila.Enfileirar(new RecalcularRaridade());
         await unitOfWork.SalvarAsync(cancellationToken);
         return medalha;

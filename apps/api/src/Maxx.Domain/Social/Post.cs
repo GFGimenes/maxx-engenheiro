@@ -1,4 +1,5 @@
 using Maxx.Domain.Academico;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Fotos;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
@@ -9,8 +10,8 @@ namespace Maxx.Domain.Social;
 // rende um post. Só aluno ativo publica; o ex-aluno mantém os que já tinha. A foto são as
 // duas derivadas de um upload confirmado na publicação (ADR 0002 e 0003).
 //
-// O prêmio é a medalha (passo 7) ou o prêmio de participação reivindicado (passo 8); a
-// conquista entra no passo 9. Nunca mais de um por post.
+// O prêmio é a medalha (passo 7), o prêmio de participação reivindicado (passo 8) ou a
+// conquista (passo 9). Nunca mais de um por post.
 public sealed class Post
 {
     // Em caracteres, contando um emoji como um, como no nome de exibição.
@@ -22,7 +23,13 @@ public sealed class Post
     }
 
     private Post(
-        Guid autorId, string? legenda, UploadPendente? upload, Medalha? medalha, PremioParticipacao? premio, DateTimeOffset agora)
+        Guid autorId,
+        string? legenda,
+        UploadPendente? upload,
+        Medalha? medalha,
+        PremioParticipacao? premio,
+        Conquista? conquista,
+        DateTimeOffset agora)
     {
         Id = Guid.CreateVersion7();
         AutorId = autorId;
@@ -31,6 +38,7 @@ public sealed class Post
         ChaveDaFotoDaGrade = upload?.ChaveDaGrade;
         MedalhaId = medalha?.Id;
         PremioParticipacaoId = premio?.Id;
+        ConquistaId = conquista?.Id;
         CriadoEm = agora;
     }
 
@@ -49,6 +57,9 @@ public sealed class Post
     // O prêmio de participação do post de reivindicação (passo 8). Nunca junto da medalha.
     public Guid? PremioParticipacaoId { get; private set; }
 
+    // A conquista que o aluno postou (passo 9). Nunca junto de outro prêmio.
+    public Guid? ConquistaId { get; private set; }
+
     public DateTimeOffset CriadoEm { get; private set; }
 
     // Remoção pela instituição (produto.md 2.1): o post some para todos, e fica quem
@@ -61,23 +72,46 @@ public sealed class Post
 
     public bool TemLegenda => Legenda is not null;
 
-    public bool TemPremio => MedalhaId is not null || PremioParticipacaoId is not null;
+    public bool TemPremio => MedalhaId is not null || PremioParticipacaoId is not null || ConquistaId is not null;
 
     public bool EstaRemovido => RemovidoEm is not null;
 
     public IReadOnlyList<string> ChavesDaFoto => TemFoto ? [ChaveDaFotoDoFeed!, ChaveDaFotoDaGrade!] : [];
 
-    // O upload e a medalha chegam já buscados; se a medalha já tem post é pergunta ao banco,
-    // feita antes por quem chama e garantida pelo índice único. Publicado, o upload fica
-    // confirmado e sai do alcance da limpeza.
     public static ResultadoDaPublicacao Publicar(
-        Usuario autor, string? legenda, UploadPendente? upload, Medalha? medalha, DateTimeOffset agora)
+        Usuario autor, string? legenda, UploadPendente? upload, Medalha? medalha, DateTimeOffset agora) =>
+        Publicar(autor, legenda, upload, medalha, null, agora);
+
+    // O upload e o prêmio chegam já buscados; se o prêmio já tem post é pergunta ao banco,
+    // feita antes por quem chama e garantida pelo índice único. Publicado, o upload fica
+    // confirmado e sai do alcance da limpeza. O prêmio é a medalha ou a conquista, nunca os
+    // dois.
+    public static ResultadoDaPublicacao Publicar(
+        Usuario autor, string? legenda, UploadPendente? upload, Medalha? medalha, Conquista? conquista, DateTimeOffset agora)
     {
         ArgumentNullException.ThrowIfNull(autor);
 
         if (Conferir(autor, ref legenda, upload) is { } recusa)
         {
             return Recusa(recusa);
+        }
+
+        if (medalha is not null && conquista is not null)
+        {
+            return Recusa(RecusaDaPublicacao.MaisDeUmPremio);
+        }
+
+        if (conquista is not null)
+        {
+            if (conquista.AlunoId != autor.Id)
+            {
+                return Recusa(RecusaDaPublicacao.PremioNaoEncontrado);
+            }
+
+            if (!conquista.EstaAtiva)
+            {
+                return Recusa(RecusaDaPublicacao.ConquistaRemovida);
+            }
         }
 
         if (medalha is not null)
@@ -93,13 +127,13 @@ public sealed class Post
             }
         }
 
-        if (legenda is null && upload is null && medalha is null)
+        if (legenda is null && upload is null && medalha is null && conquista is null)
         {
             return Recusa(RecusaDaPublicacao.Vazio);
         }
 
         upload?.Confirmar(agora);
-        return new(new Post(autor.Id, legenda, upload, medalha, null, agora), null);
+        return new(new Post(autor.Id, legenda, upload, medalha, null, conquista, agora), null);
     }
 
     // O post de reivindicação (produto.md 4.7): a foto é obrigatória, porque é a
@@ -132,7 +166,7 @@ public sealed class Post
         }
 
         upload.Confirmar(agora);
-        return new(new Post(autor.Id, legenda, upload, null, premio, agora), null);
+        return new(new Post(autor.Id, legenda, upload, null, premio, null, agora), null);
     }
 
     // O que vale para todo post: só aluno ativo publica, a legenda cabe, e o upload é do
@@ -197,9 +231,10 @@ public sealed class Post
         RemovidoPorId = instituicao.Id;
     }
 
-    // Medalha anulada (decisão do passo 7, produto.md 4.8): o post perde o vínculo e fica
-    // como post comum. Sem foto nem legenda ele ficaria vazio, e post vazio não existe: quem
-    // chama o apaga em vez de desvincular.
+    // Medalha anulada (decisão do passo 7, produto.md 4.8), e conquista removida pelo
+    // recálculo (passo 9), do mesmo jeito: o post perde o vínculo e fica como post comum. Sem
+    // foto nem legenda ele ficaria vazio, e post vazio não existe: quem chama o apaga em vez de
+    // desvincular.
     public bool FicariaVazioSemPremio => !TemFoto && !TemLegenda;
 
     public void DesvincularPremio()
@@ -211,6 +246,7 @@ public sealed class Post
 
         MedalhaId = null;
         PremioParticipacaoId = null;
+        ConquistaId = null;
     }
 
     private static ResultadoDaPublicacao Recusa(RecusaDaPublicacao recusa) => new(null, recusa);
@@ -230,6 +266,12 @@ public enum RecusaDaPublicacao
 
     // A reivindicação sem foto: a foto é a comprovação.
     FotoObrigatoria,
+
+    // A conquista que o recálculo removeu depois de uma anulação (passo 9).
+    ConquistaRemovida,
+
+    // Medalha e conquista no mesmo post: um prêmio por post.
+    MaisDeUmPremio,
 }
 
 public enum ModoDeRemocao

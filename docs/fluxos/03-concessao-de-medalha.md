@@ -115,3 +115,25 @@ worker (passo 6).
 
 A anulação é o comando `Maxx.Api anular-medalha <id> --instituicao <e-mail>`, que sai com 0
 quando a medalha fica anulada ou já estava, 1 quando recusa e 2 quando o uso está errado.
+
+## No passo 9
+
+O que era desenho agora roda, menos o ranking (passo 11):
+
+- A concessão enfileira também `reavaliar-conquistas`. O worker trava o aluno, avalia só
+  as conquistas que a medalha pode mexer, na instância dela, grava o progresso de todas e
+  concede as de gatilho `porFato` que alcançaram o alvo, com as evidências e a notificação
+  `conquistaObtida`. A trava por aluno impede disparo duplo; o índice único é a rede de
+  segurança.
+- As de gatilho `fechamentoDePeriodo` só ganham progresso pela concessão. Quem as concede é
+  o fechamento: a verificação de fechamentos, de hora em hora, fecha cada instância
+  encerrada e abre a avaliação de cada aluno matriculado. Fato que chega a uma instância já
+  fechada ainda a concede até a véspera do congelamento.
+- A anulação enfileira `recalcular-conquistas-da-medalha`: refaz o progresso e reavalia só
+  as conquistas com a medalha nas evidências. A que deixou de ser satisfeita é removida
+  (fica no histórico), os pontos saem, o aluno recebe `conquistaRemovida`, e o post dela
+  perde o vínculo, como o da medalha anulada.
+- O aluno vê em Troféus a conquista obtida, com a instância, e o progresso das que faltam
+  ("4 de 5 neste bimestre").
+
+Decisões em `decisoes/README.md`, Conquistas (passo 9).

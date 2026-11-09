@@ -226,6 +226,13 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
 - Do passo 8: reavaliar as conquistas quando o prêmio de participação fica definitivo,
   pelo fim da janela de 15 dias (trabalho `tornar-premio-definitivo`) ou pela confirmação
   da contestação.
+- Entrou também, aprovado no plano do passo: o post de conquista, porque um prêmio rende
+  um post (produto.md 6.1).
+
+Ficam pendentes: o recálculo do ranking pela conquista concedida ou removida (passo 11); o
+texto das notificações `conquistaObtida` e `conquistaRemovida`, já gravadas, e a
+bolinha de Troféus (passo 10); conquistas no seed de demonstração (passo 12). Decisões do
+passo em `decisoes/README.md`, Conquistas (passo 9).
 
 ### Passo 10. Mural e notificações
 
@@ -234,6 +241,8 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
 - Registro de leitura e bolinha dourada na aba Mural.
 - Sininho no cabeçalho do feed, com as notificações de medalha, aprovação, reprovação,
   contestação, decisão e aviso novo. A de medalha recebida já é gravada desde o passo 6.
+- Do passo 9: o texto das notificações de conquista obtida e de conquista removida pelo
+  recálculo, já gravadas pelo worker.
 - Bolinha de prêmio novo na aba Troféus.
 
 ### Passo 11. Rankings
@@ -248,6 +257,12 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
   pela contestação, pela decisão da instituição e pela remoção do post pela instituição
   (ADR 0005), e a regra de em que semestre o prêmio de participação conta (D4); hoje o
   prêmio guarda só as datas do evento.
+- Do passo 9: o recálculo do ranking também pela conquista concedida ou removida (ADR
+  0005). A regra do semestre do prêmio de participação já foi decidida (produto.md 4.9: o
+  semestre que contém o início do evento; no recesso, o seguinte), e o calendário a
+  responde em `Calendario.SemestreDoEvento`. O congelamento reaproveita
+  `InstanciaDePeriodo.DiasAteOCongelamento` e a mesma leitura: no dia do fim mais 30, já
+  congelado. A conquista pontua no semestre da instância dela.
 
 ### Passo 12. Área web da instituição
 
@@ -263,6 +278,10 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
   distribuídos de modo que as quatro raridades apareçam, avisos, eventos passados e
   futuros, duas comprovações pendentes e uma contestação aberta. Os posts semeados, que o
   passo 7 deixou para cá (D13), nascem com as contas desses alunos.
+- Do passo 9: conquistas no seed, que nascem do worker a partir das medalhas e dos prêmios
+  semeados (reavaliação e fechamento), e não gravadas à mão: é o que mantém evidências e
+  progresso coerentes. A anulação pela área web enfileira o mesmo recálculo do comando
+  administrativo.
 
 ### Passo 13. Endurecimento e ensaio
 
@@ -320,3 +339,4 @@ titular, canal de contato e prazo de guarda dos dados.
 | Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. Acompanhar no passo 13 |
 | Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP. No fechamento do passo 8, uma rodada local da suíte inteira (69 testes, em paralelo) teve uma falha no teste do limite do login, que passou nas outras; o limite é por réplica, e há duas atrás do Caddy |
 | Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest até o Maestro do passo 13. No nativo, o link de senha nova abre no navegador |
+| Timeout do Jest no runner da CI | No passo 9, o job `mobile` falhou em pushes que só mexiam na API: o primeiro teste de um arquivo (`cadastro`, `comprovacoes`, `feed`) passou dos 5 s do Jest no runner, pelo custo de carregar o arquivo (localmente, 725 ms). No push da etapa 2, três tentativas seguidas falharam no mesmo teste. O tempo limite dos testes do cliente subiu para 15 s (`testTimeout` no `package.json` do app). Acompanhar no passo 13: se o primeiro teste de algum arquivo chegar perto disso, aquecer o transform em vez de subir de novo o limite |

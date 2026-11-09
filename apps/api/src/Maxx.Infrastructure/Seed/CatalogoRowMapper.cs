@@ -113,6 +113,33 @@ public static class CatalogoRowMapper
         };
     }
 
+    // O mesmo caminho, para a conquista: a regra volta do jsonb no formato do catálogo.
+    public static ItemConquista ParaConquista(ItemCatalogoRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        if (row.Tipo != NomeJson.De(TipoDeItem.Conquista))
+        {
+            throw new InvalidOperationException($"O item {row.Codigo} é {row.Tipo}, não conquista.");
+        }
+
+        return new ItemConquista
+        {
+            Codigo = row.Codigo,
+            Nome = row.Nome,
+            Descricao = row.Descricao,
+            Tier = Ler<Tier>(row.Tier, row.Codigo),
+            Pontos = row.Pontos,
+            Familia = row.FamiliaCodigo,
+            OrdemNaFamilia = row.OrdemNaFamilia,
+            RestricaoCurso = row.RestricaoCurso,
+            Vigencia = new Vigencia(row.VigenciaInicio, row.VigenciaFim),
+            Periodo = Ler<Periodo>(row.Periodo, row.Codigo),
+            Gatilho = Ler<Gatilho>(row.Gatilho, row.Codigo),
+            Regra = RegraDeConquistaJson.Ler(row.Regra
+                ?? throw new InvalidOperationException($"A conquista {row.Codigo} está sem regra no banco.")),
+        };
+    }
+
     private static InvalidOperationException Incompleto(string codigo, string campo) =>
         new($"O prêmio de participação {codigo} está sem {campo} no banco.");
 

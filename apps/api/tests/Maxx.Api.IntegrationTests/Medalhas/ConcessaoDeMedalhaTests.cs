@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Maxx.Api.Autenticacao;
 using Maxx.Api.Medalhas;
+using Maxx.Application.Conquistas;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
@@ -103,9 +104,13 @@ public sealed class ConcessaoDeMedalhaTests(PostgresFixture postgres) : IClassFi
         Assert.Null(medalha.AnuladaEm);
 
         var trabalhos = await db.Set<Trabalho>().OrderBy(trabalho => trabalho.Id).ToListAsync(Ct);
-        Assert.Equal([NotificarMedalhaRecebida.Tipo, RecalcularRaridade.Tipo], trabalhos.Select(trabalho => trabalho.Tipo));
+        Assert.Equal(
+            [NotificarMedalhaRecebida.Tipo, ReavaliarConquistas.Tipo, RecalcularRaridade.Tipo], trabalhos.Select(trabalho => trabalho.Tipo));
         using var carga = JsonDocument.Parse(trabalhos[0].Carga);
         Assert.Equal(medalha.Id, carga.RootElement.GetProperty("medalhaId").GetGuid());
+        using var reavaliacao = JsonDocument.Parse(trabalhos[1].Carga);
+        Assert.Equal(mundo.Ana, reavaliacao.RootElement.GetProperty("alunoId").GetGuid());
+        Assert.Equal(medalha.Id, reavaliacao.RootElement.GetProperty("medalhaId").GetGuid());
 
         var naLista = Assert.Single(Assert.Single(await AlunosAsync(client, mundo.BancoDeDados)).Medalhas);
         Assert.Equal((medalha.Id, "M01", 2), (naLista.Id, naLista.Item, naLista.Bimestre));

@@ -1,3 +1,4 @@
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
@@ -17,9 +18,10 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         {
             table.HasCheckConstraint(
                 "ck_post_nao_vazio",
-                "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL");
+                "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL" +
+                " OR conquista_id IS NOT NULL");
             table.HasCheckConstraint(
-                "ck_post_um_premio", "medalha_id IS NULL OR premio_participacao_id IS NULL");
+                "ck_post_um_premio", "num_nonnulls(medalha_id, premio_participacao_id, conquista_id) <= 1");
             table.HasCheckConstraint(
                 "ck_post_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
             table.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
@@ -37,6 +39,10 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
             .HasDatabaseName("ix_post_premio_participacao_ativo")
             .IsUnique()
             .HasFilter("premio_participacao_id IS NOT NULL AND removido_em IS NULL");
+        builder.HasIndex(post => post.ConquistaId)
+            .HasDatabaseName("ix_post_conquista_ativa")
+            .IsUnique()
+            .HasFilter("conquista_id IS NOT NULL AND removido_em IS NULL");
 
         // Os posts de um autor, do mais novo ao mais antigo: o perfil e o trecho de seguidos
         // do feed (passo 7, etapas 5 e 6) andam por este índice.
@@ -47,6 +53,7 @@ internal sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.HasOne<Usuario>().WithMany().HasForeignKey(post => post.RemovidoPorId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Medalha>().WithMany().HasForeignKey(post => post.MedalhaId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<PremioParticipacao>().WithMany().HasForeignKey(post => post.PremioParticipacaoId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Conquista>().WithMany().HasForeignKey(post => post.ConquistaId).OnDelete(DeleteBehavior.Restrict);
 
         // Duas remoções, ou remoção e anulação, ao mesmo tempo: o xmin deixa só a primeira
         // gravar.

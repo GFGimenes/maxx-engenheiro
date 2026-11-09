@@ -5,6 +5,7 @@ using Maxx.Application.Medalhas;
 using Maxx.Application.Paginacao;
 using Maxx.Application.Perfil;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
 using Maxx.Domain.Social;
@@ -44,7 +45,9 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
                         + db.Set<PremioParticipacao>()
                             .Where(premio => premio.AlunoId == usuario.Id
                                 && (premio.Estado == EstadoDoPremioParticipacao.Valido || premio.Estado == EstadoDoPremioParticipacao.Definitivo))
-                            .Sum(premio => premio.Pontos),
+                            .Sum(premio => premio.Pontos)
+                        + db.Set<Conquista>().Where(conquista => conquista.AlunoId == usuario.Id && conquista.RemovidaEm == null)
+                            .Sum(conquista => conquista.Pontos),
                     MedalhasConcedidas = db.Set<Medalha>().Count(medalha => medalha.ConcedidaPorId == usuario.Id && medalha.AnuladaEm == null),
                 })
             .AsNoTracking()

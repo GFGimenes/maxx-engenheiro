@@ -58,8 +58,15 @@ internal static class PremiosEndpoints
                     obtido.Materia,
                     obtido.Bimestre,
                     obtido.ObtidoEm,
-                    obtido.PostId))],
-                item.ExigeMateria))]);
+                    obtido.PostId,
+                    obtido.Instancia is { } instancia
+                        ? new InstanciaResponse(ProfessorEndpoints.Nome(instancia.Periodo), instancia.Ano, instancia.Semestre, instancia.Bimestre)
+                        : null))],
+                item.ExigeMateria,
+                !soObtidos && item.Progresso is { } progresso
+                    ? new ProgressoResponse(
+                        ProfessorEndpoints.Nome(progresso.Periodo), progresso.Contagem, progresso.Alvo, progresso.EmMaterias ? "materias" : null)
+                    : null))]);
 }
 
 public sealed record PremiosDoAlunoResponse(int Pontos, IReadOnlyList<FamiliaResponse> Familias, IReadOnlyList<ItemDoAlunoResponse> Itens);
@@ -81,10 +88,31 @@ public sealed record ItemDoAlunoResponse(
     int? OrdemNaFamilia,
     RaridadeResponse? Raridade,
     IReadOnlyList<PremioObtidoResponse> Obtidos,
-    bool ExigeMateria);
+    bool ExigeMateria,
+    ProgressoResponse? Progresso = null);
+
+// O progresso ("2 de 3") da conquista na instância vigente do período dela (passo 9), em
+// "bimestre", "semestre", "ano" ou "curso". Só na rota do próprio aluno; o perfil público
+// nunca o leva (produto.md 9.1).
+// Unidade: "materias" quando o alvo é o das matérias do período (regra de todas as matérias);
+// nula, quando é um número de prêmios. Acréscimo do passo 9.
+public sealed record ProgressoResponse(string Periodo, int Contagem, int Alvo, string? Unidade = null);
 
 // Percentual dos alunos que têm o item, com uma casa: "x% dos alunos".
 public sealed record RaridadeResponse(string Nivel, double Percentual);
 
 // PostId entrou no passo 7: o post que o prêmio rendeu, para o app não oferecer de novo.
-public sealed record PremioObtidoResponse(Guid Id, string Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm, Guid? PostId);
+// Instancia entrou no passo 9: só na conquista, o período em que ela foi obtida.
+public sealed record PremioObtidoResponse(
+    Guid Id,
+    string Tier,
+    int Pontos,
+    string? Materia,
+    int? Bimestre,
+    DateTimeOffset ObtidoEm,
+    Guid? PostId,
+    InstanciaResponse? Instancia = null);
+
+// A instância de uma conquista obtida, em números, para o app escrever: o bimestre (1 a 4)
+// com o semestre e o ano; o semestre (1 ou 2) e o ano; o ano; ou só o período, no curso.
+public sealed record InstanciaResponse(string Periodo, int? Ano, int? Semestre, int? Bimestre);
