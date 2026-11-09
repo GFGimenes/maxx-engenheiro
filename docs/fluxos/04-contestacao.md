@@ -94,3 +94,10 @@ definitivo e, depois de definitivo, não pode mais ser contestado
   conquistas de prêmio de participação que ele fecha.
 - Válido e em averiguação não contam; revogado nunca chega a ser evidência.
 - Decisões em `decisoes/README.md`, Conquistas (passo 9).
+
+## Como ficou no passo 11
+
+- A contestação, a confirmação e a revogação enfileiram `recalcular-ranking` na mesma
+  transação: em averiguação, o prêmio sai do ranking; confirmado, volta com o instante da
+  aprovação, que a contestação não muda.
+- Decisões em `decisoes/README.md`, Rankings (passo 11).

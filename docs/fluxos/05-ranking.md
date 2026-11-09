@@ -14,7 +14,7 @@ sequenceDiagram
   participant App as Aluno (app)
 
   Origem->>Fila: recalcular ranking, na mesma transacao da escrita
-  Note over Origem: concessao, aprovacao, contestacao,<br/>decisao, anulacao, conquista
+  Note over Origem: concessao, aprovacao, contestacao,<br/>decisao, remocao pela instituicao, anulacao, conquista
 
   W->>Fila: pega os trabalhos (SKIP LOCKED)
   W->>W: coalesce os disparos, no maximo uma execucao a cada 10 s por visao
@@ -53,3 +53,23 @@ catálogo não move nenhuma posição.
 
 Se o worker morre, o ranking congela sem erro em tela (ADR 0005). A verificação de saúde
 e o alerta ficam para o passo 13.
+
+## Como ficou no passo 11
+
+- **Tabela:** `posicao_no_ranking`, uma linha por aluno em cada visão em que ele tem
+  pontos: escopo, período, semestre (só no período semestre), curso (só no escopo curso),
+  posição, pontos e `ultima_concessao_em`. Aluno sem pontos não tem linha.
+- **Escrita:** o trabalho `recalcular-ranking`, com a própria linha em `recalculo` e a
+  coalescência do recálculo de raridade. Reescreve o histórico e os semestres ainda não
+  congelados; o congelado fica como estava. O seed base pede um recálculo quando o
+  calendário muda ou o ranking nunca foi calculado.
+- **O que pontua e onde:** a medalha ativa, no semestre da concessão; o prêmio de
+  participação válido ou definitivo, no semestre do início do evento; a conquista não
+  removida, no semestre da instância (a de ano no segundo semestre; a de curso no da
+  concessão). Regras em `produto.md` 4.9 e 5.
+- **Leitura:** `GET /v1/rankings?escopo=&periodo=&seguidos=&cursor=`, 20 por página, com a
+  linha do próprio aluno à parte. O perfil, o autor do post e Troféus trazem a posição do
+  histórico geral.
+- **Entrada:** pela posição no perfil e em Troféus, que abrem o histórico, e pelos atalhos
+  da Busca.
+- Decisões em `decisoes/README.md`, Rankings (passo 11).

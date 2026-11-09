@@ -272,6 +272,15 @@ Mural e notificações (passo 10).
   responde em `Calendario.SemestreDoEvento`. O congelamento reaproveita
   `InstanciaDePeriodo.DiasAteOCongelamento` e a mesma leitura: no dia do fim mais 30, já
   congelado. A conquista pontua no semestre da instância dela.
+- Entrou também, aprovado no plano do passo: o "Quem eu sigo" da prancheta, filtrando a
+  mesma visão sem mudar a posição de ninguém; e, aprovado na etapa 5, a posição do
+  histórico geral no autor do post do feed e no cabeçalho de Troféus, que também abre o
+  ranking, como estão nas pranchetas.
+
+Ficam pendentes: marcar ex-aluno e trocar de curso pedirem o recálculo do ranking, que o
+worker já respeita (passo 12); o p95 da leitura do ranking e da posição no perfil e no feed,
+e a verificação de saúde do worker (passo 13). Decisões do passo em `decisoes/README.md`,
+Rankings (passo 11).
 
 ### Passo 12. Área web da instituição
 
@@ -296,6 +305,11 @@ Mural e notificações (passo 10).
   finalidade `aviso` do upload. Sugestão para o plano do passo 12, ainda não decidida: os
   avisos do seed nascerem pela mesma publicação, para a notificação de aviso novo ir aos
   destinatários pelo worker, como as conquistas do seed nascem do worker.
+- Do passo 11: marcar ex-aluno e trocar de curso enfileiram `fila.PedirRecalculos()` na
+  mesma transação do ato. O worker já tira o ex-aluno das visões de semestre e leva os
+  pontos para o curso novo (`Usuario.MarcarExAluno`, `Usuario.TrocarDeCurso` e o curso do
+  cadastro elegível); falta só o pedido. A concessão direta da instituição também pede o
+  recálculo, e o instante dela é o do desempate.
 
 ### Passo 13. Endurecimento e ensaio
 
@@ -305,7 +319,8 @@ Mural e notificações (passo 10).
   real (o teste dele desliga a varredura); e se a busca usa os índices de trigramas. Do
   passo 10: o p95 do mural, com a ETag, e o das novidades, que cada aluno pergunta ao
   voltar ao foco e a cada 60 s (a 2.000 usuários, cerca de 33 pedidos por segundo só
-  delas).
+  delas). Do passo 11: o p95 de `GET /v1/rankings`, sem ETag, e o do perfil e do feed, que
+  passaram a ler a posição do autor pelo índice do aluno.
 - CSP do build web liberando o domínio da CDN das fotos em `img-src` e o endpoint do R2 em
   `connect-src`, para o PUT direto do navegador.
 - R2 de verdade: rodar uma vez o `VerificacaoDoR2Tests`, que confere tipo e tamanho presos
