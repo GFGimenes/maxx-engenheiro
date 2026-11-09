@@ -140,7 +140,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres, ArmazenamentoFixture
         await factory.SeedDemoAsync(Ct);
 
         // Um cadastro de fora do arquivo, como o aluno que a banca criar no passo 5.
-        await AdicionarAsync(factory, CadastroElegivel.Instituicao("outra@unieduk.com.br", "Outra Conta"));
+        await AdicionarAsync(factory, CadastroElegivel.Instituicao("outra@maxx-unimax.com", "Outra Conta"));
         await factory.SeedDemoAsync(Ct);
 
         Assert.Equal(160, (await ContagensAsync(factory)).Cadastros);
@@ -188,14 +188,14 @@ public sealed class SeedDemoTests(PostgresFixture postgres, ArmazenamentoFixture
                 join cadastro in db.Set<CadastroElegivel>() on usuario.CadastroElegivelId equals cadastro.Id
                 select new { usuario, cadastro.Email })
             .ToDictionaryAsync(linha => linha.Email, linha => linha.usuario, StringComparer.OrdinalIgnoreCase, Ct);
-        var instituicao = contas["coordenacao@unieduk.com.br"];
+        var instituicao = contas["coordenacao@maxx-unimax.com"];
 
         // 2026/1 começa em 26/01 e termina em 27/06; 2026/2 começa em 27/07. Meia-noite em São Paulo.
         var inicioDe2026_1 = new DateTimeOffset(2026, 1, 26, 3, 0, 0, TimeSpan.Zero);
         Assert.Equal(inicioDe2026_1, contas["lucas.ferreira@al.unieduk.invalid"].CriadoEm);
         Assert.Equal(new DateTimeOffset(2026, 7, 27, 3, 0, 0, TimeSpan.Zero), contas["ana.souza@al.unieduk.invalid"].CriadoEm);
         Assert.Equal(inicioDe2026_1, instituicao.CriadoEm);
-        Assert.Equal(inicioDe2026_1, contas["renata.albuquerque@prof.unieduk.com.br"].CriadoEm);
+        Assert.Equal(inicioDe2026_1, contas["renata.albuquerque@maxx-unimax.com"].CriadoEm);
 
         var exAlunos = contas.Values.Where(conta => conta.EhExAluno).ToList();
         Assert.Equal(30, exAlunos.Count);

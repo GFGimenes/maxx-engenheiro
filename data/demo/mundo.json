@@ -2,7 +2,7 @@
   "observacao": "Mundo de demonstração do seed demo, completo desde o passo 12. Cursos e matérias são da UniMax; pessoas, RAs e e-mails são fictícios, e o e-mail dos alunos fica no domínio reservado al.unieduk.invalid, que nunca recebe nada. O seed só acrescenta o que falta: nunca apaga, e falha se uma linha que já existe divergir deste arquivo, salvo o que a instituição corrigiu (e-mail e curso do aluno). Cada matéria lista os semestres letivos em que tem turma; o professor entra em todas as turmas das matérias dele, e o aluno nas das matérias dele nos semestres letivos que lista (sem a lista, em todos). Todo aluno do arquivo nasce com conta, sem senha; o ex-aluno é marcado pela instituição no fim do último semestre que cursou.",
   "instituicao": [
     {
-      "email": "coordenacao@unieduk.com.br",
+      "email": "coordenacao@maxx-unimax.com",
       "nomeCompleto": "Coordenação UniMax"
     }
   ],
@@ -39,7 +39,7 @@
       ],
       "professores": [
         {
-          "email": "renata.albuquerque@prof.unieduk.com.br",
+          "email": "renata.albuquerque@maxx-unimax.com",
           "nomeCompleto": "Renata Albuquerque",
           "materias": [
             "Algoritmos e Programação",
@@ -49,7 +49,7 @@
           ]
         },
         {
-          "email": "fernando.prado@prof.unieduk.com.br",
+          "email": "fernando.prado@maxx-unimax.com",
           "nomeCompleto": "Fernando Prado",
           "materias": ["Redes de Computadores", "Sistemas Operacionais"]
         }
@@ -642,7 +642,7 @@
       ],
       "professores": [
         {
-          "email": "marcos.teixeira@prof.unieduk.com.br",
+          "email": "marcos.teixeira@maxx-unimax.com",
           "nomeCompleto": "Marcos Teixeira",
           "materias": [
             "Teoria Geral da Administração",
@@ -652,7 +652,7 @@
           ]
         },
         {
-          "email": "patricia.lacerda@prof.unieduk.com.br",
+          "email": "patricia.lacerda@maxx-unimax.com",
           "nomeCompleto": "Patrícia Lacerda",
           "materias": ["Finanças Corporativas", "Logística Empresarial"]
         }
@@ -1244,12 +1244,12 @@
       ],
       "professores": [
         {
-          "email": "helena.duarte@prof.unieduk.com.br",
+          "email": "helena.duarte@maxx-unimax.com",
           "nomeCompleto": "Helena Duarte",
           "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
         },
         {
-          "email": "ricardo.tavares@prof.unieduk.com.br",
+          "email": "ricardo.tavares@maxx-unimax.com",
           "nomeCompleto": "Ricardo Tavares",
           "materias": ["Farmacologia", "Semiologia"]
         }
@@ -1825,7 +1825,7 @@
       ],
       "professores": [
         {
-          "email": "claudio.fonseca@prof.unieduk.com.br",
+          "email": "claudio.fonseca@maxx-unimax.com",
           "nomeCompleto": "Cláudio Fonseca",
           "materias": [
             "Desvendando a Lógica Digital",
@@ -1835,7 +1835,7 @@
           ]
         },
         {
-          "email": "vanessa.queiroz@prof.unieduk.com.br",
+          "email": "vanessa.queiroz@maxx-unimax.com",
           "nomeCompleto": "Vanessa Queiroz",
           "materias": [
             "Estatística para Ciência de Dados",
