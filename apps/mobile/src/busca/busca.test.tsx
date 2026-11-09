@@ -196,7 +196,9 @@ describe("atalhos dos rankings", () => {
     expect(mockRoteador.push).toHaveBeenLastCalledWith("/rankings?visao=geral");
 
     await act(async () => {
-      fireEvent.press(screen.getByRole("button", { name: "Ranking do curso" }));
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Ranking do curso" }),
+      );
     });
     expect(mockRoteador.push).toHaveBeenLastCalledWith("/rankings?visao=curso");
   });

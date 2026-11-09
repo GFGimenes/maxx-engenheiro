@@ -93,7 +93,7 @@ test(
     await emTrofeusAte(page, /^Regra automática · \dº bimestre de \d{4}$/);
     await expect(c01.getByText("+25")).toBeVisible();
     await expect(c01.getByTestId("progresso-C01")).toHaveCount(0);
-    await expect(page.getByText("160 pts", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^160 pts( · #[\d.]+)?$/)).toBeVisible();
 
     // O aluno posta a conquista: um prêmio rende um post.
     await page.goto("/");
