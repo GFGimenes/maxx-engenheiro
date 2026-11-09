@@ -180,7 +180,7 @@ substituta, então não servem de referência de fonte. Componentes técnicos fi
 | Trilha | Por itens da família, de 2 a 5 passos, rolando na horizontal quando não couberem. O primeiro não obtido é o próximo, com cadeado; os demais não obtidos ficam só tracejados. A linha é contínua só entre dois obtidos, e uma lacuna no meio fica sem linha contínua. Círculo de 36, passo de 82, com o cartão de título dentro do componente |
 | Foco | Anel do token `focus`, com 2 px de espessura e 2 px de afastamento, só por teclado (`:focus-visible` na web). A prancheta mostra ouro no claro; vale o token. O contorno padrão do navegador sai com `outline-style: none`, porque largura 0 não o remove. O campo usa a borda de 1,5 px em `focus`, sem anel |
 | Pressionado e desativado | Pressionado com opacidade 0,85, embora a prancheta escureça. Desativado em `surface2` com `ink3`. O segmento ativo desativado mantém `segmentOn`, sem sombra, para a escolha continuar visível |
-| Avatar | Iniciais com as cores do token, do primeiro e do último nome, em Archivo 700 a 40% do tamanho. Com foto, a derivada da grade no lugar das iniciais. O anel dourado marca o próprio avatar no cabeçalho do perfil desde o passo 7; o do ranking chega no passo 11 |
+| Avatar | Iniciais com as cores do token, do primeiro e do último nome, em Archivo 700 a 40% do tamanho. Com foto, a derivada da grade no lugar das iniciais. O anel dourado marca o próprio avatar no cabeçalho do perfil desde o passo 7, e a linha do próprio aluno no ranking desde o passo 11 |
 | Raios | 8 nos chips. O segmento ativo tem raio 8, valor que vem de `identidade-visual.md`, porque o JSON só traz o raio do trilho |
 | Botão | Discreto com 32 de altura, 44 de toque e texto 13. O grande tem 50, em Instrument Sans 700 tamanho 15. Desde o passo 5, o grande é o da ação principal das telas de autenticação |
 | Campo | Texto em 16, fora da escala, porque abaixo disso o Safari do iPhone dá zoom ao focar. Rótulo em 14, peso 600. O erro de campo entrou no passo 5 (ver Autenticação no cliente) |
@@ -341,7 +341,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 | Decisão | Detalhe |
 |---|---|
 | Rotas | `GET /v1/perfis/{id}` e `GET /v1/eu/perfil`; a grade em `GET /v1/perfis/{id}/posts`, 18 por página; os prêmios obtidos em `GET /v1/perfis/{id}/premios`. Instituição sem papel de professor não tem perfil social (404) |
-| O que o perfil traz | Nome, arroba, papel, curso, semestre, ex-aluno, pontos, contadores, `euSigo` e foto. O RA só no próprio perfil. Faltantes e progresso só para o dono. O professor mostra as turmas vigentes e quantas medalhas concedeu. A posição no ranking chega no passo 11 |
+| O que o perfil traz | Nome, arroba, papel, curso, semestre, ex-aluno, pontos, contadores, `euSigo` e foto. O RA só no próprio perfil. Faltantes e progresso só para o dono. O professor mostra as turmas vigentes e quantas medalhas concedeu. Desde o passo 11, a posição no histórico geral |
 | ETag | Fraca, calculada do conteúdo, com 304 e `Cache-Control: private, no-cache`, porque a resposta depende de quem pede. Poupa banda, não banco: a resposta é montada antes de comparar |
 | Editar perfil | `PATCH /v1/eu/perfil` com nome, prefixo, upload de foto ou remoção, tudo ou nada. O prefixo antigo fica reservado ao dono, que pode voltar a ele; o de outra pessoa recebe 409. Trocar e remover a foto no mesmo pedido: 400 `foto-de-perfil-ambigua`. Disponibilidade em `GET /v1/eu/perfil/disponibilidade` |
 | Busca (D11) | `GET /v1/busca/alunos`, 20 por página: por trecho do nome sem acento nem maiúsculas, por trecho do prefixo ou pelo arroba inteiro com "@". Ativos e ex-alunos, filtro pelo curso atual e pelo semestre. Nunca professor, nunca pelo RA; `%` e `_` são texto. Menos de 2 caracteres e nenhum filtro: 400 `busca-sem-criterio` |
@@ -360,7 +360,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 | Pilha sobre as abas | O grupo `(app)` é um `Stack` sem cabeçalho, não um `Slot`: post, comentários, perfil de outra pessoa, novo post e editar perfil ficam por cima das abas, que continuam montadas. O voltar volta para a aba de onde se veio, com a busca digitada. Publicar e post removido voltam ao feed com `dismissTo`, sem empilhar outro |
 | Perfil (D10) | Sem bio, sem "Seguida por" e sem Compartilhar. Arroba sob o nome; anel dourado no próprio avatar; abas por ícone (grade, taça, fita) com a grade de três colunas. Post sem foto aparece na grade como medalhão sobre o metal, ou o começo da legenda sobre `surface`. O perfil de outra pessoa abre fora das abas, com voltar |
 | Menu do perfil | Tema, "Minhas turmas" para o professor e Sair. Fecha a pendência do tema do passo 4 |
-| Busca | Chips de curso e de semestre; os semestres seguem a duração do curso escolhido e, sem curso, vão até a maior. Os atalhos de ranking chegam no passo 11 |
+| Busca | Chips de curso e de semestre; os semestres seguem a duração do curso escolhido e, sem curso, vão até a maior. Desde o passo 11, os atalhos do ranking geral e do curso |
 | Editar perfil | Foto (trocar e remover), nome e prefixo com a disponibilidade consultada 500 ms depois de a digitação parar; o prefixo atual não é consultado. Salvar fica desativado sem mudança |
 | Foto na demonstração (D12) | Opcional, depois de a conta existir, porque o upload exige login. Melhor esforço: se a foto falhar, a conta segue sem ela |
 
@@ -400,7 +400,7 @@ pode ser decidido, remoção pela instituição, averiguação para os outros le
 | Evento (D1) | Semeado, com os itens do catálogo que aceita e, se for o caso, o curso a que se restringe; ou digitado pelo aluno na reivindicação, com nome (3 a 120 caracteres) e período, aceitando qualquer item. O item que deduplica por matéria (P17) vai sempre por texto livre, com a matéria: um evento semeado que o aceite faz o seed falhar |
 | Seed (D2) | `data/demo/eventos.json`, com 8 eventos de 2026/2 (4 abertos e 1 de cada curso), lido pelo seed demo: só acrescenta, e falha sem gravar nada com evento divergente, item que não é prêmio de participação, P17, curso inexistente ou código repetido. A CI confere o arquivo contra o catálogo sem banco, no passo "Catálogo e eventos válidos". O resto chega com o seed completo do passo 12 |
 | Datas (D3) | O evento já começou (início até hoje, em São Paulo) e começou depois do fim do último semestre letivo encerrado. O limite é o fim do semestre anterior, e não o início do vigente, para o evento do recesso continuar reivindicável e a reivindicação não parar no recesso. O fim pode estar adiante |
-| Semestre do evento (D4) | O prêmio guarda só as datas do evento. Em que semestre ele conta é regra do passo 11 |
+| Semestre do evento (D4) | O prêmio guarda só as datas do evento. Em que semestre ele conta foi decidido no passo 9 (`produto.md` 4.9), e o ranking o usa desde o passo 11 |
 | Lista | `GET /v1/eventos?item=`, só aluno: os semeados abertos ao curso dele, reivindicáveis hoje e que aceitam o item, do mais recente ao mais antigo. Item que não é prêmio de participação: 404 `item-nao-encontrado` |
 | Matérias do aluno | `GET /v1/eu/materias`, só aluno: as matérias das turmas dele no semestre de hoje, para a apresentação em sala. Pela D3, a data do evento é deste semestre. A matéria vale se o aluno estava matriculado numa turma dela no semestre que contém a data do evento; P17 com data no recesso não acha matéria |
 
@@ -464,7 +464,7 @@ pode ser decidido, remoção pela instituição, averiguação para os outros le
 
 | Limite | Onde é tratado |
 |---|---|
-| O ranking não é recalculado pela aprovação, contestação, decisão e remoção: a tabela de ranking não existe ainda | Passo 11 |
+| O ranking não é recalculado pela aprovação, contestação, decisão e remoção: a tabela de ranking não existe ainda | Resolvido no passo 11: os quatro enfileiram o recálculo na mesma transação |
 | Prêmio definitivo não reavalia conquistas | Resolvido no passo 9: o fim da janela e a confirmação da contestação enfileiram a reavaliação |
 | A conta de instituição não tem telas para a fila de contestações nem para a concessão direta | Passo 12 |
 | A remoção pela instituição que corre contra outro ato sobre o mesmo prêmio responde 404, como a corrida de duas remoções | Aceito |
@@ -505,7 +505,7 @@ participação, todas as matérias, conquista removida e o post dela, progresso 
 | Por fato (D6) | `reavaliar-conquistas`, com o aluno e o id da medalha ou do prêmio, na mesma transação do fato: concessão de medalha, fim da janela que torna o prêmio definitivo e confirmação da contestação. Avalia só as conquistas que o fato pode mexer, na instância dele |
 | Fechamento (D7) | `verificar-fechamentos` se reenfileira de hora em hora, com trava própria, e apaga as outras pendentes. Fecha cada instância encerrada (meia-noite de São Paulo do dia seguinte ao fim) sem registro em `fechamento_de_periodo`: grava o registro e enfileira `fechar-periodo` juntos. Este abre um `avaliar-fechamento-do-aluno` por aluno matriculado no período, ex-alunos inclusive, para não passar dos 60 s por trabalho. O seed base garante uma verificação pendente. Na primeira execução no calendário real, fechou os bimestres 1 a 3 e o semestre 2026/1 |
 | Carga com período | O tipo de período vai pelo nome do enum ("Bimestre"), não pelo número |
-| Congelamento (D8) | Com a instância fechada, o fato que chega concede a conquista de fechamento até a véspera do congelamento: o fim do último semestre coberto, mais 30 dias, já é congelado. Constante `InstanciaDePeriodo.DiasAteOCongelamento`, que o passo 11 herda. O primeiro fechamento roda mesmo depois do congelamento |
+| Congelamento (D8) | Com a instância fechada, o fato que chega concede a conquista de fechamento até a véspera do congelamento: o fim do último semestre coberto, mais 30 dias, já é congelado. Constante `InstanciaDePeriodo.DiasAteOCongelamento`, que o ranking reaproveita desde o passo 11. O primeiro fechamento roda mesmo depois do congelamento |
 | Anulação (D9) | `recalcular-conquistas-da-medalha`, sem limite de data: refaz o progresso das instâncias que a medalha tocava e reavalia só as conquistas com ela nas evidências. Nunca concede. Mudança de catálogo não remove conquista |
 | Notificação e pontos (D10) | `conquistaObtida` e `conquistaRemovida`, gravadas pelo próprio handler, na transação do trabalho; o texto chega no passo 10. Perfil e Troféus somam a conquista não removida; a raridade a conta uma vez por aluno, e conceder ou remover pede o recálculo |
 | Serviços | `AvaliacaoDeConquistas` (avaliar, gravar progresso e, se permitido, conceder) e `ContextoDasConquistas` servem aos handlers |
@@ -533,7 +533,7 @@ participação, todas as matérias, conquista removida e o post dela, progresso 
 
 | Limite | Onde é tratado |
 |---|---|
-| O ranking não é recalculado pela conquista concedida ou removida: a tabela de ranking não existe ainda | Passo 11 |
+| O ranking não é recalculado pela conquista concedida ou removida: a tabela de ranking não existe ainda | Resolvido no passo 11: conceder e remover enfileiram o recálculo |
 | O texto das notificações de conquista e a bolinha de Troféus | Resolvido no passo 10: os textos estão em `notificacoes/textos.ts` do app, e a bolinha segue o marcador `trofeus_visto_em` |
 | A regra customizada não é disparada por fato nem tem progresso | Aceito: nenhuma conquista da fase 1 usa |
 | O fato que fica contável depois do fechamento não se reproduz pelo fluxo com o catálogo da fase 1 (as de fechamento contam medalha, concedida só no bimestre da data); o teste isola o mecanismo | Aceito |
@@ -613,6 +613,82 @@ notificações e novo aviso do professor).
 | Sem push: a bolinha só acende quando o app pergunta (foco ou 60 s) | Fase 2, push nativo |
 | Na suíte e2e inteira rodada localmente (Windows, pilha no ar há horas, banco com os dados de muitas rodadas), o e2e da medalha estoura os 30 s: a página do aluno não volta a desenhar depois do recarregamento que segue a anulação. Sozinho, passa; na CI, passou de primeira em todas as etapas do passo, entre 12 e 16 s | Ocorrência de ambiente; acompanhar no passo 13 |
 | Medalhas concedidas em sequência rápida: a reavaliação da primeira roda com as outras já gravadas e pode conceder a conquista antes de as outras medalhas serem notificadas; no sininho, a conquista obtida aparece entre as medalhas | Aceito: o avaliador conta os fatos do momento |
+
+## Rankings (passo 11)
+
+A tabela das quatro visões escrita pelo worker, os eventos que pedem o recálculo, a leitura
+e a tela. As seis perguntas e as propostas A a G foram fechadas no plano do passo; as
+demais, nas etapas. As regras de produto que nasceram aqui estão em `produto.md` 4.9
+(semestre da conquista de ano e de curso), 5 (desempate por instante e por aluno, aluno sem
+pontos, quem vê o quê, "Quem eu sigo", semestre atual) e 6.5 (a posição do perfil é a do
+histórico geral).
+
+### Domínio
+
+| Decisão | Detalhe |
+|---|---|
+| Parcela | `ParcelaDoRanking`: aluno, pontos congelados, semestre e instante da concessão. Só nasce do que pontua: medalha ativa, prêmio de participação válido ou definitivo, conquista não removida. Sem o semestre no calendário, a parcela entra só no histórico |
+| Semestre de cada fonte (pergunta 1) | Medalha, o da concessão; prêmio de participação, `Calendario.SemestreDoEvento` (o do início do evento, no recesso o seguinte); conquista, o último semestre da instância (o do bimestre, o próprio, o segundo do ano), e a de curso, o da concessão, com o recesso empurrando para o seguinte |
+| Desempate (pergunta 2) | Instante da última concessão que compõe os pontos da visão: da medalha, da aprovação do prêmio (a contestação confirmada não o muda), da conquista. Persistindo, o id do aluno |
+| Classificação | `Classificacao`: soma por aluno, sem linha para quem não tem pontos (pergunta 3); ex-aluno só no histórico; escopo curso pelo curso atual |
+| Semestres | `SemestresDoRanking.Atual`: o último que já começou (proposta B). `Congelado`: reaproveita `InstanciaDePeriodo.Congelamento`, no dia do fim mais 30 já congelado (proposta C). `Abertos`: os não congelados, inclusive o que ainda não começou, porque o evento do recesso já conta para ele |
+
+### Tabela e worker
+
+| Decisão | Detalhe |
+|---|---|
+| Tabela | `posicao_no_ranking` (escopo, período, semestre, curso, aluno, posição, pontos, `ultima_concessao_em`). Checks: semestre só no período semestre, curso só no escopo curso, posição de 1 em diante e pontos positivos. Índices únicos com `NULLS NOT DISTINCT`: visão e posição (a página), aluno e visão (o perfil e o card). Chaves em cascata: dado derivado, sai com o aluno na purga |
+| Trabalho (proposta E) | `recalcular-ranking`, separado do `recalcular-raridade`, com a própria linha `ranking` em `recalculo` e a mesma coalescência: os pendentes viram uma execução, e abaixo de 10 s da última fica um pedido adiado. Uma execução reescreve as quatro visões |
+| Reescrita | Numa transação: apaga o histórico e as visões dos semestres abertos e grava de novo. O semestre congelado não é tocado: aprovação posterior entra só no histórico |
+| Seed base | Pede o recálculo com calendário novo ou mudado, ou com o ranking nunca calculado; nunca mais de um pendente. O calendário muda em que semestre conta o prêmio do recesso |
+
+### Quem pede o recálculo
+
+| Decisão | Detalhe |
+|---|---|
+| Ponto único | `fila.PedirRecalculos()` enfileira ranking e raridade juntos, na transação da escrita, em todo evento que muda pontos: concessão e anulação de medalha (o comando administrativo inclusive), aprovação de comprovação, contestação, confirmação e revogação, remoção do post pela instituição quando revoga, e conquista concedida (por fato ou no fechamento) ou removida |
+| O que não pede | Reprovação e remoção do post pendente, que não pontuavam. Cadastro, demonstração e seed pedem só a raridade: mudam o divisor, não os pontos |
+| Ex-aluno e troca de curso (proposta F) | O worker já respeita os dois na reescrita. Os atos são do passo 12, que enfileira o recálculo na mesma transação |
+
+### Leitura e contrato
+
+| Decisão | Detalhe |
+|---|---|
+| Rota | `GET /v1/rankings` com `escopo` (`geral`, `curso`), `periodo` (`semestre`, `historico`), `seguidos` e `cursor`, 20 por página por cursor de posição. A resposta traz o semestre ("2026/2"), o curso da visão, a página e `eu`, a linha do próprio aluno, nula para quem não é aluno e para o aluno sem pontos |
+| Quem vê o quê (pergunta 6) | Escopo curso para professor e instituição: 403 `ranking-de-curso-so-para-aluno`. Curso no semestre para o ex-aluno: 403 `ex-aluno-so-no-historico`. Valor errado, a validação recusa; escopo ou período ausente, 400 `visao-incompleta`, checado no endpoint, porque a validação nativa deixa passar o parâmetro anulável ausente |
+| Parâmetros em texto | `escopo` e `periodo` como `string` com valores permitidos, como no mural; o hook do app tipa os valores |
+| "Quem eu sigo" (pergunta 5) | A mesma visão filtrada por quem o leitor segue, e ele mesmo, com a posição de todos |
+| Leitura sem agregação | `SELECT` pelo índice da visão e da posição; o nulo do semestre e do curso vira `IS NULL` literal para o índice atender. Um teste confere o plano com `EXPLAIN` |
+| Posição em outros lugares (pergunta 4) | `posicao` do histórico geral no perfil e no autor do post do feed e do perfil (acréscimo nulável; nas filas de comprovação e contestação, nula) |
+| Cache | Sem ETag no ranking: seria decisão de cache, que pede p95. A leitura entra no k6 do passo 13 (proposta G) |
+
+### Cliente
+
+| Decisão | Detalhe |
+|---|---|
+| Tela | `/rankings?visao=` (`geral`, `curso`, `historico`, `historico-curso`), na pilha sobre as abas, como as outras telas internas: sem a navegação inferior da prancheta. Logo e sininho, voltar, título e "Semestre 2/2026" só no período semestre, chips das visões que o leitor vê, card "Sua posição" (só aluno), rótulo e segmentado, lista com a linha própria destacada (fundo `highlight`, borda dourada de 2 px, anel no avatar, "· você") |
+| Card | Sobre o `hero`, a posição em ouro (fundo escuro nos dois temas), o rótulo da visão, os pontos e "Ver prêmios", que abre Troféus. Sem posição: "Sem posição ainda"; ex-aluno no semestre: "Ex-aluno aparece só no histórico." |
+| Rótulo e segmentado | Na prancheta dividem a linha; a 390 px não cabem os dois nas visões de nome longo, e o rótulo vem por cima |
+| Linha | Posição, avatar, nome, curso pela sigla e semestre, pontos. O ex-aluno leva a marca e "não pontua mais". Tocar abre o perfil |
+| Entradas | O perfil mostra "pts · #N ›" e o "#N" na linha do curso; no próprio, o toque abre o histórico. Troféus mostra "15.020 pts · #29 ›" e abre o histórico. A Busca tem "Ranking geral" e, para aluno, "Ranking do curso" (o ex-aluno vai ao histórico do curso). O autor no feed traz "· #N" |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxo | Só no celular, claro e escuro, cada execução com a sua professora e o seu aluno: sem pontos, o perfil abre o ranking no histórico com "Sem posição ainda"; a professora concede uma medalha pela API, e a tela é recarregada até o card mostrar os pontos e a posição (até 45 s, pela coalescência de 10 s); os chips trocam semestre e histórico; "Quem eu sigo" mostra a linha do próprio aluno; o perfil mostra o "#"; o atalho da Busca abre o ranking do curso |
+| Isolamento | A turma vigente é compartilhada: o aluno é localizado pelo nome único da execução, e nada depende de quem mais pontuou no banco |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| A posição é eventualmente consistente: por alguns segundos o aluno vê os pontos novos e a posição antiga | Aceito (ADR 0005) |
+| Marcar ex-aluno e trocar de curso ainda não pedem o recálculo: os atos não existem fora do teste | Passo 12 |
+| Worker morto congela o ranking sem erro em tela | Passo 13, verificação de saúde e alerta |
+| O p95 da leitura do ranking e do perfil com a posição | k6 do passo 13 |
+| O topo do ranking local mostra as contas deixadas pelas rodadas de e2e | Aceito: a purga do lote e o seed completo são do passo 12 |
+| Numa rodada local da solução inteira (domínio e integração juntos), um teste de contestação estourou o tempo da conexão com o contêiner de armazenamento; sozinho e na CI, passou | Ocorrência de ambiente; acompanhar no passo 13 |
 
 ## Processo e qualidade
 

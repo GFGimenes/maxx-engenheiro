@@ -104,7 +104,8 @@ public sealed record PostResponse(
             post.Autor.Arroba,
             post.Autor.Curso,
             post.Autor.Semestre,
-            Leitura(armazenamento, post.Autor.ChaveDaFoto)),
+            Leitura(armazenamento, post.Autor.ChaveDaFoto),
+            post.Autor.Posicao),
         post.Legenda,
         post is { ChaveDaFotoDoFeed: { } feed, ChaveDaFotoDaGrade: { } grade }
             ? new FotoDoPostResponse(armazenamento.UrlDeLeitura(feed).AbsoluteUri, armazenamento.UrlDeLeitura(grade).AbsoluteUri)
@@ -134,8 +135,10 @@ public sealed record PostResponse(
 }
 
 // Curso pela sigla e semestre do aluno (1º ao 8º), como na linha do autor no feed. A foto é a
-// derivada da grade, para o avatar; sem foto, o app desenha as iniciais.
-public sealed record AutorDoPostResponse(Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, string? Foto);
+// derivada da grade, para o avatar; sem foto, o app desenha as iniciais. A posição é a do
+// histórico geral, nula sem pontos e nas filas da comprovação e da contestação (passo 11).
+public sealed record AutorDoPostResponse(
+    Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, string? Foto, int? Posicao = null);
 
 // A derivada do feed (~1080²) e a da grade (~320²), lidas direto da CDN.
 public sealed record FotoDoPostResponse(string Feed, string Grade);

@@ -1873,6 +1873,86 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Ranking.PosicaoNoRankingRow", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aluno_id");
+
+                    b.Property<Guid?>("CursoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("curso_id");
+
+                    b.Property<string>("Escopo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("escopo");
+
+                    b.Property<string>("Periodo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("periodo");
+
+                    b.Property<int>("Pontos")
+                        .HasColumnType("integer")
+                        .HasColumnName("pontos");
+
+                    b.Property<int>("Posicao")
+                        .HasColumnType("integer")
+                        .HasColumnName("posicao");
+
+                    b.Property<Guid?>("SemestreLetivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("semestre_letivo_id");
+
+                    b.Property<DateTimeOffset>("UltimaConcessaoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultima_concessao_em");
+
+                    b.HasKey("Id")
+                        .HasName("pk_posicao_no_ranking");
+
+                    b.HasIndex("CursoId")
+                        .HasDatabaseName("ix_posicao_no_ranking_curso_id");
+
+                    b.HasIndex("SemestreLetivoId")
+                        .HasDatabaseName("ix_posicao_no_ranking_semestre_letivo_id");
+
+                    b.HasIndex("AlunoId", "Escopo", "Periodo", "SemestreLetivoId", "CursoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_posicao_no_ranking_aluno_visao");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("AlunoId", "Escopo", "Periodo", "SemestreLetivoId", "CursoId"), false);
+
+                    b.HasIndex("Escopo", "Periodo", "SemestreLetivoId", "CursoId", "Posicao")
+                        .IsUnique()
+                        .HasDatabaseName("ix_posicao_no_ranking_visao_posicao");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("Escopo", "Periodo", "SemestreLetivoId", "CursoId", "Posicao"), false);
+
+                    b.ToTable("posicao_no_ranking", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_posicao_no_ranking_curso", "(escopo = 'curso') = (curso_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_posicao_no_ranking_escopo", "escopo IN ('geral', 'curso')");
+
+                            t.HasCheckConstraint("ck_posicao_no_ranking_periodo", "periodo IN ('semestre', 'historico')");
+
+                            t.HasCheckConstraint("ck_posicao_no_ranking_semestre", "(periodo = 'semestre') = (semestre_letivo_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_posicao_no_ranking_valores", "posicao >= 1 AND pontos > 0");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.RaridadeDosItens.RaridadeDoItemRow", b =>
                 {
                     b.Property<string>("ItemCodigo")
@@ -2492,6 +2572,28 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasForeignKey("FamiliaCodigo")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_item_catalogo_familia_familia_codigo");
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.Ranking.PosicaoNoRankingRow", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_posicao_no_ranking_usuario_aluno_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_posicao_no_ranking_curso_curso_id");
+
+                    b.HasOne("Maxx.Domain.Academico.SemestreLetivo", null)
+                        .WithMany()
+                        .HasForeignKey("SemestreLetivoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_posicao_no_ranking_semestre_letivo_semestre_letivo_id");
                 });
 
             modelBuilder.Entity("Maxx.Infrastructure.RaridadeDosItens.RaridadeDoItemRow", b =>

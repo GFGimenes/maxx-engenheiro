@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using Maxx.Application.Fila;
-using Maxx.Application.Medalhas;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
 
@@ -102,7 +102,7 @@ public sealed class AvaliarFechamentoDoAlunoHandler(
 
         if (concedeu)
         {
-            fila.Enfileirar(new RecalcularRaridade());
+            fila.PedirRecalculos();
         }
 
         await unitOfWork.SalvarAsync(cancellationToken);

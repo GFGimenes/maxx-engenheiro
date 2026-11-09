@@ -156,13 +156,13 @@ internal sealed class MundoDeConquistas : IAsyncDisposable
             .AnularAsync(medalha, "secretaria@unieduk.com.br", Ct));
     }
 
-    // Um prêmio de participação aprovado agora, num evento digitado que começou ontem, com o
-    // trabalho do fim da janela agendado como a aprovação agenda.
-    public async Task<PremioParticipacao> AprovadoAsync(Usuario aluno, string item, string nomeDoEvento)
+    // Um prêmio de participação aprovado agora, num evento digitado que começou ontem (ou em
+    // inicio), com o trabalho do fim da janela agendado como a aprovação agenda.
+    public async Task<PremioParticipacao> AprovadoAsync(Usuario aluno, string item, string nomeDoEvento, DateOnly? inicio = null)
     {
         var agora = Relogio.GetUtcNow();
-        var ontem = FusoHorario.DataLocal(agora).AddDays(-1);
-        var evento = Evento.TextoLivre(nomeDoEvento, ontem, ontem, aluno);
+        var data = inicio ?? FusoHorario.DataLocal(agora).AddDays(-1);
+        var evento = Evento.TextoLivre(nomeDoEvento, data, data, aluno);
         var premio = PremioParticipacao.Reivindicar(ItemDeParticipacao(item), 1, aluno, Cc, evento, null, null, agora).Premio!;
         Assert.Null(premio.Aprovar(aluno, Secretaria, agora));
 

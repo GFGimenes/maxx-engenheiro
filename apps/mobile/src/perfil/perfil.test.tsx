@@ -36,6 +36,7 @@ function perfilDe(id: string, mudancas: Record<string, unknown> = {}) {
     euSigo: false,
     foto: null,
     professor: null,
+    posicao: null,
     ...mudancas,
   };
 }
@@ -220,6 +221,32 @@ describe("o próprio perfil do aluno", () => {
     expect(mockRoteador.push).toHaveBeenCalledWith("/editar-perfil");
   });
 
+  it("mostra a posição do histórico geral junto dos pontos e o toque abre o ranking nesse chip", async () => {
+    perfis.eu = { ...perfis.eu!, posicao: 29 };
+    await renderComApi(<PerfilScreen />, api);
+
+    expect(await screen.findByText("pts · #29")).toBeOnTheScreen();
+    expect(
+      screen.getByText("CC · 3º semestre · RA 20260101 · #29"),
+    ).toBeOnTheScreen();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole("link", { name: /Abrir rankings/ }));
+    });
+    expect(mockRoteador.push).toHaveBeenCalledWith("/rankings?visao=historico");
+  });
+
+  it("sem posição ainda, mostra só os pontos e o toque ainda abre o ranking", async () => {
+    perfis.eu = { ...perfis.eu!, posicao: null, pontos: 0 };
+    await renderComApi(<PerfilScreen />, api);
+
+    expect(await screen.findByText("pts")).toBeOnTheScreen();
+    expect(screen.queryByText(/#\d/)).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "0 pontos. Abrir rankings" }),
+    ).toBeOnTheScreen();
+  });
+
   it("a grade tem foto com o medalhão no canto, o medalhão no metal e a legenda, e abre o post", async () => {
     await renderComApi(<PerfilScreen />, api);
 
@@ -283,6 +310,15 @@ describe("o perfil de outro aluno", () => {
     expect(new URL(seguir.mock.calls[0]![0].url).pathname).toBe(
       `/api/v1/seguindo/${BRUNO}`,
     );
+  });
+
+  it("mostra a posição dele, sem abrir o ranking pelo toque", async () => {
+    perfis[BRUNO] = { ...perfis[BRUNO]!, posicao: 4 };
+    await renderComApi(<PerfilScreen usuarioId={BRUNO} />, api);
+
+    expect(await screen.findByText("pts · #4")).toBeOnTheScreen();
+    expect(screen.getByText("CC · 3º semestre · #4")).toBeOnTheScreen();
+    expect(screen.queryByRole("link", { name: /Abrir rankings/ })).toBeNull();
   });
 
   it("quem já segue vê Seguindo e deixa de seguir", async () => {

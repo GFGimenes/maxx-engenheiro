@@ -75,7 +75,7 @@ test(
     await entrar(doAluno, aluno.ra, aluno.senha);
     await medalhasDoAluno(doAluno);
     const linha = doAluno.getByTestId("premio-M01");
-    await expect(doAluno.getByText("30 pts", { exact: true })).toBeVisible();
+    await expect(doAluno.getByText(/^30 pts( · #[\d.]+)?$/)).toBeVisible();
     await expect(linha.getByText("+30")).toBeVisible();
     await expect(
       linha.getByText("Banco de Dados · ", { exact: false }),
@@ -86,7 +86,7 @@ test(
 
     await doAluno.reload();
     await medalhasDoAluno(doAluno);
-    await expect(doAluno.getByText("0 pts", { exact: true })).toBeVisible();
+    await expect(doAluno.getByText(/^0 pts( · #[\d.]+)?$/)).toBeVisible();
     await expect(
       doAluno.getByTestId("premio-M01").getByText("+30"),
     ).toHaveCount(0);

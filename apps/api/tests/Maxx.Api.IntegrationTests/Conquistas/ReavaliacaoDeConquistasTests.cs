@@ -4,6 +4,7 @@ using Maxx.Application.Medalhas;
 using Maxx.Application.Perfil;
 using Maxx.Application.Premios;
 using Maxx.Application.PremiosParticipacao;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Notificacoes;
@@ -250,7 +251,11 @@ public sealed class ReavaliacaoDeConquistasTests(PostgresFixture postgres) : ICl
     // O que sobra na fila é só o recálculo de raridade adiado pela coalescência de 10 s (ADR
     // 0005), nunca um trabalho que falhou e voltou com recuo.
     private static void AssertNenhumTrabalhoFalhou(List<Trabalho> trabalhos) =>
-        Assert.All(trabalhos, trabalho => Assert.Equal((RecalcularRaridade.Tipo, 0), (trabalho.Tipo, trabalho.Tentativas)));
+        Assert.All(trabalhos, trabalho =>
+        {
+            Assert.Contains(trabalho.Tipo, new[] { RecalcularRaridade.Tipo, RecalcularRanking.Tipo });
+            Assert.Equal(0, trabalho.Tentativas);
+        });
 
     private static (int, int, string, Guid) Linha(ProgressoDeConquistaRow linha) =>
         (linha.Contagem, linha.Alvo, linha.TipoDePeriodo, linha.ReferenciaDoPeriodo);

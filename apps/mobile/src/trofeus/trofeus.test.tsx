@@ -15,8 +15,9 @@ import {
 } from "./montagem";
 import { TrofeusScreen } from "./TrofeusScreen";
 
+const mockRoteador = { push: jest.fn(), navigate: jest.fn() };
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: jest.fn(), navigate: jest.fn() }),
+  useRouter: () => mockRoteador,
 }));
 
 function item(
@@ -268,10 +269,12 @@ describe("abas da navegação", () => {
 describe("tela de Troféus", () => {
   let premios: jest.Mock<Promise<Response>, [Request]>;
   let papeis: string[];
+  let posicao: number | null;
   let api: jest.Mock<Promise<Response>, [Request]>;
 
   beforeEach(() => {
     papeis = ["aluno"];
+    posicao = null;
     premios = jest.fn(async (_pedido: Request) => json(200, PREMIOS));
     api = jest.fn(async (pedido: Request) => {
       const caminho = new URL(pedido.url).pathname;
@@ -283,8 +286,23 @@ describe("tela de Troféus", () => {
           nomeDeExibicao: "Ana",
         });
       if (caminho === "/api/v1/eu/premios") return premios(pedido);
+      if (caminho === "/api/v1/eu/perfil")
+        return json(200, { id: "a", posicao });
       return new Response(null, { status: 404 });
     });
+  });
+
+  it("ao lado do título, os pontos e a posição do histórico geral; o toque abre o ranking", async () => {
+    posicao = 29;
+    await renderComApi(<TrofeusScreen />, api);
+
+    expect(await screen.findByText("15.020 pts · #29")).toBeOnTheScreen();
+    await act(async () => {
+      fireEvent.press(
+        screen.getByRole("link", { name: /posição 29\. Abrir rankings/ }),
+      );
+    });
+    expect(mockRoteador.push).toHaveBeenCalledWith("/rankings?visao=historico");
   });
 
   it("abre em Troféus, com os pontos, o critério e a raridade do que falta", async () => {

@@ -137,3 +137,11 @@ O que era desenho agora roda, menos o ranking (passo 11):
   ("4 de 5 neste bimestre").
 
 Decisões em `decisoes/README.md`, Conquistas (passo 9).
+
+## No passo 11
+
+O ranking do diagrama agora roda: a concessão e a anulação, inclusive pelo comando
+administrativo, enfileiram `recalcular-ranking` com o recálculo de raridade, na mesma
+transação, e a conquista concedida ou removida pelo worker também. Em segundos, o aluno vê
+a posição nova no perfil e na tela de Rankings (`fluxos/05-ranking.md`). Decisões em
+`decisoes/README.md`, Rankings (passo 11).

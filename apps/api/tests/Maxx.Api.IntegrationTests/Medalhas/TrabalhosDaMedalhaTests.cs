@@ -114,7 +114,7 @@ public sealed class TrabalhosDaMedalhaTests(PostgresFixture postgres) : IClassFi
 
         // Não recalculou: deixou um pedido só, para quando os dez segundos fecharem.
         Assert.Single(factory.Log.Linhas, linha => linha.Contains(_recalculada, StringComparison.Ordinal));
-        var adiado = Assert.Single(await LinhasAsync<Trabalho>(factory));
+        var adiado = Assert.Single(await LinhasAsync<Trabalho>(factory), trabalho => trabalho.Tipo == RecalcularRaridade.Tipo);
         Assert.Equal((RecalcularRaridade.Tipo, primeira + TimeSpan.FromSeconds(10)), (adiado.Tipo, adiado.DisponivelEm));
         Assert.Equal(1, (await LinhasAsync<RaridadeDoItemRow>(factory)).Single(linha => linha.ItemCodigo == "M01").AlunosComItem);
 
