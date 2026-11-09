@@ -85,3 +85,12 @@ definitivo e, depois de definitivo, não pode mais ser contestado
   instituição." (`produto.md` 4.7).
 - Em averiguação, o post aparece sem o prêmio para quem não é o aluno nem a instituição.
 - Rotas, códigos e decisões em `decisoes/README.md`, Prêmios de participação (passo 8).
+
+## Como ficou no passo 9
+
+- O prêmio que fica definitivo, pelo fim da janela de 15 dias ou pela confirmação da
+  contestação, enfileira `reavaliar-conquistas` na mesma transação. O worker conta o prêmio
+  no semestre que contém a data de início do evento (no recesso, o seguinte) e concede as
+  conquistas de prêmio de participação que ele fecha.
+- Válido e em averiguação não contam; revogado nunca chega a ser evidência.
+- Decisões em `decisoes/README.md`, Conquistas (passo 9).

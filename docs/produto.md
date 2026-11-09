@@ -404,12 +404,29 @@ dispara em cada bimestre que fechar o critério. No período `curso`, a instânc
 próprio aluno: a contagem é a vida dele no Maxx e não reinicia na troca de curso.
 
 A conquista pontua no semestre **do período a que se refere**, mesmo quando calculada
-depois. O prêmio de participação conta no semestre **do evento**, não no da aprovação.
+depois. O prêmio de participação conta no semestre **do evento**, não no da aprovação: o
+semestre letivo que contém a **data de início** do evento; o evento que começa no recesso
+conta no **semestre seguinte** (passo 9). O passo 11 usa a mesma regra para o ranking.
+
+"Todas as matérias" são as **matérias distintas** das turmas em que o aluno está
+matriculado no período; o aluno **sem matrícula** no período não ganha a conquista de
+todas as matérias, porque o alvo zero não se cumpre de graça.
 
 Cada conquista concedida guarda as **evidências**: os prêmios que a compuseram. É o que
 torna a anulação recalculável e o que responde ao aluno por que ele ganhou aquilo.
 
-A especificação das regras é declarativa, no próprio catálogo, com três formas de
+A conquista que o recálculo remove, depois de uma anulação, sai da pontuação e fica no
+histórico; se o critério voltar a ser satisfeito, ela é concedida de novo. O post da
+conquista removida segue a regra da medalha anulada (seção 4.8): perde o vínculo e fica
+como post comum; se era só a conquista, sem foto e sem legenda, é apagado. Mudança de
+catálogo nunca remove conquista já concedida: quem a remove é o fato.
+
+Na tela de Troféus, a conquista obtida mostra a instância em que foi obtida ("4º bimestre
+de 2026"); a que falta na instância vigente mostra o progresso ("2 de 3 neste bimestre",
+"1 de 2 matérias neste bimestre"), só para o próprio aluno. No recesso, não há progresso de
+bimestre nem de semestre.
+
+A especificação das regras é declarativa, no próprio catálogo, com duas formas de
 contagem. Ver `docs/regras-conquista.md`.
 
 ### 4.10 Auditoria
@@ -511,8 +528,9 @@ Push nativo é evolução de fase 2.
 
 Geram notificação: medalha recebida, comprovação aprovada ou reprovada, contestação
 aberta, decisão de contestação, prêmio revogado sem contestação (pela remoção do post pela
-instituição, seção 4.7), aviso novo. Bolinha dourada de novidade aparece nas abas
-Mural (aviso não lido) e Troféus (prêmio novo).
+instituição, seção 4.7), conquista obtida, conquista removida pelo recálculo (seção 4.9),
+aviso novo. Bolinha dourada de novidade aparece nas abas Mural (aviso não lido) e Troféus
+(prêmio novo).
 
 ---
 

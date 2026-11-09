@@ -226,6 +226,13 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
 - Do passo 8: reavaliar as conquistas quando o prêmio de participação fica definitivo,
   pelo fim da janela de 15 dias (trabalho `tornar-premio-definitivo`) ou pela confirmação
   da contestação.
+- Entrou também, aprovado no plano do passo: o post de conquista, porque um prêmio rende
+  um post (produto.md 6.1).
+
+Ficam pendentes: o recálculo do ranking pela conquista concedida ou removida (passo 11); o
+texto das notificações `conquistaObtida` e `conquistaRemovida`, já gravadas, e a
+bolinha de Troféus (passo 10); conquistas no seed de demonstração (passo 12). Decisões do
+passo em `decisoes/README.md`, Conquistas (passo 9).
 
 ### Passo 10. Mural e notificações
 
@@ -234,6 +241,8 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
 - Registro de leitura e bolinha dourada na aba Mural.
 - Sininho no cabeçalho do feed, com as notificações de medalha, aprovação, reprovação,
   contestação, decisão e aviso novo. A de medalha recebida já é gravada desde o passo 6.
+- Do passo 9: o texto das notificações de conquista obtida e de conquista removida pelo
+  recálculo, já gravadas pelo worker.
 - Bolinha de prêmio novo na aba Troféus.
 
 ### Passo 11. Rankings
@@ -248,6 +257,12 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
   pela contestação, pela decisão da instituição e pela remoção do post pela instituição
   (ADR 0005), e a regra de em que semestre o prêmio de participação conta (D4); hoje o
   prêmio guarda só as datas do evento.
+- Do passo 9: o recálculo do ranking também pela conquista concedida ou removida (ADR
+  0005). A regra do semestre do prêmio de participação já foi decidida (produto.md 4.9: o
+  semestre que contém o início do evento; no recesso, o seguinte), e o calendário a
+  responde em `Calendario.SemestreDoEvento`. O congelamento reaproveita
+  `InstanciaDePeriodo.DiasAteOCongelamento` e a mesma leitura: no dia do fim mais 30, já
+  congelado. A conquista pontua no semestre da instância dela.
 
 ### Passo 12. Área web da instituição
 
@@ -263,6 +278,10 @@ passados e futuros do seed completo, no passo 12. Decisões do passo em
   distribuídos de modo que as quatro raridades apareçam, avisos, eventos passados e
   futuros, duas comprovações pendentes e uma contestação aberta. Os posts semeados, que o
   passo 7 deixou para cá (D13), nascem com as contas desses alunos.
+- Do passo 9: conquistas no seed, que nascem do worker a partir das medalhas e dos prêmios
+  semeados (reavaliação e fechamento), e não gravadas à mão: é o que mantém evidências e
+  progresso coerentes. A anulação pela área web enfileira o mesmo recálculo do comando
+  administrativo.
 
 ### Passo 13. Endurecimento e ensaio
 
