@@ -34,7 +34,11 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         // e 1 instituição; cada aluno nas turmas das matérias dele nos semestres que cursa, cada
         // professor nas turmas das matérias dele; conta para os 9 de professor e instituição e
         // para os 150 alunos, 30 deles ex-alunos; os 22 eventos de data/demo/eventos.json.
-        Assert.Equal(new ResultadoDoSeedDemo(4, 24, 48, 159, 1512, 48, 9, 22, 150, 30), resultado);
+        // Os fatos da atividade têm o teste próprio (SeedAtividadeTests).
+        Assert.Equal(
+            new ResultadoDoSeedDemo(4, 24, 48, 159, 1512, 48, 9, 22, 150, 30, 0, 0, 0),
+            resultado with { MedalhasNovas = 0, PremiosNovos = 0, AvisosNovos = 0 });
+        Assert.Equal(9, resultado.AvisosNovos);
 
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
@@ -100,7 +104,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await ContagensAsync(factory));
     }
 
@@ -239,7 +243,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
             await db.SaveChangesAsync(Ct);
         }
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), await factory.SeedDemoAsync(Ct));
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), await factory.SeedDemoAsync(Ct));
 
         // Sem o registro do ato, a mesma divergência é do arquivo, e falha.
         _copia.Alterar("demo/mundo.json", mundo => Alunos(mundo, "CC")[3]!["email"] = "pedro.h.lima@al.unieduk.invalid");
@@ -263,7 +267,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         }));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 2, 0, 0, 0, 1, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0), resultado);
     }
 
     [Fact]
@@ -343,6 +347,9 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
     public async Task Restricao_de_curso_para_sigla_existente_passa()
     {
         _copia.AlterarItem("premios-participacao.json", "P05", item => item["restricaoCurso"] = "MED");
+
+        // A visita técnica semeada é de Administração: restrito a Medicina, o P05 sai da atividade.
+        _copia.Alterar("demo/atividade.json", atividade => atividade["premiosParticipacao"]!.AsObject().Remove("P05"));
         await using var factory = await ComBaseAsync();
 
         await factory.SeedDemoAsync(Ct);
@@ -390,7 +397,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz).Add(Evento("palestra-extra-2026-2", "P01")));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 1, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), resultado);
     }
 
     [Fact]

@@ -84,7 +84,11 @@ internal sealed class MundoSocial : IAsyncDisposable
         var turma = new Turma(bd, ano.Semestres[0]);
 
         var hash = new Argon2idSenhaHasher().Hash(Senha);
-        var agora = DateTimeOffset.UtcNow;
+
+        // No relógio do mundo, que parte de antes da migração: a conta nasce antes de tudo que o
+        // teste faz, e a notificação de aviso, que alcança só quem tinha conta na publicação
+        // (decisão do passo 10), não depende de quanto a migração demorou.
+        var agora = relogio.GetUtcNow();
         var ana = CadastroElegivel.Aluno("20260101", Ana, "Ana Souza", cc, 3);
         var bruno = CadastroElegivel.Aluno("20260102", Bruno, "Bruno Lima", cc, 3);
         var carla = CadastroElegivel.Aluno("20260103", Carla, "Carla Dias", cc, 8);

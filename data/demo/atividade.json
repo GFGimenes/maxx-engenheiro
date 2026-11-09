@@ -1,0 +1,124 @@
+{
+  "observacao": "Atividade do mundo de demonstração (passo 12): quantos alunos têm cada medalha e cada prêmio de participação, os avisos e a contestação aberta. O seed gera os fatos de forma determinística a partir daqui, com datas passadas e pelas regras do domínio, quando as contas dos alunos nascem; rodar de novo não repete nada. As conquistas não estão aqui: nascem do worker, a partir das medalhas e dos prêmios. As quantidades foram pensadas para as quatro raridades aparecerem com folga para as contas de demonstração e de teste que entram depois: um aluno só no Lendário, de 2 a 6 no Épico, de 9 a 22 no Raro e 40 ou mais no Comum. Datas e horas em America/Sao_Paulo.",
+  "medalhas": {
+    "M01": 60,
+    "M02": 22,
+    "M03": 55,
+    "M04": 50,
+    "M05": 14,
+    "M06": 70,
+    "M07": 45,
+    "M08": 45,
+    "M09": 80,
+    "M10": 1,
+    "M11": 5
+  },
+  "premiosParticipacao": {
+    "P01": 60,
+    "P02": 42,
+    "P03": 45,
+    "P05": 10,
+    "P06": 50,
+    "P07": 20,
+    "P08": 10,
+    "P09": 6,
+    "P10": 12,
+    "P11": 9,
+    "P12": 5,
+    "P13": 4,
+    "P14": 3,
+    "P15": 2,
+    "P16": 1
+  },
+  "contestacao": {
+    "ra": "20260102",
+    "item": "P03",
+    "evento": "workshop-carreira-2026-2",
+    "concedidoEm": "2026-11-02T10:00",
+    "contestadaPor": "renata.albuquerque@prof.unieduk.com.br",
+    "contestadaEm": "2026-11-04T16:30",
+    "motivo": "O nome não está na lista de presença do workshop. Conferir antes de valer."
+  },
+  "avisos": [
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "faculdade",
+      "titulo": "Bem-vindos ao primeiro semestre de 2026",
+      "texto": "As aulas começam hoje. O calendário acadêmico, as salas e os horários estão no portal. Boas aulas a todos!",
+      "publicadoEm": "2026-01-26T08:00"
+    },
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "faculdade",
+      "titulo": "Rematrícula para 2026/2",
+      "texto": "A rematrícula vai de 6 a 17 de julho, pelo portal. Quem tiver pendência na secretaria deve resolver antes do prazo.",
+      "publicadoEm": "2026-06-29T09:00"
+    },
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "faculdade",
+      "titulo": "Semana de provas do 4º bimestre",
+      "texto": "As provas do 4º bimestre acontecem de 23 de novembro a 4 de dezembro. Confira com cada professor as datas da sua turma.",
+      "publicadoEm": "2026-11-03T08:30"
+    },
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "curso",
+      "cursos": ["CC", "IA"],
+      "titulo": "Laboratório 3 em manutenção",
+      "texto": "O laboratório 3 fica fechado na semana de 19 de outubro. As aulas práticas dessa semana vão para o laboratório 5.",
+      "publicadoEm": "2026-10-15T14:00"
+    },
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "curso",
+      "cursos": ["ADM"],
+      "titulo": "Visita técnica: inscrições abertas",
+      "texto": "Estão abertas as inscrições para a visita técnica ao centro de distribuição, em 21 de outubro. São 40 vagas, pela secretaria.",
+      "publicadoEm": "2026-10-05T10:00"
+    },
+    {
+      "autor": "coordenacao@unieduk.com.br",
+      "escopo": "curso",
+      "cursos": ["MED"],
+      "titulo": "Semana da Saúde: voluntários",
+      "texto": "A Semana da Saúde precisa de voluntários para a triagem e para as oficinas. Quem quiser ajudar pode se inscrever até 30 de setembro.",
+      "publicadoEm": "2026-09-21T11:00"
+    },
+    {
+      "autor": "renata.albuquerque@prof.unieduk.com.br",
+      "escopo": "turma",
+      "turmas": [
+        { "curso": "CC", "materia": "Banco de Dados", "semestre": "2026/2" },
+        {
+          "curso": "CC",
+          "materia": "Estruturas de Dados",
+          "semestre": "2026/2"
+        }
+      ],
+      "titulo": "Projeto final: entrega em 27/11",
+      "texto": "O projeto final das duas matérias vale como a prova do 4º bimestre. A entrega é até 27 de novembro, pelo ambiente da turma.",
+      "publicadoEm": "2026-10-30T19:00"
+    },
+    {
+      "autor": "helena.duarte@prof.unieduk.com.br",
+      "escopo": "turma",
+      "turmas": [
+        { "curso": "MED", "materia": "Anatomia", "semestre": "2026/2" }
+      ],
+      "titulo": "Aula prática no laboratório de anatomia",
+      "texto": "Na próxima quinta a aula é no laboratório de anatomia. Venham de jaleco e sapato fechado.",
+      "publicadoEm": "2026-10-20T07:30"
+    },
+    {
+      "autor": "marcos.teixeira@prof.unieduk.com.br",
+      "escopo": "turma",
+      "turmas": [
+        { "curso": "ADM", "materia": "Marketing", "semestre": "2026/2" }
+      ],
+      "titulo": "Estudo de caso para a próxima aula",
+      "texto": "Leiam o estudo de caso que está no ambiente da turma antes da aula de segunda. Vamos discutir em grupos.",
+      "publicadoEm": "2026-11-05T18:00"
+    }
+  ]
+}
