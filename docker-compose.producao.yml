@@ -1,0 +1,145 @@
+# Maxx em produção, na VPS: Postgres, migração, seed base, duas réplicas de API, worker e
+# Caddy com HTTPS automático. Sem build: as imagens vêm do GHCR, publicadas pela CI.
+# Sem Mailpit e sem emulador do bucket: SMTP e Cloudflare R2 vêm do .env da VPS.
+# Uso na VPS, em /opt/maxx (roteiro em docs/operacao.md):
+#   docker compose -f docker-compose.producao.yml pull
+#   docker compose -f docker-compose.producao.yml up -d
+# Na avaliação, com a demonstração ligada por cima, como no compose local:
+#   docker compose -f docker-compose.producao.yml -f docker-compose.demo.yml up -d
+# Este arquivo nunca menciona a flag da demonstração.
+
+name: maxx
+
+x-api-image: &api-image
+  image: ghcr.io/gfgimenes/maxx-api:${MAXX_IMAGEM_TAG:?defina no .env}
+
+# Log do Docker com teto, para o disco da VPS não encher com o tempo.
+x-log: &log
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "5"
+
+# `Gss Encryption Mode=Disable` é proposital, como no docker-compose.yml.
+x-api-env: &api-env
+  ConnectionStrings__Maxx: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?defina no .env};Username=${POSTGRES_USER:?defina no .env};Password=${POSTGRES_PASSWORD:?defina no .env};Gss Encryption Mode=Disable"
+
+# O Cloudflare R2 (ADR 0002). Sem padrão nenhum: faltando um valor, nada sobe. O endpoint
+# público fica vazio, porque no R2 ele é o próprio endpoint.
+x-armazenamento-env: &armazenamento-env
+  Armazenamento__Bucket: ${MAXX_ARMAZENAMENTO_BUCKET:?defina no .env}
+  Armazenamento__Endpoint: ${MAXX_ARMAZENAMENTO_ENDPOINT:?defina no .env}
+  Armazenamento__UrlDeLeitura: ${MAXX_ARMAZENAMENTO_URL_DE_LEITURA:?defina no .env}
+  Armazenamento__Regiao: ${MAXX_ARMAZENAMENTO_REGIAO:?defina no .env}
+  Armazenamento__ChaveDeAcesso: ${MAXX_ARMAZENAMENTO_CHAVE_DE_ACESSO:?defina no .env}
+  Armazenamento__Segredo: ${MAXX_ARMAZENAMENTO_SEGREDO:?defina no .env}
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    <<: *log
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?defina no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?defina no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina no .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  # Roda uma vez, com advisory lock, antes de qualquer réplica subir. Nunca no startup.
+  migrator:
+    <<: [*api-image, *log]
+    command: ["migrate"]
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # Catálogo, calendário e termo, a cada subida. O `seed demo` é à mão:
+  #   docker compose -f docker-compose.producao.yml run --rm seeder seed demo
+  seeder:
+    <<: [*api-image, *log]
+    command: ["seed", "base"]
+    environment:
+      <<: [*api-env, *armazenamento-env]
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # Duas réplicas sem estado: resiliência de deploy, não capacidade.
+  api:
+    <<: [*api-image, *log]
+    environment:
+      <<: [*api-env, *armazenamento-env]
+      ASPNETCORE_ENVIRONMENT: Production
+      Jwt__Chave: ${MAXX_JWT_CHAVE:?defina no .env}
+      # X-Forwarded-For só vale vindo da rede interna, onde está o Caddy.
+      Proxy__RedesConfiaveis__0: 172.30.0.0/24
+      App__UrlPublica: ${MAXX_URL_PUBLICA:?defina no .env}
+    deploy:
+      replicas: 2
+    depends_on:
+      seeder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # Uma réplica, sem porta. O e-mail sai daqui, pelo SMTP de produção.
+  worker:
+    <<: [*api-image, *log]
+    command: ["worker"]
+    environment:
+      <<: [*api-env, *armazenamento-env]
+      DOTNET_ENVIRONMENT: Production
+      App__UrlPublica: ${MAXX_URL_PUBLICA:?defina no .env}
+      Email__Remetente: ${MAXX_EMAIL_REMETENTE:?defina no .env}
+      Email__Smtp__Host: ${MAXX_SMTP_HOST:?defina no .env}
+      Email__Smtp__Porta: ${MAXX_SMTP_PORTA:?defina no .env}
+      Email__Smtp__Seguranca: ${MAXX_SMTP_SEGURANCA:?defina no .env}
+      Email__Smtp__Usuario: ${MAXX_SMTP_USUARIO:?defina no .env}
+      Email__Smtp__Senha: ${MAXX_SMTP_SENHA:?defina no .env}
+    depends_on:
+      seeder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # HTTPS automático: com o endereço do site em https://, o Caddy pede o certificado ao
+  # Let's Encrypt pela porta 80 e redireciona HTTP para HTTPS.
+  caddy:
+    image: ghcr.io/gfgimenes/maxx-caddy:${MAXX_IMAGEM_TAG:?defina no .env}
+    <<: *log
+    environment:
+      MAXX_SITE_ADDRESS: ${MAXX_URL_PUBLICA:?defina no .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Certificados e chave da conta ACME: sem o volume, cada recriação pediria um
+      # certificado novo, e o Let's Encrypt limita as emissões por domínio.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# A mesma sub-rede fixa do docker-compose.yml, que a API conhece como confiável. Só as
+# portas do Caddy são publicadas; Postgres e API não são alcançáveis de fora.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

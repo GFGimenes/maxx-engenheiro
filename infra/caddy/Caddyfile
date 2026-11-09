@@ -1,5 +1,6 @@
 # Origem única (ADR 0001): o build web em / e a API em /api, no mesmo host.
-# Local, o endereço é :80 em HTTP. HTTPS, HSTS e CSP entram no passo 13.
+# Local, o endereço é :80 em HTTP. Na VPS, o docker-compose.producao.yml passa a URL pública
+# (https://app.maxx-unimax.com), e o Caddy emite o certificado e redireciona HTTP para HTTPS.
 {$MAXX_SITE_ADDRESS::80} {
 	encode zstd gzip
 
