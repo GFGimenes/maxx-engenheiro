@@ -31,4 +31,7 @@ public static class CodigosDoMural
 
     // O upload existe, mas as duas derivadas não chegaram ao bucket.
     public const string FotoNaoEnviada = "foto-nao-enviada";
+
+    // O aviso não existe ou não está no mural de quem pede.
+    public const string AvisoNaoEncontrado = "aviso-nao-encontrado";
 }

@@ -71,3 +71,20 @@ internal sealed class AvisoCursoConfiguration : IEntityTypeConfiguration<AvisoCu
         builder.HasOne<Curso>().WithMany().HasForeignKey(alvo => alvo.CursoId).OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+// A leitura de aviso (produto.md 7). Uma por usuário e aviso, pela chave; a ordem da chave
+// serve à pergunta do mural, "o que este usuário já leu".
+internal sealed class LeituraDeAvisoConfiguration : IEntityTypeConfiguration<LeituraDeAviso>
+{
+    public void Configure(EntityTypeBuilder<LeituraDeAviso> builder)
+    {
+        builder.ToTable("leitura_de_aviso");
+        builder.HasKey(leitura => new { leitura.UsuarioId, leitura.AvisoId });
+        builder.HasIndex(leitura => leitura.AvisoId);
+
+        // Sem cascata do usuário, como o resto do que ele grava: a purga da demonstração
+        // apaga as leituras antes dele. O aviso não sai na fase 1; se sair, leva as leituras.
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(leitura => leitura.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Aviso>().WithMany().HasForeignKey(leitura => leitura.AvisoId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

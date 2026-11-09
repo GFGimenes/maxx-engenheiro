@@ -892,6 +892,29 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("aviso_turma", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Mural.LeituraDeAviso", b =>
+                {
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<Guid>("AvisoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aviso_id");
+
+                    b.Property<DateTimeOffset>("LidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lida_em");
+
+                    b.HasKey("UsuarioId", "AvisoId")
+                        .HasName("pk_leitura_de_aviso");
+
+                    b.HasIndex("AvisoId")
+                        .HasDatabaseName("ix_leitura_de_aviso_aviso_id");
+
+                    b.ToTable("leitura_de_aviso", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2147,6 +2170,23 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_aviso_turma_turma_turma_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.LeituraDeAviso", b =>
+                {
+                    b.HasOne("Maxx.Domain.Mural.Aviso", null)
+                        .WithMany()
+                        .HasForeignKey("AvisoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_leitura_de_aviso_aviso_aviso_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_leitura_de_aviso_usuario_usuario_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>

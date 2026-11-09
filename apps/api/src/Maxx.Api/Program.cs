@@ -108,6 +108,7 @@ builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.FilaDeComprovaco
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ContestacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.PublicarAvisoHandler>();
+builder.Services.AddScoped<Maxx.Application.Mural.MuralHandler>();
 
 var app = builder.Build();
 

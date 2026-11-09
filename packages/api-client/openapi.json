@@ -676,6 +676,69 @@
         ]
       }
     },
+    "/api/v1/perfis/{usuarioId}/avisos": {
+      "get": {
+        "tags": [
+          "Perfil"
+        ],
+        "operationId": "GetAvisosDoPerfil",
+        "parameters": [
+          {
+            "name": "usuarioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDoMuralResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -2245,6 +2308,166 @@
         ]
       }
     },
+    "/api/v1/avisos/{avisoId}": {
+      "get": {
+        "tags": [
+          "Mural"
+        ],
+        "operationId": "GetAviso",
+        "parameters": [
+          {
+            "name": "avisoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvisoResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/avisos/{avisoId}/leitura": {
+      "put": {
+        "tags": [
+          "Mural"
+        ],
+        "operationId": "LerAviso",
+        "parameters": [
+          {
+            "name": "avisoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/mural": {
+      "get": {
+        "tags": [
+          "Mural"
+        ],
+        "operationId": "GetMural",
+        "parameters": [
+          {
+            "name": "escopo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDoMuralResponse"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/mural/leitura": {
+      "post": {
+        "tags": [
+          "Mural"
+        ],
+        "operationId": "LerTodosOsAvisos",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -2906,6 +3129,26 @@
           }
         }
       },
+      "AutorDoAvisoResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "instituicao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "instituicao": {
+            "type": "boolean"
+          }
+        }
+      },
       "AutorDoComentarioResponse": {
         "required": [
           "id",
@@ -3028,6 +3271,68 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "AvisoResponse": {
+        "required": [
+          "id",
+          "escopo",
+          "titulo",
+          "texto",
+          "foto",
+          "publicadoEm",
+          "autor",
+          "materias",
+          "cursos",
+          "lido"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "escopo": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "publicadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "autor": {
+            "$ref": "#/components/schemas/AutorDoAvisoResponse"
+          },
+          "materias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cursos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lido": {
+            "type": "boolean"
           }
         }
       },
@@ -4180,6 +4485,27 @@
           }
         }
       },
+      "PaginaDoMuralResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvisoResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PedidoDeUploadRequest": {
         "required": [
           "finalidade",
@@ -5101,6 +5427,9 @@
       "name": "Contestacoes"
     },
     {
+      "name": "Perfil"
+    },
+    {
       "name": "Professor"
     },
     {
@@ -5108,9 +5437,6 @@
     },
     {
       "name": "Seguir"
-    },
-    {
-      "name": "Perfil"
     },
     {
       "name": "Comprovacoes"
