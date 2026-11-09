@@ -5,34 +5,45 @@ import { useApiClient } from "../api/ApiClientProvider";
 import { FalhaDaApi } from "../api/FalhaDaApi";
 import type { Derivadas } from "../fotos/derivadas";
 import { enviarFoto } from "../fotos/envio";
+import { rotuloDaInstancia } from "../trofeus/montagem";
 import { usePremios } from "../trofeus/usePremios";
 import type { Tier } from "../theme/tokens";
 
-// Uma medalha obtida que ainda não rendeu post: o que a tela de novo post oferece (um prêmio
-// rende um post, produto.md 6.1). Cada concessão é uma opção, com a matéria e o bimestre.
+// Uma medalha ou conquista obtida que ainda não rendeu post: o que a tela de novo post oferece
+// (um prêmio rende um post, produto.md 6.1). Cada concessão é uma opção: a medalha com a
+// matéria e o bimestre; a conquista (passo 9) com a instância em que foi obtida.
 export interface PremioParaPostar {
   id: string;
+  tipo: "medalha" | "conquista";
   nome: string;
   tier: Tier;
   pontos: number;
   materia: string | null;
   bimestre: number | null;
+  instancia: string | null;
 }
 
 export function usePremiosParaPostar(ativo: boolean) {
   const premios = usePremios(ativo);
   const opcoes: PremioParaPostar[] = (premios.data?.itens ?? [])
-    .filter((item) => item.tipo === "medalha")
+    .filter((item) => item.tipo === "medalha" || item.tipo === "conquista")
     .flatMap((item) =>
       item.obtidos
         .filter((obtido) => !obtido.postId)
         .map((obtido) => ({
           id: obtido.id,
+          tipo:
+            item.tipo === "conquista"
+              ? ("conquista" as const)
+              : ("medalha" as const),
           nome: item.nome,
           tier: obtido.tier as Tier,
           pontos: obtido.pontos,
           materia: obtido.materia ?? null,
           bimestre: obtido.bimestre ?? null,
+          instancia: obtido.instancia
+            ? rotuloDaInstancia(obtido.instancia)
+            : null,
           obtidoEm: obtido.obtidoEm,
         })),
     )
@@ -45,7 +56,7 @@ export function usePremiosParaPostar(ativo: boolean) {
 export interface NovoPost {
   legenda: string;
   derivadas: Derivadas | null;
-  medalhaId: string | null;
+  premio: Pick<PremioParaPostar, "id" | "tipo"> | null;
 }
 
 // Os códigos que dizem que a foto enviada não serve mais: a próxima tentativa sobe de novo.
@@ -66,7 +77,7 @@ export function usePublicarPost() {
   );
 
   return useMutation({
-    mutationFn: async ({ legenda, derivadas, medalhaId }: NovoPost) => {
+    mutationFn: async ({ legenda, derivadas, premio }: NovoPost) => {
       let uploadId: string | null = null;
       if (derivadas) {
         uploadId =
@@ -80,7 +91,8 @@ export function usePublicarPost() {
         body: {
           legenda: legenda.trim() === "" ? null : legenda,
           uploadId,
-          medalhaId,
+          medalhaId: premio?.tipo === "medalha" ? premio.id : null,
+          conquistaId: premio?.tipo === "conquista" ? premio.id : null,
         },
       });
       if (!data) {

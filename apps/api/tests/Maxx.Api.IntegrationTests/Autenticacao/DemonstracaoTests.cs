@@ -451,9 +451,17 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
                 AnoLetivoId = Guid.CreateVersion7(),
             };
             var instancia = new InstanciaDePeriodo(Periodo.Curso, aluno.Id);
+            var conquista = Conquista.Conceder(c90, 1, aluno.Id, instancia, Avaliacao.De(1, 1, [fato]), DateTimeOffset.UtcNow);
+
+            // A Ana posta a conquista: o post segura a conquista, e a purga o apaga antes dela.
+            object[] doPost = nome == "Ana Paula"
+                ? [Post.Publicar(aluno, null, null, null, conquista, DateTimeOffset.UtcNow).Post!]
+                : [];
             await SalvarAsync(
                 factory,
-                Conquista.Conceder(c90, 1, aluno.Id, instancia, Avaliacao.De(1, 1, [fato]), DateTimeOffset.UtcNow),
+                [
+                conquista,
+                .. doPost,
                 new ProgressoDeConquistaRow
                 {
                     AlunoId = aluno.Id,
@@ -463,7 +471,8 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
                     Contagem = 1,
                     Alvo = 1,
                     AtualizadoEm = DateTimeOffset.UtcNow,
-                });
+                },
+                ]);
         }
 
         var readme = await File.ReadAllTextAsync(Path.Combine(Repositorio.Raiz, "docs", "decisoes", "README.md"), Ct);

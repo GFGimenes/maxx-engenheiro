@@ -1375,6 +1375,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("chave_da_foto_do_feed");
 
+                    b.Property<Guid?>("ConquistaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conquista_id");
+
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
@@ -1408,6 +1412,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_post");
 
+                    b.HasIndex("ConquistaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_post_conquista_ativa")
+                        .HasFilter("conquista_id IS NOT NULL AND removido_em IS NULL");
+
                     b.HasIndex("MedalhaId")
                         .IsUnique()
                         .HasDatabaseName("ix_post_medalha_ativa")
@@ -1429,11 +1438,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_post_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
 
-                            t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL");
+                            t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL OR conquista_id IS NOT NULL");
 
                             t.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
 
-                            t.HasCheckConstraint("ck_post_um_premio", "medalha_id IS NULL OR premio_participacao_id IS NULL");
+                            t.HasCheckConstraint("ck_post_um_premio", "num_nonnulls(medalha_id, premio_participacao_id, conquista_id) <= 1");
                         });
                 });
 
@@ -2230,6 +2239,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_post_usuario_autor_id");
+
+                    b.HasOne("Maxx.Domain.Conquistas.Conquista", null)
+                        .WithMany()
+                        .HasForeignKey("ConquistaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_post_conquista_conquista_id");
 
                     b.HasOne("Maxx.Domain.Premios.Medalha", null)
                         .WithMany()

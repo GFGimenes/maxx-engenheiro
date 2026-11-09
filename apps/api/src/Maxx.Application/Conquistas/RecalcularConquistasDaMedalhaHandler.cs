@@ -1,6 +1,7 @@
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
+using Maxx.Application.Posts;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Notificacoes;
 
@@ -26,6 +27,7 @@ public sealed record RecalcularConquistasDaMedalha(Guid MedalhaId) : ICargaDeTra
 public sealed class RecalcularConquistasDaMedalhaHandler(
     IMedalhaRepository medalhas,
     IConquistaRepository conquistas,
+    IPostRepository posts,
     INotificacaoRepository notificacoes,
     IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
@@ -95,6 +97,7 @@ public sealed class RecalcularConquistasDaMedalhaHandler(
             if (conquista.Recalcular(avaliacao, agora))
             {
                 notificacoes.Adicionar(Notificacao.ConquistaRemovida(conquista, agora));
+                await DesvincularPostsAsync(conquista.Id, cancellationToken);
                 removeu = true;
             }
         }
@@ -107,5 +110,28 @@ public sealed class RecalcularConquistasDaMedalhaHandler(
         }
 
         await unitOfWork.SalvarAsync(cancellationToken);
+    }
+
+    // O post da conquista removida perde o vínculo e fica como post comum, como o da medalha
+    // anulada (produto.md 4.8); o que era só a conquista é apagado, porque post vazio não
+    // existe. O que a instituição já tinha removido fica como estava.
+    private async Task DesvincularPostsAsync(Guid conquistaId, CancellationToken cancellationToken)
+    {
+        foreach (var post in await posts.DaConquistaAsync(conquistaId, cancellationToken))
+        {
+            if (post.EstaRemovido)
+            {
+                continue;
+            }
+
+            if (post.FicariaVazioSemPremio)
+            {
+                posts.Apagar(post);
+            }
+            else
+            {
+                post.DesvincularPremio();
+            }
+        }
     }
 }

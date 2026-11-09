@@ -154,6 +154,9 @@ internal sealed class ConquistaRepository(MaxxDbContext db) : IConquistaReposito
 
     public void Adicionar(Conquista conquista) => db.Add(conquista);
 
+    public Task<Conquista?> BuscarAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Set<Conquista>().SingleOrDefaultAsync(conquista => conquista.Id == id, cancellationToken);
+
     public async Task GravarProgressoAsync(
         Guid alunoId,
         string itemCodigo,

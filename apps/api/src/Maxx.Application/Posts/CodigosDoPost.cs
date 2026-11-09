@@ -25,6 +25,12 @@ public static class CodigosDoPost
 
     public const string PremioAnulado = "premio-anulado";
 
+    // A conquista que o recálculo removeu depois de uma anulação (passo 9).
+    public const string ConquistaRemovida = "conquista-removida";
+
+    // Medalha e conquista no mesmo post: um prêmio por post (produto.md 6.1).
+    public const string MaisDeUmPremio = "mais-de-um-premio";
+
     // A reivindicação de prêmio de participação sem foto: a foto é a comprovação.
     public const string FotoObrigatoria = "foto-obrigatoria";
 

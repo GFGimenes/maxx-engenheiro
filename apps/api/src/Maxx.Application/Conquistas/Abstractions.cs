@@ -40,6 +40,9 @@ public interface IConquistaRepository
 
     void Adicionar(Conquista conquista);
 
+    // A conquista pelo id, ativa ou removida, para quem a posta (passo 9).
+    Task<Conquista?> BuscarAsync(Guid id, CancellationToken cancellationToken);
+
     // O progresso ("2 de 3") da instância, que a tela de Troféus lê sem calcular (D5).
     Task GravarProgressoAsync(
         Guid alunoId,

@@ -125,13 +125,13 @@ CREATE TEMP TABLE alvo ON COMMIT DROP AS
 DELETE FROM familia_sessao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM recuperacao_senha WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM notificacao WHERE usuario_id IN (SELECT usuario_id FROM alvo);
-DELETE FROM progresso_de_conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
-DELETE FROM conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM curtida WHERE usuario_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comprovacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM post WHERE autor_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM progresso_de_conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM contestacao WHERE premio_participacao_id IN (SELECT id FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo));
 DELETE FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM evento WHERE criado_por_id IN (SELECT usuario_id FROM alvo);

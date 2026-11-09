@@ -84,13 +84,26 @@ internal sealed class ConsultaDePremios(MaxxDbContext db, TimeProvider relogio) 
             .OrderByDescending(conquista => conquista.ConcedidaEm)
             .ToListAsync(cancellationToken);
 
+        // O post não removido que cada conquista rendeu (passo 9): o app não oferece de novo.
+        var idsDasConquistas = conquistas.Select(conquista => conquista.Id).ToList();
+        var postsDasConquistas = await db.Set<Post>().AsNoTracking()
+            .Where(post => post.ConquistaId != null && idsDasConquistas.Contains(post.ConquistaId.Value) && post.RemovidoEm == null)
+            .ToDictionaryAsync(post => post.ConquistaId!.Value, post => (Guid?)post.Id, cancellationToken);
+
         var obtidos = medalhas
             .Select(medalha => (medalha.ItemCodigo, Obtido: new PremioObtido(
                 medalha.Id, medalha.Tier, medalha.Pontos, medalha.Materia, medalha.Numero, medalha.ConcedidaEm, medalha.PostId)))
             .Concat(participacoes.Select(premio => (premio.ItemCodigo, Obtido: new PremioObtido(
                 premio.Id, premio.Tier, premio.Pontos, premio.Materia, null, premio.AprovadoEm!.Value, premio.PostId))))
             .Concat(conquistas.Select(conquista => (conquista.ItemCodigo, Obtido: new PremioObtido(
-                conquista.Id, conquista.Tier, conquista.Pontos, null, null, conquista.ConcedidaEm, null, Obtida(conquista.Instancia, calendario)))))
+                conquista.Id,
+                conquista.Tier,
+                conquista.Pontos,
+                null,
+                null,
+                conquista.ConcedidaEm,
+                postsDasConquistas.GetValueOrDefault(conquista.Id),
+                Obtida(conquista.Instancia, calendario)))))
             .ToLookup(par => par.ItemCodigo, par => par.Obtido);
 
         var raridades = await db.Set<RaridadeDoItemRow>().AsNoTracking()

@@ -1197,6 +1197,8 @@ export interface components {
             uploadId: null | string;
             /** Format: uuid */
             medalhaId: null | string;
+            /** Format: uuid */
+            conquistaId?: null | string;
         };
         RaridadeResponse: {
             nivel: string;

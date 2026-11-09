@@ -4510,6 +4510,13 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "conquistaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
