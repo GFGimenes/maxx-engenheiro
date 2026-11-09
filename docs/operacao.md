@@ -119,6 +119,11 @@ rm -rf /tmp/maxx-src /root/r2.env
 
 O `--env-file` do Docker não tira aspas: as linhas do R2 no `.env` ficam sem aspas.
 
+Para provar uma mudança ainda sem commit, o clone pode ser da branch (`--branch <branch>`),
+com o arquivo alterado mandado por cima, um por vez:
+`ssh root@<vps> "cat > /tmp/maxx-src/<caminho>" < <caminho>`. Mandar o repositório inteiro
+pela conexão de casa é lento demais.
+
 ## Voltar uma versão
 
 Trocar `MAXX_IMAGEM_TAG` pela tag anterior e `dc up -d`. Migration não volta sozinha: se a
