@@ -1,3 +1,4 @@
+import type { UseQueryResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
@@ -18,7 +19,13 @@ import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
 import { raios, tiers, type Tier } from "../theme/tokens";
 import type { ItemDoAluno } from "../trofeus/montagem";
-import { useEventos, useMateriasDoAluno, type EventoEscolhido } from "./api";
+import {
+  useEventos,
+  useMateriasDoAluno,
+  type EventoEscolhido,
+  type EventoSemeado,
+  type MateriaDoAluno,
+} from "./api";
 import { lerData, periodo } from "./textos";
 
 // O que o aluno escolheu até agora. eventoId "outro": o evento é digitado.
@@ -60,11 +67,32 @@ export function eventoDaEscolha(
   return { tipo: "digitado", nome: escolha.nome.trim(), inicio, fim };
 }
 
+// O que a escolha mostra de cada prêmio: o catálogo do aluno, ou o que a instituição pode
+// conceder a ele (passo 12).
+export type ItemEscolhivel = Pick<
+  ItemDoAluno,
+  "codigo" | "nome" | "tier" | "pontos" | "criterio" | "exigeMateria"
+>;
+
+// De onde vêm os eventos e as matérias: do próprio aluno, na reivindicação, ou do aluno da
+// ficha, na concessão direta da instituição.
+export interface FontesDaEscolha {
+  useEventosDoItem: (item: string | null) => UseQueryResult<EventoSemeado[]>;
+  useMaterias: (ativo: boolean) => UseQueryResult<MateriaDoAluno[]>;
+}
+
+const DO_ALUNO: FontesDaEscolha = {
+  useEventosDoItem: useEventos,
+  useMaterias: useMateriasDoAluno,
+};
+
 interface EscolhaDaReivindicacaoProps {
-  // Os prêmios de participação do catálogo do aluno.
-  itens: ItemDoAluno[];
+  itens: ItemEscolhivel[];
   valor: Escolha;
   onChange: (escolha: Escolha) => void;
+  fontes?: FontesDaEscolha;
+  // Quem escolhe: o aluno fala de si; a instituição, do aluno.
+  quem?: "aluno" | "instituicao";
 }
 
 // Reivindicação de prêmio de participação (produto.md 4.6 e 4.7): o prêmio, o evento, da
@@ -76,12 +104,16 @@ export function EscolhaDaReivindicacao({
   itens,
   valor,
   onChange,
+  fontes = DO_ALUNO,
+  quem = "aluno",
 }: EscolhaDaReivindicacaoProps) {
   const { colors } = useTheme();
+  const { useEventosDoItem, useMaterias } = fontes;
+  const daInstituicao = quem === "instituicao";
   const item = itens.find((candidato) => candidato.codigo === valor.item);
   const exigeMateria = item?.exigeMateria ?? false;
-  const eventos = useEventos(item && !exigeMateria ? item.codigo : null);
-  const materias = useMateriasDoAluno(exigeMateria);
+  const eventos = useEventosDoItem(item && !exigeMateria ? item.codigo : null);
+  const materias = useMaterias(exigeMateria);
   const digitado = exigeMateria || valor.eventoId === OUTRO_EVENTO;
   const mudar = (parcial: Partial<Escolha>) =>
     onChange({ ...valor, ...parcial });
@@ -91,7 +123,9 @@ export function EscolhaDaReivindicacao({
       <View style={styles.secao}>
         <Titulo texto="Prêmio" />
         <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
-          O prêmio que a foto comprova.
+          {daInstituicao
+            ? "O prêmio que a instituição concede, já aprovado."
+            : "O prêmio que a foto comprova."}
         </Text>
         {(item ? [item] : itens).map((opcao) => (
           <Linha
@@ -142,7 +176,9 @@ export function EscolhaDaReivindicacao({
           <Titulo texto="Evento" />
           {exigeMateria ? (
             <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
-              Diga o que você apresentou e quando.
+              {daInstituicao
+                ? "Diga o que o aluno apresentou e quando."
+                : "Diga o que você apresentou e quando."}
             </Text>
           ) : (
             <>
@@ -191,7 +227,11 @@ export function EscolhaDaReivindicacao({
             <View style={styles.campos}>
               <TextField
                 label={
-                  exigeMateria ? "O que você apresentou" : "Nome do evento"
+                  exigeMateria
+                    ? daInstituicao
+                      ? "O que o aluno apresentou"
+                      : "O que você apresentou"
+                    : "Nome do evento"
                 }
                 value={valor.nome}
                 onChangeText={(nome) => mudar({ nome })}
@@ -242,7 +282,9 @@ export function EscolhaDaReivindicacao({
           )}
           {materias.isSuccess && materias.data.length === 0 && (
             <Text style={[textStyles.legenda, { color: colors.ink3 }]}>
-              Você não tem matéria neste semestre.
+              {daInstituicao
+                ? "O aluno não tem matéria neste semestre."
+                : "Você não tem matéria neste semestre."}
             </Text>
           )}
           {(materias.data ?? []).map((materia) => (

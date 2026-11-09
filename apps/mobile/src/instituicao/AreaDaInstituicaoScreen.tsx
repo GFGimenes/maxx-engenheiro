@@ -14,9 +14,15 @@ interface Entrada {
   destino: Href;
 }
 
-// O que a área da instituição oferece (produto.md 10.2). As filas chegam na etapa 7 do passo
-// 12; alunos, avisos e a purga, nas etapas seguintes.
+// O que a área da instituição oferece (produto.md 10.2). Avisos e a purga chegam na etapa 9
+// do passo 12.
 const ENTRADAS: Entrada[] = [
+  {
+    titulo: "Alunos",
+    descricao: "Ficha, e-mail, curso, ex-aluno, medalhas e prêmios.",
+    icone: "user",
+    destino: "/instituicao/alunos",
+  },
   {
     titulo: "Comprovações",
     descricao: "Reivindicações com foto esperando aprovação.",

@@ -1,8 +1,10 @@
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Fila;
+using Maxx.Application.Premios;
 using Maxx.Application.PremiosParticipacao;
 using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
+using Maxx.Domain.Catalogo;
 using Maxx.Domain.Premios;
 
 namespace Maxx.Application.Instituicao;
@@ -19,6 +21,7 @@ public sealed class ConcessaoDiretaHandler(
     IPremioParticipacaoRepository premios,
     EventosHandler eventosReivindicaveis,
     MateriasDoAlunoHandler materiasDoAluno,
+    IConsultaDePremios consultaDePremios,
     IFilaDeTrabalhos fila,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
@@ -81,6 +84,16 @@ public sealed class ConcessaoDiretaHandler(
         await AtosSobreOAlunoHandler.InstituicaoAsync(usuarios, quemId, cancellationToken);
         var aluno = await AtosSobreOAlunoHandler.ContaDoAlunoAsync(alunos, cadastroId, cancellationToken);
         return await eventosReivindicaveis.ReivindicaveisAsync(aluno.Id, item, cancellationToken);
+    }
+
+    // Os prêmios de participação do catálogo que o aluno pode receber: os mesmos da tela de
+    // Troféus dele, sem os restritos a outro curso, com o critério e se pedem a matéria.
+    public async Task<IReadOnlyList<ItemDoAluno>> ItensAsync(Guid quemId, Guid cadastroId, CancellationToken cancellationToken)
+    {
+        await AtosSobreOAlunoHandler.InstituicaoAsync(usuarios, quemId, cancellationToken);
+        var aluno = await AtosSobreOAlunoHandler.ContaDoAlunoAsync(alunos, cadastroId, cancellationToken);
+        var premios = await consultaDePremios.DoAlunoAsync(aluno.Id, cancellationToken);
+        return [.. (premios?.Itens ?? []).Where(item => item.Tipo == TipoDeItem.PremioParticipacao)];
     }
 
     // As matérias que o aluno cursa hoje, para a apresentação em sala (P17).

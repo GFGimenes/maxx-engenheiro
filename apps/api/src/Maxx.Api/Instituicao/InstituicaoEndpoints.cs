@@ -66,6 +66,12 @@ internal static class InstituicaoEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        alunos.MapGet("/{cadastroId:guid}/premios-participacao", ItensAsync)
+            .WithName("GetPremiosParaConcessao")
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         alunos.MapGet("/{cadastroId:guid}/materias", MateriasAsync)
             .WithName("GetMateriasParaConcessao")
             .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -145,6 +151,12 @@ internal static class InstituicaoEndpoints
         [StringLength(16)] string? item = null) =>
         TypedResults.Ok<IReadOnlyList<EventoResponse>>([.. (await handler.EventosAsync(PostEndpoints.UsuarioId(principal), cadastroId, item, cancellationToken))
             .Select(evento => new EventoResponse(evento.Id, evento.Nome, evento.Inicio, evento.Fim, evento.ItensAceitos))]);
+
+    private static async Task<Ok<IReadOnlyList<ItemParaConcessaoResponse>>> ItensAsync(
+        Guid cadastroId, ClaimsPrincipal principal, ConcessaoDiretaHandler handler, CancellationToken cancellationToken) =>
+        TypedResults.Ok<IReadOnlyList<ItemParaConcessaoResponse>>([.. (await handler.ItensAsync(PostEndpoints.UsuarioId(principal), cadastroId, cancellationToken))
+            .Select(item => new ItemParaConcessaoResponse(
+                item.Codigo, item.Nome, item.Criterio, ProfessorEndpoints.Nome(item.Tier), item.Pontos, item.ExigeMateria))]);
 
     private static async Task<Ok<IReadOnlyList<MateriaResponse>>> MateriasAsync(
         Guid cadastroId, ClaimsPrincipal principal, ConcessaoDiretaHandler handler, CancellationToken cancellationToken) =>
@@ -233,6 +245,10 @@ public sealed record ConcessaoRequest(
     Guid? EventoId,
     EventoDigitadoRequest? EventoDigitado,
     Guid? MateriaId);
+
+// Um prêmio de participação que a instituição pode conceder ao aluno. Tier em camelCase.
+// ExigeMateria: a apresentação em sala, que vai com evento digitado e a matéria.
+public sealed record ItemParaConcessaoResponse(string Codigo, string Nome, string Criterio, string Tier, int Pontos, bool ExigeMateria);
 
 // Tier em camelCase, como no catálogo. ConcedidoEm: o instante da aprovação, que é o do
 // desempate no ranking.

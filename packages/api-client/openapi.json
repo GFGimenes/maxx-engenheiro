@@ -3141,6 +3141,73 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "get": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "GetPremiosParaConcessao",
+        "parameters": [
+          {
+            "name": "cadastroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ItemParaConcessaoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/api/v1/instituicao/alunos/{cadastroId}/eventos": {
@@ -4769,7 +4836,8 @@
         "required": [
           "sigla",
           "nome",
-          "duracaoEmSemestres"
+          "duracaoEmSemestres",
+          "id"
         ],
         "type": "object",
         "properties": {
@@ -4782,6 +4850,10 @@
           "duracaoEmSemestres": {
             "type": "integer",
             "format": "int32"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -5381,6 +5453,38 @@
                 "$ref": "#/components/schemas/ProgressoResponse"
               }
             ]
+          }
+        }
+      },
+      "ItemParaConcessaoResponse": {
+        "required": [
+          "codigo",
+          "nome",
+          "criterio",
+          "tier",
+          "pontos",
+          "exigeMateria"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "criterio": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "exigeMateria": {
+            "type": "boolean"
           }
         }
       },

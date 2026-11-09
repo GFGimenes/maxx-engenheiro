@@ -859,7 +859,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["GetPremiosParaConcessao"];
         put?: never;
         post: operations["ConcederPremioParticipacao"];
         delete?: never;
@@ -1306,6 +1306,8 @@ export interface components {
             nome: string;
             /** Format: int32 */
             duracaoEmSemestres: number;
+            /** Format: uuid */
+            id: string;
         };
         CurtidasResponse: {
             /** Format: int32 */
@@ -1458,6 +1460,15 @@ export interface components {
             obtidos: components["schemas"]["PremioObtidoResponse"][];
             exigeMateria: boolean;
             progresso?: null | components["schemas"]["ProgressoResponse"];
+        };
+        ItemParaConcessaoResponse: {
+            codigo: string;
+            nome: string;
+            criterio: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            exigeMateria: boolean;
         };
         LerNotificacoesRequest: {
             /** Format: date-time */
@@ -4090,6 +4101,55 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetPremiosParaConcessao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cadastroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemParaConcessaoResponse"][];
                 };
             };
             /** @description Forbidden */

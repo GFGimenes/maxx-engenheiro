@@ -179,6 +179,22 @@ public sealed class ConcessaoEAnulacaoTests(PostgresFixture postgres, Armazename
     }
 
     [Fact]
+    public async Task A_lista_de_premios_para_conceder_e_a_de_participacao_do_aluno_com_a_materia_quando_pede()
+    {
+        await using var mundo = await MundoDePremios.CriarAsync(postgres, armazenamento);
+        using var coordenacao = await mundo.Social.ComoAsync(Coordenacao);
+        using var renata = await mundo.Social.ComoAsync(Renata);
+        var ana = await CadastroAsync(mundo, Ana);
+
+        var itens = (await coordenacao.GetFromJsonAsync<List<ItemParaConcessaoResponse>>(Rota($"/alunos/{ana}/premios-participacao"), Ct))!;
+
+        Assert.Equal(["P01", "P06", "P17"], itens.Select(item => item.Codigo).Order(StringComparer.Ordinal));
+        Assert.True(itens.Single(item => item.Codigo == "P17").ExigeMateria);
+        Assert.All(itens, item => Assert.False(string.IsNullOrWhiteSpace(item.Criterio)));
+        Assert.Equal(HttpStatusCode.Forbidden, (await renata.GetAsync(Rota($"/alunos/{ana}/premios-participacao"), Ct)).StatusCode);
+    }
+
+    [Fact]
     public async Task O_aluno_posta_o_premio_concedido_uma_vez_e_nao_posta_o_que_esta_em_averiguacao()
     {
         await using var mundo = await MundoDePremios.CriarAsync(postgres, armazenamento);

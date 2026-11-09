@@ -327,11 +327,14 @@ public sealed class PerfilTests(PostgresFixture postgres, ArmazenamentoFixture a
         using var ana = await mundo.ComoAsync(Ana);
         await MedicinaAsync(mundo);
 
-        var cursos = await ana.GetFromJsonAsync<List<CursoResponse>>("/api/v1/cursos", Ct);
+        var cursos = (await ana.GetFromJsonAsync<List<CursoResponse>>("/api/v1/cursos", Ct))!;
 
         Assert.Equal(
-            [new CursoResponse("CC", "Ciência da Computação", 8), new CursoResponse("MED", "Medicina", 12)],
-            cursos);
+            [("CC", "Ciência da Computação", 8), ("MED", "Medicina", 12)],
+            cursos.Select(curso => (curso.Sigla, curso.Nome, curso.DuracaoEmSemestres)));
+        Assert.Equal(
+            (await mundo.LinhasAsync<Curso>()).OrderBy(curso => curso.Sigla, StringComparer.Ordinal).Select(curso => curso.Id),
+            cursos.Select(curso => curso.Id));
     }
 
     [Fact]
