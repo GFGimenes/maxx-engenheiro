@@ -21,8 +21,8 @@ export function abaDaRota(caminho: string): Aba {
 }
 
 // As cinco abas, na ordem do design: Home, Busca, Mural, Troféus, Perfil (produto.md 10).
-// Desde o passo 6, com Troféus de verdade; Busca, Mural e Perfil chegam nos passos 7 e 10.
-// A bolinha de novidade chega com o sininho, no passo 10.
+// Troféus desde o passo 6, Busca e Perfil desde o passo 7, Mural desde o passo 10.
+// A bolinha de novidade chega com o sininho, na etapa 6 do passo 10.
 export function LayoutDasAbas() {
   const { colors } = useTheme();
   const router = useRouter();

@@ -119,6 +119,13 @@ const ICONES = {
   // chevron-right e x do Lucide.
   voltar: [{ d: "m15 18-6-6 6-6", modo: "aberto" }],
   avancar: [{ d: "m9 18 6-6-6-6", modo: "aberto" }],
+  // chevron-down do Lucide: o cartão recolhido do mural, que abre ao toque.
+  abrir: [{ d: "m6 9 6 6 6-6", modo: "aberto" }],
+  // check-check do Lucide: o "Ler todos" do mural.
+  lerTodos: [
+    { d: "M18 6 7 17l-5-5", modo: "aberto" },
+    { d: "m22 10-7.5 7.5L13 16", modo: "aberto" },
+  ],
   fechar: [
     { d: "M18 6 6 18", modo: "aberto" },
     { d: "m6 6 12 12", modo: "aberto" },
