@@ -99,3 +99,15 @@ internal sealed class ProgressoDeConquistaConfiguration : IEntityTypeConfigurati
         builder.HasOne<ItemCatalogoRow>().WithMany().HasForeignKey(linha => linha.ItemCodigo).OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+// As instâncias de período que o worker já fechou (D7 do passo 9): é este registro, e não a
+// data, que diz se uma instância está fechada. Uma linha por instância.
+internal sealed class FechamentoDePeriodoConfiguration : IEntityTypeConfiguration<FechamentoDePeriodoRow>
+{
+    public void Configure(EntityTypeBuilder<FechamentoDePeriodoRow> builder)
+    {
+        builder.ToTable("fechamento_de_periodo", table =>
+            table.HasCheckConstraint("ck_fechamento_de_periodo_tipo_de_periodo", "tipo_de_periodo IN ('bimestre', 'semestre', 'ano')"));
+        builder.HasKey(linha => new { linha.TipoDePeriodo, linha.ReferenciaDoPeriodo });
+    }
+}

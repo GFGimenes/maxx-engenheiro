@@ -1,3 +1,4 @@
+using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
@@ -60,6 +61,7 @@ public sealed partial class DatabaseSeeder(
         var (anosNovos, anosAtualizados) = await GravarCalendarioAsync(calendario, cancellationToken);
         var termosNovos = await GravarTermosAsync(termos, cancellationToken);
         await PedirRaridadeAsync(itensNovos + itensAtualizados > 0, cancellationToken);
+        await PedirVerificacaoDeFechamentosAsync(cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         await transacao.CommitAsync(cancellationToken);
@@ -87,6 +89,19 @@ public sealed partial class DatabaseSeeder(
         if (catalogoMudou || semRaridade)
         {
             fila.Enfileirar(new RecalcularRaridade());
+        }
+    }
+
+    // A verificação de fechamentos se reenfileira sozinha (D7 do passo 9): o seed só a põe
+    // na fila quando não há uma pendente, no primeiro seed ou se a corrente se perdeu num
+    // trabalho falho. Rodar de novo não acrescenta outra.
+    private async Task PedirVerificacaoDeFechamentosAsync(CancellationToken cancellationToken)
+    {
+        var pendente = await db.Set<Trabalho>()
+            .AnyAsync(trabalho => trabalho.Tipo == VerificarFechamentos.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, cancellationToken);
+        if (!pendente)
+        {
+            fila.Enfileirar(new VerificarFechamentos());
         }
     }
 

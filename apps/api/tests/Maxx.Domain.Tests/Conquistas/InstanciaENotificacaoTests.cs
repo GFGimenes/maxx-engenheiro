@@ -39,6 +39,46 @@ public class InstanciaENotificacaoTests
         Assert.Empty(InstanciaDoCurso.Semestres(_fatos.Calendario));
     }
 
+    [Fact]
+    public void Instancia_encerra_a_meia_noite_do_dia_seguinte_ao_fim()
+    {
+        // 03/04 é o último dia do bimestre 1: nele, ainda aberto; em 04/04, encerrado.
+        Assert.Empty(InstanciaDePeriodo.EncerradasAte(_fatos.Calendario, Data(4, 3)));
+        Assert.Equal([_fatos.InstanciaDoBimestre(1)], InstanciaDePeriodo.EncerradasAte(_fatos.Calendario, Data(4, 4)));
+    }
+
+    [Fact]
+    public void Encerradas_trazem_bimestres_semestres_e_o_ano()
+    {
+        var noRecessoDeJulho = InstanciaDePeriodo.EncerradasAte(_fatos.Calendario, Data(7, 10));
+        var depoisDoAno = InstanciaDePeriodo.EncerradasAte(_fatos.Calendario, Data(12, 6));
+
+        Assert.Equal([_fatos.InstanciaDoBimestre(1), _fatos.InstanciaDoBimestre(2), _fatos.InstanciaDoSemestre(1)], noRecessoDeJulho);
+        Assert.Equal(7, depoisDoAno.Count);
+        Assert.Contains(_fatos.InstanciaDoAno, depoisDoAno);
+        Assert.DoesNotContain(depoisDoAno, instancia => instancia.Tipo == Periodo.Curso);
+    }
+
+    [Fact]
+    public void Congelamento_e_30_dias_depois_do_fim_do_ultimo_semestre_coberto()
+    {
+        Assert.Equal(Data(7, 27), _fatos.InstanciaDoBimestre(1).Congelamento(_fatos.Calendario));
+        Assert.Equal(Data(7, 27), _fatos.InstanciaDoSemestre(1).Congelamento(_fatos.Calendario));
+        Assert.Equal(new DateOnly(2027, 1, 4), _fatos.InstanciaDoBimestre(3).Congelamento(_fatos.Calendario));
+        Assert.Equal(new DateOnly(2027, 1, 4), _fatos.InstanciaDoAno.Congelamento(_fatos.Calendario));
+        Assert.Null(InstanciaDoCurso.Congelamento(_fatos.Calendario));
+    }
+
+    [Fact]
+    public void Reavaliacao_de_fechamento_vale_ate_a_vespera_do_congelamento()
+    {
+        var bimestre2 = _fatos.InstanciaDoBimestre(2);
+
+        Assert.True(bimestre2.AceitaReavaliacaoDeFechamento(_fatos.Calendario, Data(7, 26)));
+        Assert.False(bimestre2.AceitaReavaliacaoDeFechamento(_fatos.Calendario, Data(7, 27)));
+        Assert.False(InstanciaDoCurso.AceitaReavaliacaoDeFechamento(_fatos.Calendario, Data(7, 1)));
+    }
+
     private Conquista Concedida()
     {
         var instancia = _fatos.InstanciaDoBimestre(4);

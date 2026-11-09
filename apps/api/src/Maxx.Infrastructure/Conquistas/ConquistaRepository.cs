@@ -121,6 +121,31 @@ internal sealed class ConquistaRepository(MaxxDbContext db) : IConquistaReposito
         return materias.ToHashSet();
     }
 
+    public async Task<IReadOnlyList<Guid>> AlunosDoPeriodoAsync(
+        IReadOnlyList<SemestreLetivo> semestres, CancellationToken cancellationToken)
+    {
+        var ids = semestres.Select(semestre => semestre.Id).ToList();
+        return await (
+                from usuario in db.Set<Usuario>()
+                join matricula in db.Set<Matricula>() on usuario.CadastroElegivelId equals matricula.AlunoId
+                join turma in db.Set<Turma>() on matricula.TurmaId equals turma.Id
+                where usuario.Papeis == Papeis.Aluno && ids.Contains(turma.SemestreLetivoId)
+                select usuario.Id)
+            .Distinct()
+            .OrderBy(id => id)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> FechadaAsync(InstanciaDePeriodo instancia, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(instancia);
+
+        var tipo = NomeJson.De(instancia.Tipo);
+        return await db.Set<FechamentoDePeriodoRow>().AnyAsync(
+            fechamento => fechamento.TipoDePeriodo == tipo && fechamento.ReferenciaDoPeriodo == instancia.Referencia,
+            cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Conquista>> AtivasAsync(Guid alunoId, CancellationToken cancellationToken) =>
         await db.Set<Conquista>()
             .Include(conquista => conquista.Evidencias)

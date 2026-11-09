@@ -1463,6 +1463,29 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Conquistas.FechamentoDePeriodoRow", b =>
+                {
+                    b.Property<string>("TipoDePeriodo")
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_periodo");
+
+                    b.Property<Guid>("ReferenciaDoPeriodo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("referencia_do_periodo");
+
+                    b.Property<DateTimeOffset>("FechadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fechado_em");
+
+                    b.HasKey("TipoDePeriodo", "ReferenciaDoPeriodo")
+                        .HasName("pk_fechamento_de_periodo");
+
+                    b.ToTable("fechamento_de_periodo", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fechamento_de_periodo_tipo_de_periodo", "tipo_de_periodo IN ('bimestre', 'semestre', 'ano')");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Conquistas.ProgressoDeConquistaRow", b =>
                 {
                     b.Property<Guid>("AlunoId")

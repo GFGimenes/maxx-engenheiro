@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaDeContestacoes, ConsultaDeContestacoes>();
         services.AddScoped<IConquistaRepository, ConquistaRepository>();
         services.AddScoped<ContextoDasConquistas>();
+        services.AddScoped<AvaliacaoDeConquistas>();
 
         // O avaliador único das conquistas (ADR 0004), com as regras customizadas registradas.
         // Nenhuma conquista da fase 1 usa o escape, e nenhuma está registrada.
@@ -114,6 +115,9 @@ public static class DependencyInjection
         services.AddTrabalho<NotificarPremioRevogado, NotificarContestacaoHandler>();
         services.AddTrabalho<ReavaliarConquistas, ReavaliarConquistasHandler>();
         services.AddTrabalho<RecalcularConquistasDaMedalha, RecalcularConquistasDaMedalhaHandler>();
+        services.AddTrabalho<VerificarFechamentos, VerificacaoDeFechamentos>();
+        services.AddTrabalho<FecharPeriodo, FecharPeriodoHandler>();
+        services.AddTrabalho<AvaliarFechamentoDoAluno, AvaliarFechamentoDoAlunoHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()

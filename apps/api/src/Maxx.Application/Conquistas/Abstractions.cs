@@ -29,6 +29,12 @@ public interface IConquistaRepository
     Task<IReadOnlySet<Guid>> MateriasDoPeriodoAsync(
         Guid alunoId, IReadOnlyList<SemestreLetivo> semestres, CancellationToken cancellationToken);
 
+    // Os usuários alunos, ex-alunos inclusive, matriculados numa turma desses semestres.
+    Task<IReadOnlyList<Guid>> AlunosDoPeriodoAsync(IReadOnlyList<SemestreLetivo> semestres, CancellationToken cancellationToken);
+
+    // Se o worker já registrou o fechamento da instância (D7 do passo 9).
+    Task<bool> FechadaAsync(InstanciaDePeriodo instancia, CancellationToken cancellationToken);
+
     // As conquistas não removidas do aluno, com as evidências.
     Task<IReadOnlyList<Conquista>> AtivasAsync(Guid alunoId, CancellationToken cancellationToken);
 

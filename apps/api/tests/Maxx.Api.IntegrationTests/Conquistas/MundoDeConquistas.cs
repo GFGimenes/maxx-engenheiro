@@ -1,10 +1,13 @@
+using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.PremiosParticipacao;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Infrastructure.Conquistas;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
@@ -185,6 +188,28 @@ internal sealed class MundoDeConquistas : IAsyncDisposable
     {
         await using var scope = Factory.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<T>().AsNoTracking().ToListAsync(Ct);
+    }
+
+    // Grava o fechamento da instância como a verificação grava, sem enfileirar nada: isola a
+    // reavaliação por fato do fechamento em si.
+    public async Task RegistrarFechamentoAsync(InstanciaDePeriodo instancia)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        db.Add(new FechamentoDePeriodoRow
+        {
+            TipoDePeriodo = instancia.Tipo.ToString().ToLowerInvariant(),
+            ReferenciaDoPeriodo = instancia.Referencia,
+            FechadoEm = Relogio.GetUtcNow(),
+        });
+        await db.SaveChangesAsync(Ct);
+    }
+
+    // Uma verificação de fechamentos agora, e o que ela abrir, até a fila esvaziar.
+    public async Task VerificarFechamentosAsync()
+    {
+        await EnfileirarAsync(new VerificarFechamentos());
+        await EsvaziarAsync();
     }
 
     public ValueTask DisposeAsync() => Factory.DisposeAsync();
