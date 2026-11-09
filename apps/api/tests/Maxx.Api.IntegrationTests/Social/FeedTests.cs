@@ -29,6 +29,23 @@ public sealed class FeedTests(PostgresFixture postgres, ArmazenamentoFixture arm
         Assert.Null(pagina.Proximo);
     }
 
+    // O autor traz a posição do histórico geral (passo 11), como o perfil; sem pontos, nula.
+    [Fact]
+    public async Task Autor_do_post_traz_a_posicao_do_historico_geral()
+    {
+        await using var mundo = await CriarAsync(postgres, armazenamento);
+        using var ana = await mundo.ComoAsync(Ana);
+        await mundo.MedalhaAsync(Ana);
+        await mundo.EsvaziarFilaAsync();
+        var daAna = Assert.Single(await PostarAsync(mundo, Ana, 1));
+        var doBruno = Assert.Single(await PostarAsync(mundo, Bruno, 1));
+
+        var pagina = await PaginaAsync(ana);
+
+        Assert.Equal(1, pagina.Itens.Single(post => post.Id == daAna).Autor.Posicao);
+        Assert.Null(pagina.Itens.Single(post => post.Id == doBruno).Autor.Posicao);
+    }
+
     [Fact]
     public async Task Quem_nao_segue_ninguem_ve_os_proprios_posts_e_recomendacoes_dos_outros()
     {

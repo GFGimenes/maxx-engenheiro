@@ -60,12 +60,17 @@ export function usuarioDoArroba(arroba: string): string {
   return arroba.replace(/^@/, "").replace(/-[^-]*$/, "");
 }
 
-// "CC · 3º semestre"
+// "CC · 3º semestre · #29": a posição é a do histórico geral (passo 11), quando há.
 export function descreverAutor(autor: {
   curso?: string | null;
   semestre?: number | null;
+  posicao?: number | null;
 }): string {
-  return [autor.curso, autor.semestre ? `${autor.semestre}º semestre` : null]
+  return [
+    autor.curso,
+    autor.semestre ? `${autor.semestre}º semestre` : null,
+    autor.posicao ? `#${formatarNumero(autor.posicao)}` : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 }

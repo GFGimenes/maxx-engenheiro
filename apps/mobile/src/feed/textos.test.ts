@@ -52,6 +52,9 @@ describe("textos do feed", () => {
       "CC · 3º semestre",
     );
     expect(descreverAutor({ curso: null, semestre: null })).toBe("");
+    expect(descreverAutor({ curso: "CC", semestre: 3, posicao: 1029 })).toBe(
+      "CC · 3º semestre · #1.029",
+    );
     expect(descreverMedalha({ materia: "Banco de Dados", bimestre: 2 })).toBe(
       "Banco de Dados · 2º bimestre",
     );

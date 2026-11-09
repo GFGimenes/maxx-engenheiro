@@ -3423,6 +3423,13 @@
               "null",
               "string"
             ]
+          },
+          "posicao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },

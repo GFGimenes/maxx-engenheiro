@@ -55,8 +55,8 @@ interface CartaoDePostProps {
 
 // O post no feed, como na prancheta: cabeçalho com avatar, nome, curso e semestre e o selo do
 // prêmio; a foto em largura total; coração, comentário e enviar (salvar não existe na fase
-// 1); a faixa do prêmio; curtidas, legenda, comentários e tempo. A posição (#29) chega com o
-// ranking, no passo 11.
+// 1); a faixa do prêmio; curtidas, legenda, comentários e tempo. A posição (#29) do autor é
+// a do histórico geral (passo 11).
 export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
   const { colors } = useTheme();
   const router = useRouter();

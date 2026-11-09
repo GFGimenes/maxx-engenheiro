@@ -977,6 +977,8 @@ export interface components {
             /** Format: int32 */
             semestre: null | number;
             foto: null | string;
+            /** Format: int32 */
+            posicao?: null | number;
         };
         AvisoPublicadoResponse: {
             /** Format: uuid */
