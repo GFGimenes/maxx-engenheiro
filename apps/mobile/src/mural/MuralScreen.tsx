@@ -18,6 +18,8 @@ import { FilterChip } from "../components/FilterChip";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { Logo } from "../marca/Logo";
+import { useNovidades } from "../notificacoes/api";
+import { Sininho } from "../notificacoes/Sininho";
 import { fontFamily, textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
 import { espacamento, interacao, raios, tamanhos } from "../theme/tokens";
@@ -42,8 +44,7 @@ const VAZIO: Record<string, string> = {
 
 // A aba Mural (produto.md 7 e prancheta mural-*.png): o mural combinado da faculdade, do
 // curso e das turmas, do mais novo ao mais antigo, somente leitura. O "+" do professor abre
-// o novo aviso para as turmas dele. O sininho do cabeçalho chega com as notificações, na
-// etapa 6 do passo 10.
+// o novo aviso para as turmas dele; o sininho abre as notificações, como no feed.
 export function MuralScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -55,8 +56,13 @@ export function MuralScreen() {
   const lerTodos = useLerTodos();
   const [atualizando, setAtualizando] = useState(false);
 
+  const novidades = useNovidades();
   const avisos = mural.data?.pages.flatMap((pagina) => pagina.itens) ?? [];
-  const temNaoLido = avisos.some((aviso) => !aviso.lido);
+
+  // "Ler todos" marca o mural inteiro, não só o filtro do chip: segue a bolinha da aba, que
+  // é do mural inteiro. Sem a resposta das novidades, vale o que a lista mostra.
+  const temNaoLido =
+    novidades.data?.mural ?? avisos.some((aviso) => !aviso.lido);
 
   const atualizar = async () => {
     setAtualizando(true);
@@ -71,17 +77,20 @@ export function MuralScreen() {
     <View>
       <View style={styles.topo}>
         <Logo largura={110} />
-        {ehProfessor && (
-          <Pressable
-            role="button"
-            accessibilityLabel="Novo aviso"
-            hitSlop={8}
-            onPress={() => router.push("/novo-aviso")}
-            style={styles.botao}
-          >
-            <Icon name="novo" color={colors.ink} size={tamanhos.iconeNav} />
-          </Pressable>
-        )}
+        <View style={styles.acoes}>
+          {ehProfessor && (
+            <Pressable
+              role="button"
+              accessibilityLabel="Novo aviso"
+              hitSlop={8}
+              onPress={() => router.push("/novo-aviso")}
+              style={styles.botao}
+            >
+              <Icon name="novo" color={colors.ink} size={tamanhos.iconeNav} />
+            </Pressable>
+          )}
+          <Sininho />
+        </View>
       </View>
       <View style={styles.linhaDoTitulo}>
         <Text role="heading" style={[textStyles.titulo, { color: colors.ink }]}>
@@ -242,12 +251,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: espacamento.margemLateral,
     paddingTop: 4,
   },
+  acoes: { flexDirection: "row", alignItems: "center" },
   botao: {
     width: tamanhos.alvoDeToque,
     height: tamanhos.alvoDeToque,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: -10,
+    marginRight: 4,
   },
   toqueLerTodos: {
     minHeight: tamanhos.alvoDeToque,

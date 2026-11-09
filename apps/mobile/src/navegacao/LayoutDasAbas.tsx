@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { useEu } from "../api/useEu";
 import { BottomNav, type Aba } from "../components/BottomNav";
+import { useNovidades } from "../notificacoes/api";
 import { useTheme } from "../theme/ThemeProvider";
 
 const ROTAS: Record<Aba, Href> = {
@@ -22,12 +23,14 @@ export function abaDaRota(caminho: string): Aba {
 
 // As cinco abas, na ordem do design: Home, Busca, Mural, Troféus, Perfil (produto.md 10).
 // Troféus desde o passo 6, Busca e Perfil desde o passo 7, Mural desde o passo 10.
-// A bolinha de novidade chega com o sininho, na etapa 6 do passo 10.
+// A bolinha de novidade (aviso não lido no Mural, prêmio novo em Troféus) vem das
+// novidades, perguntadas ao focar e a cada 60 s, desde o passo 10.
 export function LayoutDasAbas() {
   const { colors } = useTheme();
   const router = useRouter();
   const caminho = usePathname();
   const eu = useEu();
+  const novidades = useNovidades();
 
   return (
     <View style={[styles.fill, { backgroundColor: colors.bg }]}>
@@ -37,6 +40,10 @@ export function LayoutDasAbas() {
       <BottomNav
         active={abaDaRota(caminho)}
         nome={eu.data?.nomeDeExibicao ?? ""}
+        novidades={{
+          mural: novidades.data?.mural ?? false,
+          trofeus: novidades.data?.trofeus ?? false,
+        }}
         onSelect={(aba) => router.navigate(ROTAS[aba])}
       />
     </View>
