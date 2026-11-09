@@ -1,10 +1,12 @@
 using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Ranking;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -61,6 +63,7 @@ public sealed partial class DatabaseSeeder(
         var (anosNovos, anosAtualizados) = await GravarCalendarioAsync(calendario, cancellationToken);
         var termosNovos = await GravarTermosAsync(termos, cancellationToken);
         await PedirRaridadeAsync(itensNovos + itensAtualizados > 0, cancellationToken);
+        await PedirRankingAsync(anosNovos + anosAtualizados > 0, cancellationToken);
         await PedirVerificacaoDeFechamentosAsync(cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -89,6 +92,27 @@ public sealed partial class DatabaseSeeder(
         if (catalogoMudou || semRaridade)
         {
             fila.Enfileirar(new RecalcularRaridade());
+        }
+    }
+
+    // Calendário novo ou mudado, ou ranking ainda nunca calculado: um pedido de recálculo ao
+    // worker. O calendário muda o semestre em que uma parcela conta (o prêmio do recesso
+    // espera o semestre seguinte existir) e quais semestres já congelaram. Só um: com um
+    // pedido pendente, rodar de novo não acrescenta nada, e o seed segue idempotente.
+    private async Task PedirRankingAsync(bool calendarioMudou, CancellationToken cancellationToken)
+    {
+        var pendente = await db.Set<Trabalho>()
+            .AnyAsync(trabalho => trabalho.Tipo == RecalcularRanking.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, cancellationToken);
+        if (pendente)
+        {
+            return;
+        }
+
+        var nuncaCalculado = !await db.Set<RecalculoRow>()
+            .AnyAsync(recalculo => recalculo.Nome == RecalculoDoRanking.Nome && recalculo.UltimaExecucaoEm != null, cancellationToken);
+        if (calendarioMudou || nuncaCalculado)
+        {
+            fila.Enfileirar(new RecalcularRanking());
         }
     }
 
