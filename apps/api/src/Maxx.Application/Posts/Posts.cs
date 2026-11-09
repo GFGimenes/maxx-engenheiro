@@ -94,6 +94,7 @@ public sealed class PublicarPostHandler(
     IUploadPendenteRepository uploads,
     IMedalhaRepository medalhas,
     IConquistaRepository conquistas,
+    IPremioParticipacaoRepository premiosDeParticipacao,
     IPostRepository posts,
     IArmazenamentoDeFotos armazenamento,
     IUnitOfWork unitOfWork,
@@ -103,9 +104,20 @@ public sealed class PublicarPostHandler(
         Guid autorId, string? legenda, Guid? uploadId, Guid? medalhaId, CancellationToken cancellationToken) =>
         await PublicarAsync(autorId, legenda, uploadId, medalhaId, null, cancellationToken);
 
-    // O prêmio do post é a medalha ou a conquista (passo 9), nunca os dois.
     public async Task<Post> PublicarAsync(
-        Guid autorId, string? legenda, Guid? uploadId, Guid? medalhaId, Guid? conquistaId, CancellationToken cancellationToken)
+        Guid autorId, string? legenda, Guid? uploadId, Guid? medalhaId, Guid? conquistaId, CancellationToken cancellationToken) =>
+        await PublicarAsync(autorId, legenda, uploadId, medalhaId, conquistaId, null, cancellationToken);
+
+    // O prêmio do post é um só: a medalha, a conquista (passo 9) ou o prêmio de participação
+    // concedido direto pela instituição (passo 12).
+    public async Task<Post> PublicarAsync(
+        Guid autorId,
+        string? legenda,
+        Guid? uploadId,
+        Guid? medalhaId,
+        Guid? conquistaId,
+        Guid? premioParticipacaoId,
+        CancellationToken cancellationToken)
     {
         var autor = await usuarios.BuscarAsync(autorId, cancellationToken)
             ?? throw new RecusaException(TipoDeRecusa.NaoAutorizado, CodigosDeRecusa.SessaoInvalida, $"Usuário {autorId} não existe.");
@@ -131,16 +143,26 @@ public sealed class PublicarPostHandler(
                 ?? throw Recusa(RecusaDaPublicacao.PremioNaoEncontrado, autorId);
         }
 
-        var resultado = Post.Publicar(autor, legenda, upload, medalha, conquista, relogio.GetUtcNow());
+        PremioParticipacao? premioParticipacao = null;
+        if (premioParticipacaoId is { } idDoPremio)
+        {
+            premioParticipacao = await premiosDeParticipacao.BuscarAsync(idDoPremio, cancellationToken)
+                ?? throw Recusa(RecusaDaPublicacao.PremioNaoEncontrado, autorId);
+        }
+
+        var resultado = Post.Publicar(autor, legenda, upload, medalha, conquista, premioParticipacao, relogio.GetUtcNow());
         if (resultado.Post is not { } post)
         {
             throw Recusa(resultado.Recusa!.Value, autorId);
         }
 
+        var premioId = (medalha?.Id ?? conquista?.Id ?? premioParticipacao?.Id).GetValueOrDefault();
         if ((medalha is not null && await posts.PremioTemPostAsync(medalha.Id, cancellationToken))
-            || (conquista is not null && await posts.ConquistaTemPostAsync(conquista.Id, cancellationToken)))
+            || (conquista is not null && await posts.ConquistaTemPostAsync(conquista.Id, cancellationToken))
+            || (premioParticipacao is not null
+                && (await posts.DoPremioParticipacaoAsync(premioParticipacao.Id, cancellationToken)).Any(existente => !existente.EstaRemovido)))
         {
-            throw PremioJaPostado((medalha?.Id ?? conquista?.Id)!.Value);
+            throw PremioJaPostado(premioId);
         }
 
         // O app diz que enviou; o bucket confirma. Sem as duas derivadas, o post teria uma
@@ -160,7 +182,7 @@ public sealed class PublicarPostHandler(
         }
         catch (ConflitoDeUnicidadeException conflito) when (conflito.Unicidade == Unicidade.PostPorPremio)
         {
-            throw PremioJaPostado((medalha?.Id ?? conquista?.Id)!.Value);
+            throw PremioJaPostado(premioId);
         }
         catch (ConflitoDeConcorrenciaException)
         {
@@ -187,7 +209,9 @@ public sealed class PublicarPostHandler(
         RecusaDaPublicacao.PremioAnulado => new(TipoDeRecusa.Conflito, CodigosDoPost.PremioAnulado, "Prêmio anulado."),
         RecusaDaPublicacao.FotoObrigatoria => new(TipoDeRecusa.Invalido, CodigosDoPost.FotoObrigatoria, "Reivindicação sem foto."),
         RecusaDaPublicacao.ConquistaRemovida => new(TipoDeRecusa.Conflito, CodigosDoPost.ConquistaRemovida, "Conquista removida."),
-        RecusaDaPublicacao.MaisDeUmPremio => new(TipoDeRecusa.Invalido, CodigosDoPost.MaisDeUmPremio, "Medalha e conquista no mesmo post."),
+        RecusaDaPublicacao.MaisDeUmPremio => new(TipoDeRecusa.Invalido, CodigosDoPost.MaisDeUmPremio, "Mais de um prêmio no mesmo post."),
+        RecusaDaPublicacao.PremioIndisponivel => new(
+            TipoDeRecusa.Conflito, CodigosDoPost.PremioIndisponivel, "Prêmio de participação que não pontua agora."),
         _ => throw new ArgumentOutOfRangeException(nameof(recusa), recusa, null),
     };
 }

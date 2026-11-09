@@ -48,6 +48,7 @@ const MENSAGENS = {
   "premio-anulado": "Esse prêmio foi anulado.",
   "premio-ja-postado": "Esse prêmio já tem um post.",
   "conquista-removida": "Essa conquista foi removida.",
+  "premio-indisponivel": "Esse prêmio não está valendo agora.",
   "mais-de-um-premio": "Escolha um prêmio só para o post.",
   "post-nao-encontrado": "Esse post não existe mais.",
   "remocao-nao-permitida": "Você não pode apagar este post.",
@@ -93,6 +94,16 @@ const MENSAGENS = {
   "titulo-do-aviso-invalido": "O título precisa ter de 3 a 120 caracteres.",
   "texto-do-aviso-invalido": "O texto precisa ter de 1 a 2.000 caracteres.",
   "aviso-nao-encontrado": "Esse aviso não está mais no seu mural.",
+  // Área da instituição (CodigosDaInstituicao.cs); ex-aluno, curso e busca repetem os de
+  // cima.
+  "aluno-nao-encontrado": "Esse aluno não está na base.",
+  "aluno-sem-conta": "Esse aluno ainda não criou a conta.",
+  "email-invalido": "Confira o e-mail digitado.",
+  "email-em-uso": "Esse e-mail já é de outra pessoa da base.",
+  "mesmo-curso": "O aluno já é desse curso.",
+  "semestre-invalido": "Esse curso não tem esse semestre.",
+  "confirmacao-invalida": "Digite o nome do lote igual ao da lista.",
+  "lote-nao-encontrado": "Esse lote não tem mais ninguém para purgar.",
   // Paginação (CodigosDaPaginacao.cs)
   "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)

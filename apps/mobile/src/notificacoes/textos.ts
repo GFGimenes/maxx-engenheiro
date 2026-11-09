@@ -100,6 +100,11 @@ export const APRESENTACOES: Record<
     icone: "newspaper",
     destino: `/aviso/${referenciaId}`,
   }),
+  premioConcedido: ({ item }) => ({
+    texto: `A UniMax te concedeu ${nome(item, "um prêmio de participação")}.`,
+    icone: "taca",
+    destino: "/trofeus",
+  }),
 };
 
 export function apresentar(dados: DadosDaNotificacao): Apresentacao {

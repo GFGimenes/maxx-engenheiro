@@ -6,6 +6,7 @@ using Maxx.Api.Erros;
 using Maxx.Api.Feed;
 using Maxx.Api.Fotos;
 using Maxx.Api.Health;
+using Maxx.Api.Instituicao;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
 using Maxx.Api.Mural;
@@ -113,6 +114,9 @@ builder.Services.AddScoped<Maxx.Application.Ranking.LeituraDoRankingHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.PublicarAvisoHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.MuralHandler>();
 builder.Services.AddScoped<Maxx.Application.Notificacoes.NotificacoesHandler>();
+builder.Services.AddScoped<Maxx.Application.Instituicao.AtosSobreOAlunoHandler>();
+builder.Services.AddScoped<Maxx.Application.Instituicao.ConcessaoDiretaHandler>();
+builder.Services.AddScoped<Maxx.Application.Instituicao.PurgaDaDemonstracaoHandler>();
 
 var app = builder.Build();
 
@@ -187,6 +191,7 @@ v1.MapContestacaoEndpoints();
 v1.MapAvisoEndpoints();
 v1.MapNotificacaoEndpoints();
 v1.MapRankingEndpoints();
+v1.MapInstituicaoEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

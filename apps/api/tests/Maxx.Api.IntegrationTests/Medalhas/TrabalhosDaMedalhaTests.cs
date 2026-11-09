@@ -212,7 +212,7 @@ public sealed class TrabalhosDaMedalhaTests(PostgresFixture postgres) : IClassFi
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
         var usuario = await db.Set<Usuario>().SingleAsync(linha => linha.Id == aluna, Ct);
-        usuario.MarcarExAluno(DateTimeOffset.UtcNow);
+        usuario.MarcarExAluno(usuario.Id, DateTimeOffset.UtcNow);
         await db.SaveChangesAsync(Ct);
     }
 

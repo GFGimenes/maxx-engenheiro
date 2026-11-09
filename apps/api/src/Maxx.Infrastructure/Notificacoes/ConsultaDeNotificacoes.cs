@@ -22,6 +22,7 @@ internal sealed class ConsultaDeNotificacoes(MaxxDbContext db) : IConsultaDeNoti
         TipoDeNotificacao.ContestacaoAberta,
         TipoDeNotificacao.DecisaoDeContestacao,
         TipoDeNotificacao.PremioRevogado,
+        TipoDeNotificacao.PremioConcedido,
     ];
 
     public async Task<Pagina<NotificacaoLida>> PaginaAsync(

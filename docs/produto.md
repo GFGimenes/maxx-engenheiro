@@ -59,7 +59,11 @@ A instituição marca o aluno como ex-aluno. A partir daí ele continua entrando
 seguindo, lendo o mural, curtindo e comentando, e mantém os posts que já tinha. Não
 posta, não recebe prêmio e não pontua. Sai do ranking do semestre no instante da
 marcação e permanece no ranking histórico. Nesse mesmo instante o arroba troca o sufixo
-para `-EX`.
+para `-EX`. Na fase 1 a marcação não volta atrás, e o ex-aluno não troca de curso.
+
+A troca de curso também é ato da instituição, com o curso e o semestre do aluno no curso
+novo; as matrículas antigas ficam, e o aluno leva os pontos para o ranking do curso novo
+(seção 5).
 
 ### 2.3 Identidade do usuário
 
@@ -70,6 +74,13 @@ para `-EX`.
 | **Arroba** | Identificador público e único. Formato `@primeiroNomeUltimoNome-SUFIXO`. Sufixos: a sigla do curso atual para o aluno (`@guilhermeGimenes-CC`), `-EX` para o ex-aluno, `-PROF` para professor (inclusive quando a conta acumula professor e instituição) e `-UNIMAX` para a conta só de instituição. O cadastro sugere a partir do nome; em colisão, a sugestão inclui o nome do meio quando houver e, se ainda colidir, acrescenta número sequencial. O usuário edita apenas a parte antes do hífen, no cadastro e depois no perfil. O sufixo muda sozinho quando o aluno troca de curso ou é marcado como ex-aluno, e o arroba antigo fica reservado permanentemente ao dono, sem reuso por terceiros. Unicidade sem diferenciar maiúsculas; exibição como o usuário escreveu. Regras de formação na seção 2.3.1 |
 | **Nome de exibição** | Texto livre, editável, não precisa ser único |
 | **Foto de perfil** | Opcional, de aluno e de professor; segue as mesmas regras de assinatura e de derivadas da foto de post. Sem foto, o avatar são as iniciais |
+
+A correção de e-mail pela instituição vale para a linha da base com conta ou sem: o caso
+principal é o aluno que não consegue se cadastrar porque o e-mail da base está errado. Ela
+confere só a forma e a unicidade, invalida os links de recuperação de senha já enviados,
+que podem ter ido para o endereço errado, e mantém as sessões abertas. Quem corrigiu, quem
+marcou o ex-aluno, quem trocou o curso e quem purgou a demonstração ficam registrados, com
+o instante.
 
 #### 2.3.1 Formação e unicidade do arroba
 
@@ -338,7 +349,9 @@ Regras do ciclo:
 - A fila de comprovações e de contestações é ordenada por mais antigo e marca o que
   passou de 7 dias. Não há decisão automática por decurso de prazo.
 - A instituição pode conceder prêmio de participação direto, já aprovado e sem
-  comprovação. Nunca concede medalha.
+  comprovação. Nunca concede medalha. O concedido nasce válido, com a janela de 15 dias, e
+  é contestável como qualquer aprovado; valem as regras de evento da reivindicação, e o
+  evento digitado é da instituição. O aluno é notificado e decide se posta o prêmio.
 
 Quando um prêmio é reprovado ou revogado, o post perde o vínculo com o prêmio e
 permanece como post comum; o aluno apaga se quiser. Se o post era só o prêmio, sem foto e
@@ -565,12 +578,13 @@ plataforma. Push nativo é evolução de fase 2.
 
 Geram notificação: medalha recebida, comprovação aprovada ou reprovada, contestação
 aberta, decisão de contestação, prêmio revogado sem contestação (pela remoção do post pela
-instituição, seção 4.7), conquista obtida, conquista removida pelo recálculo (seção 4.9),
+instituição, seção 4.7), prêmio de participação concedido direto pela instituição, conquista
+obtida, conquista removida pelo recálculo (seção 4.9),
 aviso novo. Bolinha dourada de novidade aparece nas abas Mural (aviso não lido) e Troféus
 (prêmio novo).
 
 Abrir o sininho marca como lidas todas as notificações que ele mostrou. Tocar numa leva ao
-que ela trata: medalha e conquista, a Troféus; aprovação, contestação e decisão, ao post do
+que ela trata: medalha, conquista e prêmio concedido, a Troféus; aprovação, contestação e decisão, ao post do
 prêmio; reprovação e revogação, a Troféus, onde ficam as reivindicações com o motivo; aviso
 novo, ao aviso.
 
@@ -629,8 +643,11 @@ Seguem a identidade visual, sem prancheta:
 
 Só no navegador, pequena e funcional: fila de comprovações e fila de contestações
 (aprovar, reprovar, confirmar, revogar), conceder prêmio de participação, publicar
-aviso, corrigir e-mail de aluno, marcar ex-aluno, anular medalha, purgar dados de
-demonstração.
+aviso, corrigir e-mail de aluno, marcar ex-aluno, trocar de curso, anular medalha, purgar
+dados de demonstração. Fica no mesmo app, em `/instituicao`, dentro da moldura de celular;
+no aparelho, a tela diz que a área abre no navegador. A entrada é o menu do perfil e, na
+conta só de instituição, a aba Perfil, que mostra a conta no lugar do perfil social. A
+instituição também contesta pelo menu do post, onde remove o post impróprio.
 
 Catálogo, cursos, turmas, matérias e calendário entram por seed. Não há tela de cadastro
 desses dados na fase 1.
@@ -657,7 +674,13 @@ demonstração respondem 404 e o botão não aparece no login.
   avaliação.
 - Na fase 1 existe só o mundo do seed: nenhuma conta real.
 - O seed traz os professores dos quatro cursos de demonstração e a conta de instituição
-  usada para conceder durante a avaliação.
+  usada para conceder durante a avaliação. Traz também o mundo inteiro: 150 alunos
+  fictícios com conta, sem senha e com e-mail num domínio reservado, que nunca recebe nada
+  (120 ativos e 30 ex-alunos), com medalhas, prêmios, posts com foto, avisos, seguimentos,
+  duas comprovações pendentes e uma contestação aberta; as conquistas desse mundo nascem do
+  sistema, a partir dos fatos.
+- A purga é pela área web da instituição, por lote, também do lote vigente, sempre com o
+  nome do lote digitado de novo: sai do banco tudo do lote, e as fotos dele saem do bucket.
 
 Como isso se traduz no sistema:
 

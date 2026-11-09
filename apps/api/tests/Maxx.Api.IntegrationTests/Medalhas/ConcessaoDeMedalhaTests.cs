@@ -254,7 +254,7 @@ public sealed class ConcessaoDeMedalhaTests(PostgresFixture postgres) : IClassFi
         var contaDaRenata = ComSenha(Usuario.CriarPeloSeed(renata, "renataA", agora), hash);
         var contaDaAna = Usuario.CadastrarAluno(ana, cc, "Ana", "anaSouza", hash, agora);
         var contaDaCarla = Usuario.CadastrarAluno(carla, cc, "Carla", "carlaDias", hash, agora);
-        contaDaCarla.MarcarExAluno(agora);
+        contaDaCarla.MarcarExAluno(contaDaCarla.Id, agora);
         var contaDoDiego = Usuario.CadastrarAluno(diego, cc, "Diego", "diegoReis", hash, agora);
 
         await SalvarAsync(

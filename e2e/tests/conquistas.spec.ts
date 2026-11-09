@@ -71,6 +71,9 @@ test(
   "cinco medalhas no bimestre fecham a conquista, que aparece em Troféus e vira post",
   { tag: "@celular" },
   async ({ page, request }) => {
+    // Cinco concessões e o worker fechando a conquista, com a suíte em paralelo: o prazo dos
+    // casos de vários papéis.
+    test.setTimeout(90_000);
     const professora = await novaProfessora(request);
     const nome = `Aluno ${Date.now().toString().slice(-6)}`;
     const aluno = await novaConta(request, nome);

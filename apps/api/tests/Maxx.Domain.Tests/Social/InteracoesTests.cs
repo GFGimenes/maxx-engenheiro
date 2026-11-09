@@ -18,7 +18,7 @@ public class InteracoesTests
     private static Usuario ExAluna()
     {
         var carla = Aluno("20260103", "carlaDias");
-        carla.MarcarExAluno(_agora);
+        carla.MarcarExAluno(carla.Id, _agora);
         return carla;
     }
 

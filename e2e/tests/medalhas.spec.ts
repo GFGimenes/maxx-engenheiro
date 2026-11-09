@@ -43,6 +43,9 @@ test(
   "a professora concede, o aluno vê em Troféus e a anulação tira a medalha",
   { tag: "@celular" },
   async ({ browser, request }) => {
+    // Dois papéis e dois comandos no contêiner: sozinho leva uns 20 s, e com a suíte em
+    // paralelo passava dos 30 s.
+    test.setTimeout(90_000);
     const professora = await novaProfessora(request);
     const n = Date.now().toString().slice(-6);
     const nome = `Aluno ${n}`;

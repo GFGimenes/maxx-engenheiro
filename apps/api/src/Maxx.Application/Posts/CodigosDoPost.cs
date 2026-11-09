@@ -28,6 +28,10 @@ public static class CodigosDoPost
     // A conquista que o recálculo removeu depois de uma anulação (passo 9).
     public const string ConquistaRemovida = "conquista-removida";
 
+    // O prêmio de participação concedido que não pontua agora: em averiguação ou revogado
+    // (passo 12).
+    public const string PremioIndisponivel = "premio-indisponivel";
+
     // Medalha e conquista no mesmo post: um prêmio por post (produto.md 6.1).
     public const string MaisDeUmPremio = "mais-de-um-premio";
 

@@ -118,8 +118,9 @@ public sealed class RecuperacaoDeSenha
         return ResultadoDaRecuperacao.Concluida;
     }
 
-    // Só pedido ainda aberto: usado ou já invalidado fica como está.
-    private void Invalidar(DateTimeOffset agora)
+    // Só pedido ainda aberto: usado ou já invalidado fica como está. Também pela correção de
+    // e-mail (passo 12, P3): o link pode ter ido para o endereço errado.
+    public void Invalidar(DateTimeOffset agora)
     {
         if (EstaAberta)
         {

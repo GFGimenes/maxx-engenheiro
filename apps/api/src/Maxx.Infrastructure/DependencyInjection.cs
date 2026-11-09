@@ -7,6 +7,7 @@ using Maxx.Application.Demonstracao;
 using Maxx.Application.Feed;
 using Maxx.Application.Fila;
 using Maxx.Application.Fotos;
+using Maxx.Application.Instituicao;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Mural;
 using Maxx.Application.Notificacoes;
@@ -25,6 +26,7 @@ using Maxx.Infrastructure.Email;
 using Maxx.Infrastructure.Feed;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Fotos;
+using Maxx.Infrastructure.Instituicao;
 using Maxx.Infrastructure.Medalhas;
 using Maxx.Infrastructure.Mural;
 using Maxx.Infrastructure.Notificacoes;
@@ -101,6 +103,9 @@ public static class DependencyInjection
         services.AddScoped<IAvisoRepository, AvisoRepository>();
         services.AddScoped<IDistribuicaoDeAviso, DistribuicaoDeAviso>();
         services.AddScoped<IConsultaDoMural, ConsultaDoMural>();
+        services.AddScoped<IAlunosDaInstituicaoRepository, AlunosDaInstituicaoRepository>();
+        services.AddScoped<IConsultaDaInstituicao, ConsultaDaInstituicao>();
+        services.AddScoped<IPurgaDaDemonstracao, PurgaDaDemonstracaoRepository>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
@@ -118,6 +123,7 @@ public static class DependencyInjection
         services.AddTrabalho<LimparUploadAbandonado, LimparUploadAbandonadoHandler>();
         services.AddTrabalho<RemoverFotos, RemoverFotosHandler>();
         services.AddTrabalho<NotificarComprovacaoAprovada, NotificarComprovacaoHandler>();
+        services.AddTrabalho<NotificarPremioConcedido, NotificarComprovacaoHandler>();
         services.AddTrabalho<NotificarComprovacaoReprovada, NotificarComprovacaoHandler>();
         services.AddTrabalho<TornarPremioDefinitivo, TornarPremioDefinitivoHandler>();
         services.AddTrabalho<NotificarContestacaoAberta, NotificarContestacaoHandler>();

@@ -144,12 +144,12 @@ DELETE FROM cadastro_elegivel WHERE id IN (SELECT cadastro_id FROM alvo) AND dem
 COMMIT;
 ```
 
-Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1`. Os prefixos reservados, os aceites do
+Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1` até o passo 11. Desde o passo 12, a purga é pela área web da instituição, numa transação só e com as tabelas que chegaram depois (seção Área web da instituição, Purga da demonstração); o SQL fica aqui como referência. Os prefixos reservados, os aceites do
 termo e os refresh saem em cascata com o usuário e a família, e as evidências, com a
 conquista. Curtidas e comentários de outras pessoas nos posts do lote saem em cascata com o
 post. A lista cresce com os passos que gravam dados do aluno (prêmios, pontos): cada um
 acrescenta aqui a tabela dele, antes de `usuario`. As fotos no bucket não saem por este SQL,
-que só alcança o banco: saem na purga pela área web da instituição, no passo 12.
+que só alcança o banco: saem na purga pela área web da instituição, desde o passo 12.
 
 ## Cliente
 
@@ -253,7 +253,7 @@ medalha) está em `produto.md` 4.8.
 | Outras recusas | 404 `aluno-fora-da-turma` e `item-nao-encontrado`; 409 `ex-aluno`, `item-fora-de-vigencia`, `item-de-outro-curso` e `limite-atingido`. Códigos em `CodigosDaMedalha.cs` |
 | Gravação | A medalha, quem concedeu e quando, e os trabalhos `notificar-medalha-recebida` e `recalcular-raridade`, numa transação só |
 | Auditoria | Colunas na própria `medalha`: quem concedeu e quando, quem anulou e quando, sempre juntos por constraint. Sem tabela genérica de auditoria |
-| Anulação | Por comando administrativo até a área web do passo 12: `Maxx.Api anular-medalha <id> --instituicao <e-mail>`, no compose `docker compose run --rm seeder anular-medalha <id> --instituicao <e-mail>`. Recusa e-mail sem papel de instituição; conta de professor e instituição anula. Sai com 0 (anulada ou já estava), 1 (recusa) ou 2 (uso errado) |
+| Anulação | Por comando administrativo e, desde o passo 12, também pela área web (`POST /v1/instituicao/medalhas/{id}/anulacao`). O comando: `Maxx.Api anular-medalha <id> --instituicao <e-mail>`, no compose `docker compose run --rm seeder anular-medalha <id> --instituicao <e-mail>`. Recusa e-mail sem papel de instituição; conta de professor e instituição anula. Sai com 0 (anulada ou já estava), 1 (recusa) ou 2 (uso errado) |
 | Anulação e vaga | A anulada sai do índice de vagas e libera a ocorrência para nova concessão. Anular de novo não muda nada |
 | Anulação simultânea | `xmin` na medalha: só a primeira grava, e a segunda responde "já estava anulada" |
 | Purga | A purga da demonstração apaga `notificacao` e `medalha` do lote antes do usuário |
@@ -382,7 +382,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 | O PUT de Blob no Android e no iOS só passa pelo Jest | Maestro do passo 13 |
 | HEIC não abre no Chrome: quem escolher um vê "Não deu para abrir essa foto. Escolha outra." | Aceito |
 | A conferência do `content-length` assinado foi provada no emulador, não no R2 | `VerificacaoDoR2Tests`, quando a conta existir |
-| As fotos do lote de demonstração não saem pelo SQL da purga (D14) | Purga pela área web, passo 12 |
+| As fotos do lote de demonstração não saem pelo SQL da purga (D14) | Resolvido no passo 12: a purga pela área web manda as fotos do lote para a remoção do bucket na mesma transação |
 
 ## Prêmios de participação (passo 8)
 
@@ -466,7 +466,7 @@ pode ser decidido, remoção pela instituição, averiguação para os outros le
 |---|---|
 | O ranking não é recalculado pela aprovação, contestação, decisão e remoção: a tabela de ranking não existe ainda | Resolvido no passo 11: os quatro enfileiram o recálculo na mesma transação |
 | Prêmio definitivo não reavalia conquistas | Resolvido no passo 9: o fim da janela e a confirmação da contestação enfileiram a reavaliação |
-| A conta de instituição não tem telas para a fila de contestações nem para a concessão direta | Passo 12 |
+| A conta de instituição não tem telas para a fila de contestações nem para a concessão direta | Resolvido no passo 12: a área web da instituição |
 | A remoção pela instituição que corre contra outro ato sobre o mesmo prêmio responde 404, como a corrida de duas remoções | Aceito |
 | P17 com data no recesso não acha matéria | Aceito |
 | O e2e depende do evento semeado da semana acadêmica de CC no semestre vigente | Risco "Semestre vigente na avaliação" do plano mestre |
@@ -538,7 +538,7 @@ participação, todas as matérias, conquista removida e o post dela, progresso 
 | A regra customizada não é disparada por fato nem tem progresso | Aceito: nenhuma conquista da fase 1 usa |
 | O fato que fica contável depois do fechamento não se reproduz pelo fluxo com o catálogo da fase 1 (as de fechamento contam medalha, concedida só no bimestre da data); o teste isola o mecanismo | Aceito |
 | O post de conquista no feed não mostra a instância, só o nome, o tier e os pontos | Aceito |
-| Conquistas no seed de demonstração | Passo 12 |
+| Conquistas no seed de demonstração | Resolvido no passo 12: nascem do worker a partir das medalhas e dos prêmios semeados |
 | A suíte local da API disputa recurso com a pilha do compose de pé (o teste do migrador passa de 1 min); para a suíte local, pilha parada | Ocorrência de ambiente |
 
 ## Mural e notificações (passo 10)
@@ -607,8 +607,8 @@ notificações e novo aviso do professor).
 | Limite | Onde é tratado |
 |---|---|
 | Os destinatários do aviso de curso são lidos pelo curso atual: quem trocar de curso entre a publicação e o trabalho do worker (segundos) é lido pelo curso novo | Aceito |
-| A tela de aviso de faculdade e de curso da instituição | Passo 12, com a API pronta |
-| Avisos no seed de demonstração | Passo 12 |
+| A tela de aviso de faculdade e de curso da instituição | Resolvido no passo 12 |
+| Avisos no seed de demonstração | Resolvido no passo 12: pela fábrica do domínio, com a notificação pelo worker |
 | O p95 do mural com ETag e das novidades perguntadas a cada 60 s por usuário | k6 do passo 13 |
 | Sem push: a bolinha só acende quando o app pergunta (foco ou 60 s) | Fase 2, push nativo |
 | Na suíte e2e inteira rodada localmente (Windows, pilha no ar há horas, banco com os dados de muitas rodadas), o e2e da medalha estoura os 30 s: a página do aluno não volta a desenhar depois do recarregamento que segue a anulação. Sozinho, passa; na CI, passou de primeira em todas as etapas do passo, entre 12 e 16 s | Ocorrência de ambiente; acompanhar no passo 13 |
@@ -684,11 +684,107 @@ histórico geral).
 | Limite | Onde é tratado |
 |---|---|
 | A posição é eventualmente consistente: por alguns segundos o aluno vê os pontos novos e a posição antiga | Aceito (ADR 0005) |
-| Marcar ex-aluno e trocar de curso ainda não pedem o recálculo: os atos não existem fora do teste | Passo 12 |
+| Marcar ex-aluno e trocar de curso ainda não pedem o recálculo: os atos não existem fora do teste | Resolvido no passo 12: os dois atos da área pedem na mesma transação |
 | Worker morto congela o ranking sem erro em tela | Passo 13, verificação de saúde e alerta |
 | O p95 da leitura do ranking e do perfil com a posição | k6 do passo 13 |
-| O topo do ranking local mostra as contas deixadas pelas rodadas de e2e | Aceito: a purga do lote e o seed completo são do passo 12 |
+| O topo do ranking local mostra as contas deixadas pelas rodadas de e2e | Aceito; desde o passo 12, o seed completo põe 150 alunos com pontos à frente delas |
 | Numa rodada local da solução inteira (domínio e integração juntos), um teste de contestação estourou o tempo da conexão com o contêiner de armazenamento; sozinho e na CI, passou | Ocorrência de ambiente; acompanhar no passo 13 |
+
+## Área web da instituição (passo 12)
+
+As filas, os atos da instituição sobre o aluno, a concessão direta, a anulação, o aviso da
+faculdade e do curso, a purga por lote e o seed completo do mundo de demonstração. As nove
+perguntas (P1 a P9) foram fechadas no plano do passo; as demais, nas etapas. As regras de
+produto que nasceram aqui estão em `produto.md` 2.2 (ex-aluno sem volta), 2.3 (correção de
+e-mail), 4.7 (concessão direta e o post dela), 8 (prêmio concedido), 10.2 (a área) e 11 (o
+mundo do seed e a purga).
+
+### Atos sobre o aluno
+
+| Decisão | Detalhe |
+|---|---|
+| Rotas | `/v1/instituicao/alunos`: busca (`?busca=`), ficha (`/{cadastroId}`), `PUT .../email`, `POST .../ex-aluno`, `PUT .../curso`, sob a policy de instituição. O papel é conferido de novo no banco em todo ato, como na decisão de contestação |
+| Busca | Linhas de aluno da base, com conta ou sem, por trecho do nome completo ou do nome de exibição (sem acento nem maiúsculas), do prefixo do arroba ou do e-mail, ou pelo RA inteiro; 20 por nome. Sem índice próprio: só a instituição usa. Menos de 2 caracteres: 400 `busca-sem-criterio` |
+| Ficha | A linha da base, a conta quando há (arroba, ex-aluno desde, foto) e as medalhas ativas, da mais nova para a mais antiga, com matéria, bimestre e quem concedeu |
+| Correção de e-mail (P3) | Na linha da base, com conta ou sem: o caso principal é o aluno que não consegue se cadastrar. Só a forma e a unicidade (`email-invalido`, `email-em-uso`, também na corrida pelo índice). O mesmo e-mail escrito igual não muda nada; trocar só maiúsculas é correção. Com conta, invalida os pedidos de recuperação abertos (o link pode ter ido para o endereço errado) e mantém as sessões |
+| Ex-aluno (P4) | Sem volta na fase 1. Pede conta (`aluno-sem-conta`). Na mesma transação, `fila.PedirRecalculos()`: o worker já tirava o ex-aluno das visões do semestre (passo 11, proposta F). Prova reversa: sem o pedido, os dois testes do ex-aluno falham |
+| Troca de curso (P4) | Curso e semestre novos (`mesmo-curso`, `semestre-invalido`, `curso-nao-encontrado`); ex-aluno não troca. Muda o curso do cadastro elegível, de onde o worker lê, e o sufixo da conta, quando há. As matrículas antigas ficam. Pede os recálculos na mesma transação |
+| Registro (P5) | Quem marcou o ex-aluno na própria conta (`ex_aluno_marcado_por_id`, junto do instante por constraint); `correcao_de_email` (com o e-mail anterior) e `troca_de_curso` (antes e depois) em tabelas próprias, em cascata com a linha da base. A migration preenche as marcações antigas, que só existiam nos testes, com a própria conta |
+| Códigos | `CodigosDaInstituicao.cs`: `aluno-nao-encontrado`, `aluno-sem-conta`, `email-invalido`, `email-em-uso`, `mesmo-curso`, `semestre-invalido`, `confirmacao-invalida`, `lote-nao-encontrado` |
+
+### Concessão direta e anulação
+
+| Decisão | Detalhe |
+|---|---|
+| Concessão (P2) | `POST /v1/instituicao/alunos/{cadastroId}/premios-participacao` com o item, o evento semeado ou digitado e a matéria no P17. `PremioParticipacao.ConcederPelaInstituicao`: as mesmas regras da reivindicação (evento já começado e depois do fim do último semestre encerrado, curso, vigência, deduplicação); o evento digitado é da instituição. Nasce válido, aprovado pela instituição, sem comprovação, com a janela de 15 dias e contestável |
+| Na mesma transação | A notificação `premioConcedido` (tipo novo, que leva a Troféus), `fila.PedirRecalculos()` e o `tornar-premio-definitivo` adiado para o fim da janela. O instante da concessão é o da aprovação, que é o do desempate no ranking (testado) |
+| Listas para a concessão | `GET .../premios-participacao` (os prêmios de participação da tela de Troféus do aluno, com o critério e se pedem a matéria), `GET .../eventos?item=` e `GET .../materias`, os mesmos do aluno. A primeira entrou na etapa 8, como acréscimo |
+| Post do prêmio concedido (P2) | O aluno decide se posta: `POST /v1/posts` aceita `premioParticipacaoId` (acréscimo). Só o prêmio que pontua (válido ou definitivo); o outro responde `premio-indisponivel`. Um post por prêmio, pelo índice |
+| Anulação | `POST /v1/instituicao/medalhas/{id}/anulacao`: o mesmo ato e o mesmo recálculo do comando administrativo, que continua existindo. Anular de novo responde igual, sem pedido novo |
+| Cursos | `GET /v1/cursos` ganhou o `id` (acréscimo), que a troca de curso pede |
+
+### Purga da demonstração
+
+| Decisão | Detalhe |
+|---|---|
+| Rotas | `GET /v1/instituicao/demonstracao/lotes` (lote, alunos, primeiro e último registro, vigente) e `POST .../lotes/{lote}/purga` com `confirmacao`, o nome do lote digitado de novo (P6). Mapeadas sempre: a purga é depois da avaliação, com a flag já desligada. O lote vigente também se purga |
+| Uma transação | O SQL da purga (seção Purga da demonstração, acima) virou código, com as tabelas que chegaram depois. As chaves das fotos (posts, fotos de perfil e uploads pendentes do lote) são lidas antes de apagar e vão para `remover-fotos`, 200 por trabalho, na mesma transação, com `PedirRecalculos()` e o registro da purga (`purga_da_demonstracao`: lote, alunos, fotos, quem, quando). Falha no meio desfaz tudo e não manda foto nenhuma para fora (testado) |
+| Corrida | As contas do lote são travadas (`FOR UPDATE`): a segunda purga do mesmo lote espera e já não acha ninguém (`lote-nao-encontrado`) |
+
+### Seed completo
+
+| Decisão | Detalhe |
+|---|---|
+| Mundo | `data/demo/mundo.json`: 150 alunos (120 ativos em rodízio pelos semestres de cada curso e 30 ex-alunos), dois professores e seis matérias por curso, turmas em 2026/1 e 2026/2. O aluno lista os semestres letivos que cursa; sem a lista, todos. 22 eventos em `eventos.json`, passados e futuros |
+| Contas dos alunos (P8) | `Usuario.CriarAlunoPeloSeed`: conta sem senha e sem aceite do termo, com o nome completo como nome de exibição, criada no início do primeiro semestre que o aluno cursou. Os e-mails ficam no domínio reservado `al.unieduk.invalid`, que nunca recebe nada. Só os alunos do arquivo ganham conta: a linha que o e2e cria continua sem |
+| Contas de professor e instituição | As do arquivo nascem no início do calendário, para a notificação de aviso alcançar quem tinha conta na publicação |
+| Achar pelo RA | O aluno é achado pelo RA. Nome e papel têm de bater; e-mail, curso e semestre também, salvo o que a instituição corrigiu (correção ou troca registrada): o ato dela vence o arquivo |
+| Ex-alunos | Marcados pela instituição do arquivo no dia seguinte ao fim do último semestre que cursaram, depois dos fatos deles: ex-aluno não recebe prêmio |
+| Atividade | `data/demo/atividade.json`: quantos alunos têm cada medalha e cada prêmio de participação, a contestação aberta, as duas comprovações pendentes, os avisos, as legendas e os números de posts e interações. Gerada de forma determinística (semente fixa, alunos pelo RA, itens pelo código) e pelas regras do domínio, com datas passadas até 06/11/2026 ou a véspera, só na primeira vez que os alunos do arquivo ganham conta |
+| Raridades | Um aluno no Lendário, de 2 a 6 no Épico, de 9 a 22 no Raro e 40 ou mais no Comum, com folga para as contas que entram depois. O teste confere as quatro com dono |
+| Conquistas | O seed não grava nenhuma: enfileira a reavaliação por fato (um fato por aluno e bimestre com medalha, um prêmio definitivo por aluno e semestre) e o fechamento de cada período encerrado por aluno matriculado, e o worker concede, com evidências e progresso. O prêmio aprovado há mais de 15 dias fica definitivo pela regra do domínio, no instante em que a janela fechou; o mais novo agenda o fim da janela |
+| Avisos | Pela fábrica do domínio, com datas passadas, e `notificar-aviso-novo` enfileirado: quem distribui é o worker, como na publicação |
+| Prêmios do seed | Parte nasce como o app faz (reivindicação com foto, comprovação e aprovação de um professor do aluno), parte como concessão direta. A medalha semeada não notifica: ninguém entra nessas contas |
+| Fotos (P7) | 33 fotos do Wikimedia Commons (domínio público, CC0, CC BY e CC BY-SA), sem rosto identificável, já nas duas derivadas, em `data/demo/fotos/`, com `fotos.json` (cursos em que cabem, procedência) e `CREDITOS.md`. O seed sobe cada uma com chave aleatória nova por `IArmazenamentoDeFotos.EnviarAsync`, que nenhuma rota da API chama: a foto de quem usa o app continua indo direto do aparelho ao bucket (ADR 0002) |
+| Seeder com bucket | O seeder do compose passou a ter as variáveis do bucket. Na VPS, o `seed demo` precisa do R2 |
+| Social (P9) | Cada aluno ativo segue de 3 a 8 colegas de curso; cada post com foto ganha de 2 a 14 curtidas; 40 comentários |
+| Validação | `CatalogoArquivosTests` confere, sem banco, o mundo, a atividade e as fotos contra o catálogo e os eventos, no passo "Catálogo e eventos válidos" da CI |
+
+### Cliente
+
+| Decisão | Detalhe |
+|---|---|
+| Onde (P1) | No mesmo app, em `/instituicao`, só no navegador e para quem tem o papel; no aparelho e para outros papéis, a tela explica. Dentro da moldura de celular, como as outras telas |
+| Entrada | "Área da instituição" no menu do perfil (só na web) e, para a conta só de instituição, na aba Perfil, que mostra a conta no lugar de "Esse perfil não existe." |
+| Área | Lista com Alunos, Comprovações, Contestações, Novo aviso e Purgar demonstração |
+| Filas | Comprovações: a tela do professor, com o voltar da área. Contestações: cartão com a foto (ou "Concedido direto pela instituição, sem comprovação."), o motivo, quem contestou e a marca de 7 dias; confirmar decide na hora, revogar pede o motivo |
+| Contestar no post | No menu do post, a instituição contesta o prêmio de participação válido, acima de "Remover post", direto na folha de motivo |
+| Alunos | Busca 400 ms depois da digitação, a partir de 2 letras. Ficha com os atos conforme a situação (sem conta: e-mail e curso; ex-aluno: só e-mail), cada um numa folha que sobe de baixo, com a recusa dentro dela |
+| Conceder | A escolha da reivindicação (`EscolhaDaReivindicacao`), agora com fontes de eventos e matérias e textos em terceira pessoa. A recusa `premio-ja-reivindicado` diz "O aluno já tem esse prêmio nesse evento." |
+| Novo aviso | Faculdade ou cursos, pelo `FormularioDoAviso`, compartilhado com o aviso do professor |
+| Purga | Os lotes com o vigente marcado e a confirmação pelo nome do lote |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxos | Só no celular, claro e escuro, cada execução com a sua instituição: entrada pela aba Perfil, aprovação pela fila filtrada pelo evento do teste, confirmar e revogar contestações; pela ficha, corrigir e-mail, conceder com evento digitado, anular e marcar ex-aluno; aviso de curso visto pelo aluno; purga de um lote criado pela execução, com a foto sumindo do emulador |
+| Espera da fila | O setup global espera não haver trabalho pendente já disponível antes do primeiro teste: o seed deixa cerca de 1.500 trabalhos (66 s locais) |
+| Isolamento | Nomes únicos por execução, porque a turma vigente é compartilhada. O lote da purga nasce direto no banco com a flag desligada; a foto sobe por outra conta, já que o aluno de demonstração não tem senha |
+| Prazo dos casos de vários papéis | Com o spec da instituição em paralelo e o mundo de 150 alunos no worker, os casos de medalha, conquista e ranking passavam dos 30 s (sozinho, o de medalha leva uns 20 s). Ganharam os 90 s que mural e prêmios já tinham |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| A lista de domínios de e-mail aceitos (`produto.md` 2.4) não existe: a correção confere só a forma | Passo 13, como configuração; o seed já usa domínio reservado |
+| O e-mail da instituição e dos professores do seed é de domínio real: o primeiro acesso deles pela recuperação depende do SMTP da VPS | Passo 13, provedor de e-mail |
+| Um banco local anterior ao passo 12 falha no `seed demo` (os 20 alunos mudaram de e-mail): recriar o volume | Aceito |
+| A atividade nasce só na primeira população: aluno acrescentado depois ganha conta sem fatos | Aceito |
+| Nenhuma conquista de fechamento (todas as matérias) aparece com a distribuição semeada | Aceito |
+| A foto de cada post do seed é sorteada entre as do curso e pode não combinar com o evento | Aceito: dado de demonstração |
+| Na fila de comprovações da instituição, "em comum" são todas as matérias do aluno (regra do passo 8) | Aceito |
+| O seed sobe as fotos antes do commit: falha depois disso deixa objetos sem dono no bucket | Aceito |
 
 ## Processo e qualidade
 

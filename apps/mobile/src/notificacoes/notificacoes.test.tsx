@@ -37,7 +37,7 @@ describe("textos das notificações", () => {
   it("todo tipo que a API grava tem texto e destino", () => {
     const tipos = tiposDaApi();
 
-    expect(tipos).toHaveLength(9);
+    expect(tipos).toHaveLength(10);
     expect(Object.keys(APRESENTACOES).sort()).toEqual([...tipos].sort());
   });
 
@@ -109,6 +109,11 @@ describe("textos das notificações", () => {
       { tipo: "avisoNovo", tituloDoAviso: "Matrícula até 30/07" },
       "Aviso novo no Mural: Matrícula até 30/07",
       `/aviso/${REF}`,
+    ],
+    [
+      { tipo: "premioConcedido", item: "Monitoria" },
+      "A UniMax te concedeu Monitoria.",
+      "/trofeus",
     ],
   ])("%o", (dados, texto, destino) => {
     const apresentacao = apresentar({ referenciaId: REF, ...dados });

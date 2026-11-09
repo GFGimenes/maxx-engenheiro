@@ -139,61 +139,120 @@ public sealed class PremioParticipacao
             throw new DomainException($"Só aluno reivindica prêmio de participação; {aluno.Id} é {aluno.Papeis}.");
         }
 
-        if (aluno.EhExAluno)
+        if (Validar(item, aluno, cursoDoAluno, evento, materia, ultimoEncerrado, agora, donoDoEventoDigitado: aluno.Id) is { } recusa)
         {
-            return Recusa(RecusaDaReivindicacao.ExAluno);
+            return Recusa(recusa);
         }
 
-        if (evento.Origem == OrigemDoEvento.TextoLivre && evento.CriadoPorId != aluno.Id)
+        return new(
+            new PremioParticipacao(item, versaoDoItem, aluno, evento, materia, Chave(item, aluno, evento, materia), agora),
+            null);
+    }
+
+    // Concessão direta pela instituição (produto.md 4.7, passo 12): o prêmio nasce já
+    // aprovado, válido e sem comprovação, com a mesma janela de 15 dias e contestável como
+    // qualquer aprovado (P2). Valem as regras da reivindicação: evento já começado e depois do
+    // fim do último semestre encerrado (D3), evento e item do curso do aluno, vigência e a
+    // chave de deduplicação (D5). O evento digitado é da própria instituição. O instante da
+    // concessão é o da aprovação, que é o do desempate no ranking.
+    public static ResultadoDaReivindicacao ConcederPelaInstituicao(
+        ItemPremioParticipacao item,
+        int versaoDoItem,
+        Usuario aluno,
+        Curso? cursoDoAluno,
+        Evento evento,
+        Materia? materia,
+        SemestreLetivo? ultimoEncerrado,
+        Usuario instituicao,
+        DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        ArgumentNullException.ThrowIfNull(aluno);
+        ArgumentNullException.ThrowIfNull(evento);
+        ArgumentNullException.ThrowIfNull(instituicao);
+
+        if (aluno.Papeis != Papeis.Aluno)
+        {
+            throw new DomainException($"Só aluno recebe prêmio de participação; {aluno.Id} é {aluno.Papeis}.");
+        }
+
+        if (!instituicao.Papeis.HasFlag(Papeis.Instituicao))
+        {
+            throw new DomainException($"Só a instituição concede prêmio de participação direto; {instituicao.Id} é {instituicao.Papeis}.");
+        }
+
+        if (Validar(item, aluno, cursoDoAluno, evento, materia, ultimoEncerrado, agora, donoDoEventoDigitado: instituicao.Id) is { } recusa)
+        {
+            return Recusa(recusa);
+        }
+
+        var premio = new PremioParticipacao(item, versaoDoItem, aluno, evento, materia, Chave(item, aluno, evento, materia), agora)
+        {
+            Estado = EstadoDoPremioParticipacao.Valido,
+            AprovadoPorId = instituicao.Id,
+            AprovadoEm = agora,
+        };
+        return new(premio, null);
+    }
+
+    private static RecusaDaReivindicacao? Validar(
+        ItemPremioParticipacao item,
+        Usuario aluno,
+        Curso? cursoDoAluno,
+        Evento evento,
+        Materia? materia,
+        SemestreLetivo? ultimoEncerrado,
+        DateTimeOffset agora,
+        Guid donoDoEventoDigitado)
+    {
+        if (aluno.EhExAluno)
+        {
+            return RecusaDaReivindicacao.ExAluno;
+        }
+
+        if (evento.Origem == OrigemDoEvento.TextoLivre && evento.CriadoPorId != donoDoEventoDigitado)
         {
             throw new DomainException($"O evento {evento.Id} foi digitado por outra pessoa.");
         }
 
         if (!evento.AbertoAoCurso(cursoDoAluno?.Id))
         {
-            return Recusa(RecusaDaReivindicacao.EventoNaoEncontrado);
+            return RecusaDaReivindicacao.EventoNaoEncontrado;
         }
 
         if (!evento.Aceita(item))
         {
-            return Recusa(RecusaDaReivindicacao.EventoNaoAceitaOItem);
+            return RecusaDaReivindicacao.EventoNaoAceitaOItem;
         }
 
         var hoje = FusoHorario.DataLocal(agora);
         switch (evento.RecusaParaReivindicarEm(hoje, ultimoEncerrado))
         {
             case RecusaDoEvento.NaoComecou:
-                return Recusa(RecusaDaReivindicacao.EventoNaoComecou);
+                return RecusaDaReivindicacao.EventoNaoComecou;
             case RecusaDoEvento.DeSemestreEncerrado:
-                return Recusa(RecusaDaReivindicacao.EventoDeSemestreEncerrado);
+                return RecusaDaReivindicacao.EventoDeSemestreEncerrado;
         }
 
         // A vigência do item vale na data do evento, que é quando a participação aconteceu.
         if (item.Vigencia is { Inicio: { } inicio } && evento.Inicio < inicio || item.Vigencia is { Fim: { } fim } && evento.Inicio > fim)
         {
-            return Recusa(RecusaDaReivindicacao.ItemForaDeVigencia);
+            return RecusaDaReivindicacao.ItemForaDeVigencia;
         }
 
         if (item.RestricaoCurso is { } restricao
             && !string.Equals(restricao, cursoDoAluno?.Sigla, StringComparison.OrdinalIgnoreCase))
         {
-            return Recusa(RecusaDaReivindicacao.ItemDeOutroCurso);
+            return RecusaDaReivindicacao.ItemDeOutroCurso;
         }
 
         var exigeMateria = Evento.SoPorTextoLivre(item);
         if (exigeMateria && materia is null)
         {
-            return Recusa(RecusaDaReivindicacao.MateriaObrigatoria);
+            return RecusaDaReivindicacao.MateriaObrigatoria;
         }
 
-        if (!exigeMateria && materia is not null)
-        {
-            return Recusa(RecusaDaReivindicacao.MateriaNaoSeAplica);
-        }
-
-        return new(
-            new PremioParticipacao(item, versaoDoItem, aluno, evento, materia, Chave(item, aluno, evento, materia), agora),
-            null);
+        return !exigeMateria && materia is not null ? RecusaDaReivindicacao.MateriaNaoSeAplica : null;
     }
 
     // Aprovação da comprovação (produto.md 4.7): o professor de uma turma do aluno no

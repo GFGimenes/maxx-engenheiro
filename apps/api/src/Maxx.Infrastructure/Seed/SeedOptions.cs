@@ -37,4 +37,10 @@ public sealed record ResultadoDoSeedDemo(
     int MatriculasNovas,
     int VinculosNovos,
     int ContasNovas,
-    int EventosNovos);
+    int EventosNovos,
+    int ContasDeAlunoNovas,
+    int ExAlunosNovos,
+    int MedalhasNovas,
+    int PremiosNovos,
+    int AvisosNovos,
+    int PostsNovos);

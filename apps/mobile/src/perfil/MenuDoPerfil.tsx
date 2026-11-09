@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "../components/Button";
@@ -11,16 +11,20 @@ import { espacamento } from "../theme/tokens";
 interface MenuDoPerfilProps {
   aberto: boolean;
   professor: boolean;
+  // A área da instituição abre só no navegador (P1 do passo 12).
+  instituicao?: boolean;
   onFechar: () => void;
 }
 
 // O menu do próprio perfil (o "≡" da prancheta): o lugar definitivo do tema (decisoes,
 // Design system: o controle saiu da tela de status para cá no passo 7), as turmas do
-// professor, as comprovações dos alunos dele (passo 8, D8) e a saída. Folha que sobe de
+// professor, as comprovações dos alunos dele (passo 8, D8), a área da instituição no
+// navegador (passo 12) e a saída. Folha que sobe de
 // baixo, como as do Instagram.
 export function MenuDoPerfil({
   aberto,
   professor,
+  instituicao = false,
   onFechar,
 }: MenuDoPerfilProps) {
   const { colors } = useTheme();
@@ -55,6 +59,16 @@ export function MenuDoPerfil({
           ]}
         >
           <ThemePreferenceControl />
+          {instituicao && Platform.OS === "web" && (
+            <Button
+              label="Área da instituição"
+              variant="secondary"
+              onPress={() => {
+                onFechar();
+                router.push("/instituicao");
+              }}
+            />
+          )}
           {professor && (
             <Button
               label="Minhas turmas"

@@ -127,7 +127,7 @@ public sealed class LeituraDoRankingTests(PostgresFixture postgres) : IClassFixt
         await using var mundo = await MundoDeConquistas.CriarAsync(postgres);
         using var bruno = await mundo.ComoAsync(_bruno);
         await ExecutarAsync(mundo, async db =>
-            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Bruno.Id, Ct)).MarcarExAluno(mundo.Relogio.GetUtcNow()));
+            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Bruno.Id, Ct)).MarcarExAluno(mundo.Bruno.Id, mundo.Relogio.GetUtcNow()));
         await PosicoesAsync(mundo, Curso(null, mundo.Cc.Id), (mundo.Bruno, 60));
 
         var historico = await RankingAsync(bruno, "curso", "historico");

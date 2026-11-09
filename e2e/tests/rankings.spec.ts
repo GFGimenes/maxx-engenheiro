@@ -53,6 +53,9 @@ test(
   "a medalha move a posição em segundos, e o ranking abre pelo perfil e pela Busca",
   { tag: "@celular" },
   async ({ page, request }) => {
+    // Professora, aluno e o worker no caminho, com a suíte em paralelo: o prazo dos casos de
+    // vários papéis.
+    test.setTimeout(90_000);
     const professora = await novaProfessora(request);
     const nome = `Aluno ${Date.now().toString().slice(-6)}`;
     const aluno = await novaConta(request, nome);
