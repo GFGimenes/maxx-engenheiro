@@ -2,14 +2,15 @@ using Maxx.Application.Autenticacao;
 using Maxx.Application.Autorizacao;
 using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Premios;
 
 namespace Maxx.Application.Medalhas;
 
 // Concessão de medalha pelo professor (fluxos/03-concessao-de-medalha.md): escopo de turma
 // no banco, aluno com conta matriculado na turma, item do catálogo, limite por período e
-// chave de deduplicação. A medalha, quem concedeu e quando, a notificação e o recálculo de
-// raridade gravam juntos.
+// chave de deduplicação. A medalha, quem concedeu e quando, a notificação e os recálculos de
+// ranking e raridade gravam juntos.
 public sealed class ConcederMedalhaHandler(
     IEscopoDeTurma escopo,
     IUsuarioRepository usuarios,
@@ -83,7 +84,7 @@ public sealed class ConcederMedalhaHandler(
         medalhas.Adicionar(medalha);
         fila.Enfileirar(new NotificarMedalhaRecebida(medalha.Id));
         fila.Enfileirar(ReavaliarConquistas.PelaMedalha(medalha.AlunoId, medalha.Id));
-        fila.Enfileirar(new RecalcularRaridade());
+        fila.PedirRecalculos();
         await unitOfWork.SalvarAsync(cancellationToken);
         return medalha;
     }

@@ -25,7 +25,7 @@ import { Logo } from "../marca/Logo";
 import { ModalDeConcessao } from "../professor/ModalDeConcessao";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
-import { espacamento, raios, tamanhos } from "../theme/tokens";
+import { espacamento, interacao, raios, tamanhos } from "../theme/tokens";
 import { LinhaDePremio } from "../trofeus/LinhaDePremio";
 import {
   usePerfil,
@@ -52,7 +52,7 @@ const VAO = 2;
 // O perfil (produto.md 6.5 e prancheta do perfil): o próprio, na aba Perfil, ou o de outra
 // pessoa, por /usuarios/:id. Do aluno: avatar (com o anel dourado no próprio), pontos,
 // seguidores e seguindo, nome, curso e semestre, e as abas por ícone com a grade de três
-// colunas, os troféus e as medalhas. A posição no ranking (#29) chega no passo 11. Do
+// colunas, os troféus e as medalhas, com a posição no histórico geral (passo 11). Do
 // professor: as turmas do semestre e as medalhas concedidas (produto.md 2.1).
 export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
   const { colors } = useTheme();
@@ -354,6 +354,7 @@ function DadosDoPerfil({
     perfil.semestre ? `${perfil.semestre}º semestre` : null,
     perfil.exAluno ? "Ex-aluno" : null,
     perfil.ra ? `RA ${perfil.ra}` : null,
+    perfil.posicao ? `#${formatarNumero(perfil.posicao)}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -368,20 +369,15 @@ function DadosDoPerfil({
           anel={proprio && ehAluno}
         />
         {ehAluno && (
-          <View style={[styles.pontos, { backgroundColor: colors.surface }]}>
-            <Text style={[textStyles.titulo, { color: colors.ink }]}>
-              {formatarNumero(perfil.pontos ?? 0)}
-            </Text>
-            <Text
-              style={[
-                textStyles.legenda,
-                styles.forte,
-                { color: colors.goldText },
-              ]}
-            >
-              pts
-            </Text>
-          </View>
+          <Pontos
+            pontos={perfil.pontos ?? 0}
+            posicao={perfil.posicao}
+            onPress={
+              proprio
+                ? () => router.push("/rankings?visao=historico")
+                : undefined
+            }
+          />
         )}
         {ehAluno && <Contagem numero={perfil.seguidores} rotulo="seguidores" />}
         <Contagem numero={perfil.seguindo} rotulo="seguindo" />
@@ -493,6 +489,64 @@ function DadosDoPerfil({
   );
 }
 
+// Os pontos acumulados e a posição no histórico geral, coerente com eles (pergunta 4 do
+// passo 11): "15.020 / pts · #29 ›". No próprio perfil, tocar abre o ranking nesse chip
+// (produto.md 6.5); no de outra pessoa, só mostra. Sem posição ainda, só os pontos.
+function Pontos({
+  pontos,
+  posicao,
+  onPress,
+}: {
+  pontos: number;
+  posicao: number | null;
+  onPress?: () => void;
+}) {
+  const { colors } = useTheme();
+  const legenda = posicao ? `pts · #${formatarNumero(posicao)}` : "pts";
+  const conteudo = (
+    <>
+      <Text style={[textStyles.titulo, { color: colors.ink }]}>
+        {formatarNumero(pontos)}
+      </Text>
+      <View style={styles.legendaDosPontos}>
+        <Text
+          style={[textStyles.legenda, styles.forte, { color: colors.goldText }]}
+        >
+          {legenda}
+        </Text>
+        {onPress && <Icon name="avancar" color={colors.goldText} size={14} />}
+      </View>
+    </>
+  );
+
+  return onPress ? (
+    <Pressable
+      testID="pontos-do-perfil"
+      role="link"
+      accessibilityLabel={
+        posicao
+          ? `${pontos} pontos, posição ${posicao}. Abrir rankings`
+          : `${pontos} pontos. Abrir rankings`
+      }
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.pontos,
+        { backgroundColor: colors.surface },
+        pressed && { opacity: interacao.opacidadePressionado },
+      ]}
+    >
+      {conteudo}
+    </Pressable>
+  ) : (
+    <View
+      testID="pontos-do-perfil"
+      style={[styles.pontos, { backgroundColor: colors.surface }]}
+    >
+      {conteudo}
+    </View>
+  );
+}
+
 function Contagem({ numero, rotulo }: { numero: number; rotulo: string }) {
   const { colors } = useTheme();
   return (
@@ -534,6 +588,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   forte: { fontWeight: "700" },
+  legendaDosPontos: { flexDirection: "row", alignItems: "center", gap: 2 },
   contagem: { flex: 1, alignItems: "center" },
   quem: { gap: 2 },
   botoes: { flexDirection: "row", gap: 8 },

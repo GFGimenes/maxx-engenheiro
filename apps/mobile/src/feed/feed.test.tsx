@@ -41,6 +41,7 @@ function post(id: string, mudancas: Record<string, unknown> = {}) {
       curso: "CC",
       semestre: 3,
       foto: null,
+      posicao: 29,
     },
     legenda: "Nota 10 em Banco de Dados!",
     foto: {
@@ -150,7 +151,9 @@ describe("feed", () => {
 
     const cartao = await screen.findByTestId("post-p1");
     expect(within(cartao).getAllByText("brunoLima").length).toBeGreaterThan(0);
-    expect(within(cartao).getByText(/CC · 3º semestre/)).toBeOnTheScreen();
+    expect(
+      within(cartao).getByText(/CC · 3º semestre · #29/),
+    ).toBeOnTheScreen();
     expect(within(cartao).getAllByText("Nota 10 em prova").length).toBe(2);
     expect(within(cartao).getByTestId("foto-do-post")).toBeOnTheScreen();
     expect(

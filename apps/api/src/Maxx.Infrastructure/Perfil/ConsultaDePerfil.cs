@@ -8,8 +8,10 @@ using Maxx.Domain.Academico;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Domain.Ranking;
 using Maxx.Domain.Social;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Ranking;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maxx.Infrastructure.Perfil;
@@ -49,6 +51,14 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
                         + db.Set<Conquista>().Where(conquista => conquista.AlunoId == usuario.Id && conquista.RemovidaEm == null)
                             .Sum(conquista => conquista.Pontos),
                     MedalhasConcedidas = db.Set<Medalha>().Count(medalha => medalha.ConcedidaPorId == usuario.Id && medalha.AnuladaEm == null),
+                    // A posição do perfil é a do histórico geral (pergunta 4 do passo 11): bate com os
+                    // pontos acumulados e existe também para o ex-aluno.
+                    Posicao = db.Set<PosicaoNoRankingRow>()
+                        .Where(posicao => posicao.AlunoId == usuario.Id
+                            && posicao.Escopo == EscopoDoRanking.Geral
+                            && posicao.Periodo == PeriodoDoRanking.Historico)
+                        .Select(posicao => (int?)posicao.Posicao)
+                        .FirstOrDefault(),
                 })
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
@@ -75,7 +85,8 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
             linha.EuSigo,
             linha.ChaveDaFotoDoFeed,
             linha.ChaveDaFotoDaGrade,
-            ehAluno ? null : new ProfessorDoPerfil(await professores.TurmasVigentesAsync(linha.Id, cancellationToken), linha.MedalhasConcedidas));
+            ehAluno ? null : new ProfessorDoPerfil(await professores.TurmasVigentesAsync(linha.Id, cancellationToken), linha.MedalhasConcedidas),
+            ehAluno ? linha.Posicao : null);
     }
 
     public async Task<Pagina<Guid>> PostsAsync(Guid autorId, PosicaoNoTempo? depoisDe, int limite, CancellationToken cancellationToken)

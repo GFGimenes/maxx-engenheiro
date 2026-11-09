@@ -5,6 +5,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
 using Maxx.Application.Posts;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Notificacoes;
@@ -25,8 +26,8 @@ public sealed class DecidirComprovacaoHandler(
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
-    // Aprovado, o prêmio pontua na hora: o recálculo de raridade e a notificação vão para a
-    // fila, e o fim da janela de contestação fica agendado.
+    // Aprovado, o prêmio pontua na hora: os recálculos de ranking e raridade e a notificação
+    // vão para a fila, e o fim da janela de contestação fica agendado.
     public async Task AprovarAsync(Guid quemId, Guid comprovacaoId, CancellationToken cancellationToken)
     {
         var (quem, premio, aluno) = await CarregarAsync(quemId, comprovacaoId, cancellationToken);
@@ -37,7 +38,7 @@ public sealed class DecidirComprovacaoHandler(
         }
 
         fila.Enfileirar(new NotificarComprovacaoAprovada(premio.Id));
-        fila.Enfileirar(new RecalcularRaridade());
+        fila.PedirRecalculos();
         fila.Enfileirar(new TornarPremioDefinitivo(premio.Id), premio.FimDaJanela);
         await SalvarAsync(comprovacaoId, cancellationToken);
     }

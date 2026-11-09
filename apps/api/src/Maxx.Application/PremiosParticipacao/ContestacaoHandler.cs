@@ -5,6 +5,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
 using Maxx.Application.Posts;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Notificacoes;
@@ -14,8 +15,8 @@ namespace Maxx.Application.PremiosParticipacao;
 
 // Contestação e decisão da instituição (fluxos/04-contestacao.md). Contestam o professor da
 // turma, conferido no banco, ou a instituição; decide sempre a instituição. Cada ato grava
-// quem e quando, e enfileira na mesma transação a notificação e o recálculo de raridade,
-// porque todos mudam o que pontua.
+// quem e quando, e enfileira na mesma transação a notificação e os recálculos de ranking e
+// raridade, porque todos mudam o que pontua.
 public sealed class ContestacaoHandler(
     IUsuarioRepository usuarios,
     IEscopoDeTurma escopo,
@@ -54,7 +55,7 @@ public sealed class ContestacaoHandler(
 
         premios.Adicionar(contestacao);
         fila.Enfileirar(new NotificarContestacaoAberta(premio.Id));
-        fila.Enfileirar(new RecalcularRaridade());
+        fila.PedirRecalculos();
         try
         {
             await unitOfWork.SalvarAsync(cancellationToken);
@@ -85,7 +86,7 @@ public sealed class ContestacaoHandler(
 
         fila.Enfileirar(new NotificarDecisaoDeContestacao(premio.Id));
         fila.Enfileirar(ReavaliarConquistas.PeloPremio(premio.AlunoId, premio.Id));
-        fila.Enfileirar(new RecalcularRaridade());
+        fila.PedirRecalculos();
         await SalvarDecisaoAsync(contestacaoId, cancellationToken);
     }
 
@@ -101,7 +102,7 @@ public sealed class ContestacaoHandler(
 
         await DesvincularPostsAsync(posts, premio, cancellationToken);
         fila.Enfileirar(new NotificarDecisaoDeContestacao(premio.Id));
-        fila.Enfileirar(new RecalcularRaridade());
+        fila.PedirRecalculos();
         await SalvarDecisaoAsync(contestacaoId, cancellationToken);
     }
 
@@ -203,14 +204,14 @@ public static class RemocaoPelaInstituicao
             case EstadoDoPremioParticipacao.Valido:
                 recusa = premio.Revogar(instituicao, Motivo.RemovidoPelaInstituicao, null, agora);
                 fila.Enfileirar(new NotificarPremioRevogado(premio.Id));
-                fila.Enfileirar(new RecalcularRaridade());
+                fila.PedirRecalculos();
                 break;
             case EstadoDoPremioParticipacao.EmAveriguacao:
                 var contestacao = await premios.ContestacaoDoPremioAsync(premio.Id, cancellationToken)
                     ?? throw new InvalidOperationException($"O prêmio {premio.Id} está em averiguação sem contestação.");
                 recusa = premio.Revogar(instituicao, Motivo.RemovidoPelaInstituicao, contestacao, agora);
                 fila.Enfileirar(new NotificarDecisaoDeContestacao(premio.Id));
-                fila.Enfileirar(new RecalcularRaridade());
+                fila.PedirRecalculos();
                 break;
             default:
                 return;

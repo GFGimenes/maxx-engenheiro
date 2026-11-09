@@ -2,6 +2,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
 using Maxx.Application.Posts;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Notificacoes;
 
@@ -102,11 +103,10 @@ public sealed class RecalcularConquistasDaMedalhaHandler(
             }
         }
 
-        // Conquista removida muda o numerador da raridade (ADR 0005). O ranking entra no
-        // passo 11.
+        // Conquista removida muda a pontuação e o numerador da raridade (ADR 0005).
         if (removeu)
         {
-            fila.Enfileirar(new RecalcularRaridade());
+            fila.PedirRecalculos();
         }
 
         await unitOfWork.SalvarAsync(cancellationToken);

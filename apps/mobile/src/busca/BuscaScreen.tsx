@@ -14,10 +14,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { falhaParaTela } from "../api/FalhaDaApi";
 import { useEu } from "../api/useEu";
 import { Avatar } from "../components/Avatar";
+import { Button } from "../components/Button";
 import { FilterChip } from "../components/FilterChip";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { TextField } from "../components/TextField";
 import { perfilDe } from "../feed/CartaoDePost";
+import { usePerfil } from "../perfil/api";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
 import { espacamento } from "../theme/tokens";
@@ -29,13 +31,20 @@ import {
 } from "./api";
 
 // A Busca (produto.md 6.4): alunos por nome de exibição e por arroba, com filtros de curso
-// e de semestre, como a busca do Instagram. Os atalhos para os rankings chegam no passo 11.
+// e de semestre, como a busca do Instagram, e os atalhos para os rankings (passo 11).
 // Sem prancheta: segue a identidade visual.
 export function BuscaScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const eu = useEu();
+  // Os atalhos dos rankings (produto.md 6.4): o geral para todos; o do curso só para o aluno,
+  // e o ex-aluno vai direto ao histórico do curso (pergunta 6 do passo 11).
+  const aluno =
+    eu.data !== undefined &&
+    eu.data.papeis.length === 1 &&
+    eu.data.papeis[0] === "aluno";
+  const exAluno = (usePerfil().data?.exAluno ?? false) && aluno;
   const cursos = useCursos();
   const [termo, setTermo] = useState("");
   const [curso, setCurso] = useState<string | null>(null);
@@ -128,6 +137,28 @@ export function BuscaScreen() {
           autoCorrect={false}
           returnKeyType="search"
         />
+        <View style={styles.atalhos}>
+          <View style={styles.atalho}>
+            <Button
+              label="Ranking geral"
+              variant="secondary"
+              onPress={() => router.push("/rankings?visao=geral")}
+            />
+          </View>
+          {aluno && (
+            <View style={styles.atalho}>
+              <Button
+                label="Ranking do curso"
+                variant="secondary"
+                onPress={() =>
+                  router.push(
+                    `/rankings?visao=${exAluno ? "historico-curso" : "curso"}`,
+                  )
+                }
+              />
+            </View>
+          )}
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -198,6 +229,8 @@ const styles = StyleSheet.create({
   margem: { paddingHorizontal: espacamento.margemLateral },
   topo: { gap: 4, paddingTop: 8, paddingBottom: 8 },
   chips: { gap: 8 },
+  atalhos: { flexDirection: "row", gap: 8, paddingTop: 4 },
+  atalho: { flex: 1 },
   linha: {
     flexDirection: "row",
     alignItems: "center",

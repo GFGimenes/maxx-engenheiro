@@ -1,6 +1,8 @@
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   StyleSheet,
   Switch,
   Text,
@@ -9,15 +11,18 @@ import {
 
 import { falhaParaTela } from "../api/FalhaDaApi";
 import { useEu } from "../api/useEu";
+import { Icon } from "../components/Icon";
 import { Screen } from "../components/Screen";
 import { EmptyState, ErrorState } from "../components/StateMessage";
+import { formatarNumero } from "../feed/textos";
 import { Logo } from "../marca/Logo";
 import { useVerTrofeus } from "../notificacoes/api";
+import { usePerfil } from "../perfil/api";
 import { TrilhaFamilia } from "../premios/TrilhaFamilia";
 import { SecaoDeReivindicacoes } from "../premiosParticipacao/SecaoDeReivindicacoes";
 import { textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
-import { cores } from "../theme/tokens";
+import { cores, interacao } from "../theme/tokens";
 import { AbasSublinhadas } from "./AbasSublinhadas";
 import { LinhaDePremio } from "./LinhaDePremio";
 import {
@@ -37,12 +42,15 @@ const ABAS = [
 
 // A tela de Troféus (prancheta trofeus-*.png): o catálogo do próprio aluno, o que falta, o
 // critério e a raridade por escassez. Abrir a aba apaga a bolinha de prêmio novo (passo 10,
-// pergunta 5), sem ler o sininho. A posição no ranking chega no passo 11.
+// pergunta 5), sem ler o sininho. Ao lado do título, os pontos e a posição no histórico
+// geral, lida do próprio perfil; o toque abre o ranking nesse chip, como no perfil (passo 11).
 export function TrofeusScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const eu = useEu();
   const ehAluno = eu.data?.papeis.includes("aluno") ?? false;
   const premios = usePremios(ehAluno);
+  const posicao = usePerfil().data?.posicao ?? null;
   const { mutate: verTrofeus } = useVerTrofeus();
   useEffect(() => {
     if (ehAluno) {
@@ -67,9 +75,28 @@ export function TrofeusScreen() {
           Troféus e medalhas
         </Text>
         {premios.data && (
-          <Text style={[textStyles.secao, { color: colors.goldText }]}>
-            {formatarPontos(premios.data.pontos)}
-          </Text>
+          <Pressable
+            testID="pontos-de-trofeus"
+            role="link"
+            accessibilityLabel={
+              posicao
+                ? `${premios.data.pontos} pontos, posição ${posicao}. Abrir rankings`
+                : `${premios.data.pontos} pontos. Abrir rankings`
+            }
+            hitSlop={8}
+            onPress={() => router.push("/rankings?visao=historico")}
+            style={({ pressed }) => [
+              styles.pontos,
+              pressed && { opacity: interacao.opacidadePressionado },
+            ]}
+          >
+            <Text style={[textStyles.secao, { color: colors.goldText }]}>
+              {posicao
+                ? `${formatarPontos(premios.data.pontos)} · #${formatarNumero(posicao)}`
+                : formatarPontos(premios.data.pontos)}
+            </Text>
+            <Icon name="avancar" color={colors.goldText} size={16} />
+          </Pressable>
         )}
       </View>
 
@@ -146,11 +173,12 @@ const styles = StyleSheet.create({
   topo: { paddingTop: 16, paddingBottom: 8 },
   titulo: {
     flexDirection: "row",
-    alignItems: "baseline",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
     paddingVertical: 8,
   },
+  pontos: { flexDirection: "row", alignItems: "center", gap: 2 },
   espera: { marginTop: 32 },
   alternar: {
     flexDirection: "row",

@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Maxx.Application.Conquistas;
+using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Fila;
@@ -66,6 +67,44 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
             1,
             await db.Set<Trabalho>().CountAsync(
                 trabalho => trabalho.Tipo == VerificarFechamentos.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, Ct));
+    }
+
+    // O ranking nunca calculado, ou o calendário mudado, pede um recálculo ao worker (passo
+    // 11): só um, e rodar de novo com o ranking já calculado e o calendário igual não pede.
+    [Fact]
+    public async Task Seed_base_pede_o_ranking_nunca_calculado_ou_com_calendario_mudado_uma_vez_so()
+    {
+        await using var factory = await MigradoAsync(postgres, Dados);
+
+        await factory.SeedBaseAsync(Ct);
+        await factory.SeedBaseAsync(Ct);
+        Assert.Equal(1, await PedidosDeRankingAsync(factory));
+
+        await SimularRecalculoDoRankingAsync(factory);
+        await factory.SeedBaseAsync(Ct);
+        Assert.Equal(0, await PedidosDeRankingAsync(factory));
+
+        AlterarCalendario(ano => ano["semestres"]![1]!["bimestres"]![1]!["fim"] = "2026-12-12");
+        await factory.SeedBaseAsync(Ct);
+        Assert.Equal(1, await PedidosDeRankingAsync(factory));
+    }
+
+    private static async Task<int> PedidosDeRankingAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Trabalho>().CountAsync(
+            trabalho => trabalho.Tipo == RecalcularRanking.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, Ct);
+    }
+
+    // O que o worker deixa depois de recalcular: o pedido consumido e a execução registrada
+    // na linha "ranking" do recálculo.
+    private static async Task SimularRecalculoDoRankingAsync(MaxxApiFactory factory)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        await db.Database.ExecuteSqlAsync($"DELETE FROM trabalho WHERE tipo = {RecalcularRanking.Tipo}", Ct);
+        await db.Database.ExecuteSqlAsync(
+            $"INSERT INTO recalculo (nome, ultima_execucao_em) VALUES ('ranking', now())", Ct);
     }
 
     [Fact]

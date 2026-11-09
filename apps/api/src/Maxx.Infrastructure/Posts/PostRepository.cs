@@ -5,8 +5,10 @@ using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Domain.Ranking;
 using Maxx.Domain.Social;
 using Maxx.Infrastructure.Persistence;
+using Maxx.Infrastructure.Ranking;
 using Maxx.Infrastructure.RaridadeDosItens;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +74,13 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
                     FotoDoAutor = autor.ChaveDaFotoDaGrade,
                     Curso = curso == null ? null : curso.Sigla,
                     cadastro.Semestre,
+                    // A posição do autor no histórico geral (passo 11), pelo índice do aluno.
+                    Posicao = db.Set<PosicaoNoRankingRow>()
+                        .Where(posicao => posicao.AlunoId == autor.Id
+                            && posicao.Escopo == EscopoDoRanking.Geral
+                            && posicao.Periodo == PeriodoDoRanking.Historico)
+                        .Select(posicao => (int?)posicao.Posicao)
+                        .FirstOrDefault(),
                     Curtidas = db.Set<Curtida>().Count(curtida => curtida.PostId == post.Id),
                     Comentarios = db.Set<Comentario>().Count(comentario => comentario.PostId == post.Id && comentario.RemovidoEm == null),
                     Curtiu = db.Set<Curtida>().Any(curtida => curtida.PostId == post.Id && curtida.UsuarioId == leitorId),
@@ -96,7 +105,7 @@ internal sealed class ConsultaDePosts(MaxxDbContext db) : IConsultaDePosts
             linha => linha.Id,
             linha => new PostLido(
                 linha.Id,
-                new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre, linha.FotoDoAutor),
+                new AutorDoPost(linha.AutorId, linha.NomeDeExibicao, new Arroba(linha.Prefixo, linha.Sufixo).ToString(), linha.Curso, linha.Semestre, linha.FotoDoAutor, linha.Posicao),
                 linha.Legenda,
                 linha.ChaveDaFotoDoFeed,
                 linha.ChaveDaFotoDaGrade,

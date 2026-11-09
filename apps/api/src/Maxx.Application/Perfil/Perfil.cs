@@ -48,7 +48,8 @@ public sealed record PerfilLido(
     bool EuSigo,
     string? ChaveDaFotoDoFeed,
     string? ChaveDaFotoDaGrade,
-    ProfessorDoPerfil? Professor);
+    ProfessorDoPerfil? Professor,
+    int? Posicao);
 
 // O que o perfil do professor mostra além do nome (produto.md 2.1): as turmas do semestre e
 // as medalhas que ele concedeu. Os avisos chegam no passo 10.

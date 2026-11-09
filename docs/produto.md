@@ -408,6 +408,13 @@ depois. O prêmio de participação conta no semestre **do evento**, não no da 
 semestre letivo que contém a **data de início** do evento; o evento que começa no recesso
 conta no **semestre seguinte** (passo 9). O passo 11 usa a mesma regra para o ranking.
 
+Para o ranking do semestre (passo 11): a conquista de bimestre conta no semestre do
+bimestre; a de **ano**, no **segundo semestre** do ano, o mesmo que decide o congelamento
+(`regras-conquista.md` 5); a de **curso**, que não tem fronteira de data, no semestre **da
+concessão**, e a concedida no recesso, no semestre seguinte, como o evento. Enquanto o
+calendário não tem esse semestre seguinte, o prêmio e a conquista pontuam no histórico e
+em nenhum semestre, como no passo 9.
+
 "Todas as matérias" são as **matérias distintas** das turmas em que o aluno está
 matriculado no período; o aluno **sem matrícula** no período não ganha a conquista de
 todas as matérias, porque o alvo zero não se cumpre de graça.
@@ -452,7 +459,17 @@ São quatro visões, combinando escopo e período:
 - Cada tela mostra o topo e a posição do próprio aluno, com a linha dele destacada.
 - O filtro entre semestre atual e histórico fica dentro da tela de ranking.
 - **Desempate:** o instante da última concessão que compõe a pontuação atual. Quem parou
-  de pontuar antes fica na frente.
+  de pontuar antes fica na frente. O instante é o da concessão da medalha, o da aprovação
+  do prêmio de participação (a contestação confirmada não o muda) e o da concessão da
+  conquista. Persistindo o empate, decide o identificador do aluno, para a posição não
+  oscilar entre dois recálculos.
+- Aluno sem pontos numa visão não tem linha nela: a tela mostra "Sem posição ainda".
+- Quem vê o quê: o aluno vê as quatro visões, com o curso atual; o ex-aluno vê o geral e,
+  do curso, só o histórico do último curso; professor e instituição veem o geral, semestre
+  e histórico.
+- "Quem eu sigo" filtra a mesma visão para quem o aluno segue, e ele mesmo, sem mudar a
+  posição de ninguém.
+- O semestre atual é o último que já começou: no recesso continua o que terminou.
 - O ranking do semestre **congela 30 dias depois do fim do semestre**. Aprovação
   posterior ao congelamento entra só no histórico.
 - Na virada do semestre, o ranking do semestre começa do zero e o histórico acumula.
@@ -504,8 +521,10 @@ do curso. Nada além disso na fase 1.
 ### 6.5 Perfil
 
 Mostra nome, arroba, curso, pontos, posição e prêmios, mais a grade de posts em três
-colunas sem legenda. Tocar na própria posição abre o ranking. Editar perfil altera foto,
-nome de exibição e a parte do arroba antes do hífen.
+colunas sem legenda. A posição é a do **histórico geral**, coerente com os pontos
+acumulados que o perfil mostra, e aparece também no perfil de outro aluno, na linha do
+autor no feed e em Troféus. Tocar na própria posição abre o ranking nesse chip. Editar
+perfil altera foto, nome de exibição e a parte do arroba antes do hífen.
 
 ---
 

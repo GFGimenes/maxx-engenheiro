@@ -86,3 +86,12 @@ diagrama.
 - O evento semeado lista os itens que aceita; a apresentação em sala vai sempre por texto
   livre, com a matéria (`produto.md` 4.6).
 - Rotas, códigos e decisões em `decisoes/README.md`, Prêmios de participação (passo 8).
+
+## Como ficou no passo 11
+
+- A aprovação enfileira também `recalcular-ranking`, na mesma transação. O prêmio conta no
+  ranking do semestre que contém a data de início do evento (no recesso, o seguinte), e não
+  no da aprovação, e o instante da aprovação é o do desempate.
+- A remoção do post pela instituição pede o recálculo quando revoga (prêmio válido ou em
+  averiguação); a do pendente, que não pontuava, não pede.
+- Decisões em `decisoes/README.md`, Rankings (passo 11).

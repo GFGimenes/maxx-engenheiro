@@ -98,7 +98,7 @@ test(
 
     // Pendente não pontua.
     await trofeus(doAluno);
-    await expect(doAluno.getByText("0 pts", { exact: true })).toBeVisible();
+    await expect(doAluno.getByText(/^0 pts( · #[\d.]+)?$/)).toBeVisible();
     await expect(doAluno.getByText("Pendente", { exact: true })).toBeVisible();
 
     // A professora, pela fila de comprovações do menu do perfil.
@@ -116,7 +116,7 @@ test(
 
     // Aprovado, pontua na hora.
     await trofeus(doAluno);
-    await expect(doAluno.getByText("30 pts", { exact: true })).toBeVisible();
+    await expect(doAluno.getByText(/^30 pts( · #[\d.]+)?$/)).toBeVisible();
     await expect(
       doAluno.getByTestId("premio-P06").getByText("+30"),
     ).toBeVisible();
@@ -210,6 +210,6 @@ test(
     await expect(
       doAluno.getByText("Motivo: A foto é de outro evento."),
     ).toBeVisible();
-    await expect(doAluno.getByText("0 pts", { exact: true })).toBeVisible();
+    await expect(doAluno.getByText(/^0 pts( · #[\d.]+)?$/)).toBeVisible();
   },
 );

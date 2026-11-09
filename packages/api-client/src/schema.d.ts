@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rankings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/professor/turmas": {
         parameters: {
             query?: never;
@@ -961,6 +977,8 @@ export interface components {
             /** Format: int32 */
             semestre: null | number;
             foto: null | string;
+            /** Format: int32 */
+            posicao?: null | number;
         };
         AvisoPublicadoResponse: {
             /** Format: uuid */
@@ -1231,6 +1249,22 @@ export interface components {
             /** Format: date-time */
             ate: null | string;
         };
+        LinhaDoRankingResponse: {
+            /** Format: uuid */
+            alunoId: string;
+            /** Format: int32 */
+            posicao: number;
+            /** Format: int32 */
+            pontos: number;
+            nomeDeExibicao: string;
+            arroba: string;
+            curso: null | string;
+            nomeDoCurso: null | string;
+            /** Format: int32 */
+            semestre: null | number;
+            exAluno: boolean;
+            foto: null | string;
+        };
         LoginRequest: {
             identificador: string;
             senha: string;
@@ -1342,6 +1376,8 @@ export interface components {
             euSigo: boolean;
             foto: null | components["schemas"]["FotoDoPostResponse"];
             professor: null | components["schemas"]["ProfessorDoPerfilResponse"];
+            /** Format: int32 */
+            posicao: null | number;
         };
         PostResponse: {
             /** Format: uuid */
@@ -1433,6 +1469,16 @@ export interface components {
             medalhaId: null | string;
             /** Format: uuid */
             conquistaId?: null | string;
+        };
+        RankingResponse: {
+            escopo: string;
+            periodo: string;
+            semestre: null | string;
+            curso: null | string;
+            nomeDoCurso: null | string;
+            eu: null | components["schemas"]["LinhaDoRankingResponse"];
+            itens: components["schemas"]["LinhaDoRankingResponse"][];
+            proximo: null | string;
         };
         RaridadeResponse: {
             nivel: string;
@@ -2078,6 +2124,49 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetRanking: {
+        parameters: {
+            query: {
+                escopo: string;
+                periodo: string;
+                seguidos?: boolean;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -26,10 +26,14 @@ const JOAO_ENCONTRADO = {
 };
 
 let busca: jest.Mock<Promise<Response>, [Request]>;
+let papeis: string[];
+let exAluno: boolean;
 let api: jest.Mock<Promise<Response>, [Request]>;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  papeis = ["aluno"];
+  exAluno = false;
   busca = jest.fn(async (_pedido: Request) =>
     json(200, { itens: [JOAO_ENCONTRADO], proximo: null }),
   );
@@ -38,7 +42,7 @@ beforeEach(() => {
     if (pathname === "/api/v1/eu")
       return json(200, {
         id: ANA,
-        papeis: ["aluno"],
+        papeis,
         arroba: "@anaSouza-CC",
         nomeDeExibicao: "Ana Souza",
         foto: null,
@@ -54,6 +58,8 @@ beforeEach(() => {
         { sigla: "MED", nome: "Medicina", duracaoEmSemestres: 12 },
       ]);
     if (pathname === "/api/v1/busca/alunos") return busca(pedido);
+    if (pathname === "/api/v1/eu/perfil")
+      return json(200, { id: ANA, exAluno });
     return new Response(null, { status: 404 });
   });
 });
@@ -175,5 +181,52 @@ describe("busca", () => {
     await digitar("joa");
 
     expect(await screen.findByText(/Sem conexão/)).toBeOnTheScreen();
+  });
+});
+
+describe("atalhos dos rankings", () => {
+  it("o aluno tem o ranking geral e o do curso", async () => {
+    await renderComApi(<BuscaScreen />, api);
+
+    await act(async () => {
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Ranking geral" }),
+      );
+    });
+    expect(mockRoteador.push).toHaveBeenLastCalledWith("/rankings?visao=geral");
+
+    await act(async () => {
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Ranking do curso" }),
+      );
+    });
+    expect(mockRoteador.push).toHaveBeenLastCalledWith("/rankings?visao=curso");
+  });
+
+  it("o ex-aluno vai ao histórico do curso", async () => {
+    exAluno = true;
+    await renderComApi(<BuscaScreen />, api);
+    await act(async () => {});
+
+    await act(async () => {
+      fireEvent.press(
+        await screen.findByRole("button", { name: "Ranking do curso" }),
+      );
+    });
+    expect(mockRoteador.push).toHaveBeenLastCalledWith(
+      "/rankings?visao=historico-curso",
+    );
+  });
+
+  it("o professor tem só o ranking geral", async () => {
+    papeis = ["professor"];
+    await renderComApi(<BuscaScreen />, api);
+
+    expect(
+      await screen.findByRole("button", { name: "Ranking geral" }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByRole("button", { name: "Ranking do curso" }),
+    ).toBeNull();
   });
 });
