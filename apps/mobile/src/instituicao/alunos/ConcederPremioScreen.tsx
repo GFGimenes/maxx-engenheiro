@@ -89,7 +89,12 @@ function Concessao({ cadastroId }: { cadastroId: string }) {
         <Button
           label="Voltar à ficha"
           variant="secondary"
-          onPress={() => router.replace(`/instituicao/alunos/${cadastroId}`)}
+          onPress={() =>
+            // A ficha está embaixo, na pilha: voltar a ela, e não empilhar outra.
+            router.canGoBack()
+              ? router.back()
+              : router.replace(`/instituicao/alunos/${cadastroId}`)
+          }
         />
       </View>
     );

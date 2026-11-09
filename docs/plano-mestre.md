@@ -302,14 +302,25 @@ Rankings (passo 11).
   administrativo.
 - Do passo 10: a publicação de aviso de faculdade e de curso pela área web usa
   `POST /v1/avisos`, que já recebe os dois escopos e um ou mais cursos; a foto sobe pela
-  finalidade `aviso` do upload. Sugestão para o plano do passo 12, ainda não decidida: os
-  avisos do seed nascerem pela mesma publicação, para a notificação de aviso novo ir aos
+  finalidade `aviso` do upload. Decidido no plano do passo 12: os avisos do seed nascem pela
+  fábrica do domínio, com datas passadas, e a notificação de aviso novo vai aos
   destinatários pelo worker, como as conquistas do seed nascem do worker.
 - Do passo 11: marcar ex-aluno e trocar de curso enfileiram `fila.PedirRecalculos()` na
   mesma transação do ato. O worker já tira o ex-aluno das visões de semestre e leva os
   pontos para o curso novo (`Usuario.MarcarExAluno`, `Usuario.TrocarDeCurso` e o curso do
   cadastro elegível); falta só o pedido. A concessão direta da instituição também pede o
   recálculo, e o instante dela é o do desempate.
+- Entrou também, aprovado no plano do passo: trocar de curso pela área web, com curso e
+  semestre novos e as matrículas antigas mantidas; o registro de quem fez e quando nos
+  quatro atos sem regra de auditoria (correção de e-mail, ex-aluno, troca de curso, purga);
+  a notificação `premioConcedido` e o post do prêmio concedido pelo aluno; o contestar da
+  instituição no menu do post. Nas etapas: a lista dos prêmios que a instituição pode
+  conceder e o id do curso em `GET /v1/cursos` (etapa 8), e a espera da fila do worker
+  antes do e2e (etapa 5).
+
+Ficam pendentes: a lista de domínios de e-mail aceitos, o primeiro acesso das contas de
+professor e instituição do seed pelo SMTP da VPS e o R2 no `seed demo` da VPS (passo 13).
+Decisões do passo em `decisoes/README.md`, Área web da instituição (passo 12).
 
 ### Passo 13. Endurecimento e ensaio
 
@@ -338,7 +349,16 @@ Rankings (passo 11).
 - Ensaio da demonstração remota: não há apresentação presencial, a avaliação é remota,
   antes de 05/12, e cada avaliador entra pela própria conexão. O ensaio entra na VPS de
   fora, por conexões diferentes, com a demonstração ligada.
-- Purga de ensaio testada, para a purga real, ao fim da avaliação, ser rotina.
+- Purga de ensaio testada, para a purga real, ao fim da avaliação, ser rotina. Desde o
+  passo 12, pela tela da área web (`/instituicao/purga`), que também tira as fotos do lote do
+  bucket.
+- Do passo 12: a lista de domínios de e-mail aceitos (`produto.md` 2.4) como configuração,
+  conferida no cadastro e na correção de e-mail pela instituição; o seed já usa o domínio
+  reservado `al.unieduk.invalid` nos alunos do mundo. O provedor de e-mail da VPS também
+  decide o primeiro acesso das contas de professor e instituição do seed, que têm e-mail de
+  domínio real. O `seed demo` na VPS precisa das variáveis do R2, porque sobe as fotos dos
+  posts do mundo; e o tempo de esvaziar a fila depois dele (cerca de 1.500 trabalhos, 66 s
+  locais) entra na medição da VPS.
 - Avaliar a troca do Node 22 (em manutenção até abril de 2027) pelo Node 24 LTS no
   `.nvmrc`, no `engines` e na CI.
 - Revisar os 33 achados do `npm audit` abaixo do corte alto ou crítico (1 baixo e 32
