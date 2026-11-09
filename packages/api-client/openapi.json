@@ -3677,6 +3677,41 @@
           }
         }
       },
+      "InstanciaResponse": {
+        "required": [
+          "periodo",
+          "ano",
+          "semestre",
+          "bimestre"
+        ],
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string"
+          },
+          "ano": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "bimestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ItemDeMedalhaResponse": {
         "required": [
           "codigo",
@@ -3784,6 +3819,16 @@
           },
           "exigeMateria": {
             "type": "boolean"
+          },
+          "progresso": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgressoResponse"
+              }
+            ]
           }
         }
       },
@@ -4315,6 +4360,16 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "instancia": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InstanciaResponse"
+              }
+            ]
           }
         }
       },
@@ -4394,6 +4449,27 @@
             }
           },
           "medalhasConcedidas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProgressoResponse": {
+        "required": [
+          "periodo",
+          "contagem",
+          "alvo"
+        ],
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string"
+          },
+          "contagem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alvo": {
             "type": "integer",
             "format": "int32"
           }

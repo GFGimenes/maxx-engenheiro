@@ -1,3 +1,7 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using Maxx.Api.Autenticacao;
 using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
@@ -7,6 +11,7 @@ using Maxx.Domain.Catalogo;
 using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Infrastructure.Autenticacao;
 using Maxx.Infrastructure.Conquistas;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
@@ -24,7 +29,12 @@ namespace Maxx.Api.IntegrationTests.Conquistas;
 // Renata; a Secretaria é a instituição.
 internal sealed class MundoDeConquistas : IAsyncDisposable
 {
+    public const string Senha = "senha-boa-123";
+
     private static readonly Catalogo _catalogo = CatalogoReader.Ler(Repositorio.DiretorioDoCatalogo).Catalogo!;
+
+    // Argon2id de verdade, calculado uma vez: os testes HTTP entram como a Ana e o Bruno.
+    private static readonly Lazy<string> _hash = new(() => new Argon2idSenhaHasher().Hash(Senha));
 
     private MundoDeConquistas(MaxxApiFactory factory, RelogioDeTeste relogio)
     {
@@ -88,8 +98,8 @@ internal sealed class MundoDeConquistas : IAsyncDisposable
         var bruno = CadastroElegivel.Aluno("20260102", "bruno.lima@al.unieduk.com.br", "Bruno Lima", mundo.Cc, 3);
         mundo.Renata = Usuario.CriarPeloSeed(renata, "renataA", agora);
         mundo.Secretaria = Usuario.CriarPeloSeed(secretaria, "secretaria", agora);
-        mundo.Ana = Usuario.CadastrarAluno(ana, mundo.Cc, "Ana", "anaSouza", "hash", agora);
-        mundo.Bruno = Usuario.CadastrarAluno(bruno, mundo.Cc, "Bruno", "brunoLima", "hash", agora);
+        mundo.Ana = Usuario.CadastrarAluno(ana, mundo.Cc, "Ana", "anaSouza", _hash.Value, agora);
+        mundo.Bruno = Usuario.CadastrarAluno(bruno, mundo.Cc, "Bruno", "brunoLima", _hash.Value, agora);
 
         await SalvarAsync(
             factory,
@@ -210,6 +220,19 @@ internal sealed class MundoDeConquistas : IAsyncDisposable
     {
         await EnfileirarAsync(new VerificarFechamentos());
         await EsvaziarAsync();
+    }
+
+    // Um cliente HTTP logado com a senha do mundo. Só antes de avançar o relógio: o token sai
+    // com o instante do relógio de teste.
+    public async Task<HttpClient> ComoAsync(string email)
+    {
+        var client = Factory.CreateClient();
+        var response = await client.PostAsJsonAsync(
+            new Uri("/api/v1/auth/login", UriKind.Relative), new { identificador = email, senha = Senha }, Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var token = (await response.Content.ReadFromJsonAsync<SessaoResponse>(Ct))!.AccessToken;
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
     }
 
     public ValueTask DisposeAsync() => Factory.DisposeAsync();
