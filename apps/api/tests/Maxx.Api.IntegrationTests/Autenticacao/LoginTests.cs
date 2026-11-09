@@ -113,7 +113,7 @@ public sealed class LoginTests(PostgresFixture postgres) : IClassFixture<Postgre
         {
             var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
             var ana = await db.Set<Usuario>().SingleAsync(usuario => usuario.Papeis == Papeis.Aluno, Ct);
-            ana.MarcarExAluno(DateTimeOffset.UtcNow);
+            ana.MarcarExAluno(ana.Id, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync(Ct);
         }
 

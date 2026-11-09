@@ -303,7 +303,7 @@ public sealed class ComprovacoesTests(PostgresFixture postgres, ArmazenamentoFix
         await using (var scope = mundo.Social.Factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
-            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Social.Id(Ana), Ct)).MarcarExAluno(DateTimeOffset.UtcNow);
+            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Social.Id(Ana), Ct)).MarcarExAluno(mundo.Social.Id(Ana), DateTimeOffset.UtcNow);
             await db.SaveChangesAsync(Ct);
         }
 

@@ -73,6 +73,58 @@ public sealed class CatalogoArquivosTests : IDisposable
         });
     }
 
+    // O mundo de demonstração do passo 12, sem banco: 150 alunos (30 ex-alunos) nos quatro
+    // cursos, e a atividade citando só itens do catálogo do tipo certo, pessoas e turmas do
+    // mundo e eventos do arquivo de eventos.
+    [Fact]
+    public void Mundo_e_atividade_do_repositorio_sao_coerentes()
+    {
+        var demo = Path.Combine(Repositorio.DiretorioDeDados, "demo");
+        var catalogo = CatalogoReader.Ler(_diretorioReal).Catalogo!.Itens.ToDictionary(item => item.Codigo, StringComparer.Ordinal);
+        var mundo = MundoDemoReader.Ler(demo);
+        var eventos = EventosDemoReader.Ler(demo).Eventos.Select(evento => evento.Codigo).ToHashSet(StringComparer.Ordinal);
+        var atividade = AtividadeDemoReader.Ler(demo);
+
+        var alunos = mundo.Cursos.SelectMany(curso => curso.Alunos).ToList();
+        Assert.Equal((150, 30), (alunos.Count, alunos.Count(aluno => aluno.ExAluno)));
+        Assert.Equal(4, mundo.Cursos.Count);
+        Assert.All(alunos, aluno => Assert.EndsWith("@al.unieduk.invalid", aluno.Email, StringComparison.Ordinal));
+
+        Assert.All(atividade.Medalhas.Keys, codigo => Assert.Equal(TipoDeItem.Medalha, catalogo[codigo].Tipo));
+        Assert.All(atividade.PremiosParticipacao.Keys, codigo => Assert.Equal(TipoDeItem.PremioParticipacao, catalogo[codigo].Tipo));
+
+        var pessoas = mundo.Instituicao.Select(pessoa => pessoa.Email)
+            .Concat(mundo.Cursos.SelectMany(curso => curso.Professores.Select(professor => professor.Email)))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var turmas = mundo.Cursos
+            .SelectMany(curso => curso.Materias.SelectMany(materia => materia.Turmas.Select(semestre => (curso.Sigla, materia.Nome, semestre))))
+            .ToHashSet();
+        Assert.All(atividade.Avisos, aviso =>
+        {
+            Assert.Contains(aviso.Autor, pessoas);
+            Assert.All(aviso.Cursos ?? [], sigla => Assert.Contains(mundo.Cursos, curso => curso.Sigla == sigla));
+            Assert.All(aviso.Turmas ?? [], turma => Assert.Contains((turma.Curso, turma.Materia, turma.Semestre), turmas));
+        });
+
+        var contestacao = atividade.Contestacao!;
+        Assert.Contains(alunos, aluno => aluno.Ra == contestacao.Ra);
+        Assert.Contains(contestacao.Evento, eventos);
+        Assert.Contains(contestacao.ContestadaPor, pessoas);
+        Assert.All(atividade.ComprovacoesPendentes, pendente =>
+        {
+            Assert.Contains(alunos, aluno => aluno.Ra == pendente.Ra);
+            Assert.Contains(pendente.Evento, eventos);
+            Assert.Equal(TipoDeItem.PremioParticipacao, catalogo[pendente.Item].Tipo);
+        });
+
+        // As fotos: as derivadas dentro do limite do upload, a procedência de cada uma e foto
+        // para todo curso.
+        var fotos = FotosDemoReader.Ler(demo);
+        Assert.All(mundo.Cursos, curso => Assert.True(fotos.Count(foto => foto.CabeEm(curso.Sigla)) >= 10, curso.Sigla));
+        var creditos = File.ReadAllText(Path.Combine(demo, FotosDemoReader.Diretorio, "CREDITOS.md"));
+        Assert.All(fotos, foto => Assert.Contains(foto.Nome, creditos, StringComparison.Ordinal));
+    }
+
     [Fact]
     public void Pontos_fora_da_faixa_falham_com_o_codigo_do_item()
     {

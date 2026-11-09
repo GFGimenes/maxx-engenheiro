@@ -18,7 +18,7 @@ public class UploadPendenteTests
     private static Usuario ExAluna()
     {
         var aluna = Aluna();
-        aluna.MarcarExAluno(_agora);
+        aluna.MarcarExAluno(aluna.Id, _agora);
         return aluna;
     }
 

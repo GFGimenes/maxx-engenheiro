@@ -59,7 +59,7 @@ public sealed record ProfessorDoPerfil(IReadOnlyList<TurmaDoProfessor> Turmas, i
 public sealed record FiltroDaBusca(string Termo, string? Curso, int? Semestre);
 
 // A duração dá os semestres do filtro: cada curso vai do 1º ao último dele (Medicina tem 12).
-public sealed record CursoDaBusca(string Sigla, string Nome, int DuracaoEmSemestres);
+public sealed record CursoDaBusca(string Sigla, string Nome, int DuracaoEmSemestres, Guid Id = default);
 
 public sealed record AlunoEncontrado(
     Guid Id, string NomeDeExibicao, string Arroba, string? Curso, int? Semestre, bool ExAluno, string? ChaveDaFotoDaGrade, bool EuSigo);

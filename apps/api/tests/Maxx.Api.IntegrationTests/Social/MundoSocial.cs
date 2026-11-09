@@ -54,13 +54,18 @@ internal sealed class MundoSocial : IAsyncDisposable
 
     public Guid Id(string email) => _ids[email];
 
+    // configuracao: chaves a mais, por cima das do bucket (o lote da demonstração, por exemplo).
     public static async Task<MundoSocial> CriarAsync(
-        PostgresFixture postgres, ArmazenamentoFixture armazenamento, Action<IServiceCollection>? servicos = null)
+        PostgresFixture postgres,
+        ArmazenamentoFixture armazenamento,
+        Action<IServiceCollection>? servicos = null,
+        IReadOnlyDictionary<string, string>? configuracao = null)
     {
         var relogio = new RelogioDeTeste();
         var factory = new MaxxApiFactory(
             await postgres.CreateDatabaseAsync(),
-            configuracao: armazenamento.Configuracao,
+            configuracao: armazenamento.Configuracao.Concat(configuracao ?? new Dictionary<string, string>())
+                .ToDictionary(par => par.Key, par => par.Value),
             servicos: colecao =>
             {
                 colecao.Replace(ServiceDescriptor.Singleton<TimeProvider>(relogio));
@@ -79,7 +84,11 @@ internal sealed class MundoSocial : IAsyncDisposable
         var turma = new Turma(bd, ano.Semestres[0]);
 
         var hash = new Argon2idSenhaHasher().Hash(Senha);
-        var agora = DateTimeOffset.UtcNow;
+
+        // No relógio do mundo, que parte de antes da migração: a conta nasce antes de tudo que o
+        // teste faz, e a notificação de aviso, que alcança só quem tinha conta na publicação
+        // (decisão do passo 10), não depende de quanto a migração demorou.
+        var agora = relogio.GetUtcNow();
         var ana = CadastroElegivel.Aluno("20260101", Ana, "Ana Souza", cc, 3);
         var bruno = CadastroElegivel.Aluno("20260102", Bruno, "Bruno Lima", cc, 3);
         var carla = CadastroElegivel.Aluno("20260103", Carla, "Carla Dias", cc, 8);
@@ -95,7 +104,7 @@ internal sealed class MundoSocial : IAsyncDisposable
             [Renata] = ComSenha(Usuario.CriarPeloSeed(renata, "renataA", agora), hash),
             [Coordenacao] = ComSenha(Usuario.CriarPeloSeed(coordenacao, "coordenacao", agora), hash),
         };
-        contas[Carla].MarcarExAluno(agora);
+        contas[Carla].MarcarExAluno(contas[Carla].Id, agora);
 
         await BancoDeTeste.SalvarAsync(
             factory,

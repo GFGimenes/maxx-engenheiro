@@ -20,6 +20,8 @@ const celular = {
 
 export default defineConfig({
   testDir: "./tests",
+  // O worker esvazia a fila do mundo de demonstração antes do primeiro teste.
+  globalSetup: "./tests/apoio/fila.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",

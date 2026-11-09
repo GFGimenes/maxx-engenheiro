@@ -21,6 +21,7 @@ internal sealed class UnitOfWork(MaxxDbContext db) : IUnitOfWork
         ["ix_conquista_instancia_ativa"] = Unicidade.ConquistaAtiva,
         ["pk_curtida"] = Unicidade.Curtida,
         ["pk_seguimento"] = Unicidade.Seguimento,
+        ["ix_cadastro_elegivel_email"] = Unicidade.EmailDoCadastro,
     };
 
     public async Task SalvarAsync(CancellationToken cancellationToken)

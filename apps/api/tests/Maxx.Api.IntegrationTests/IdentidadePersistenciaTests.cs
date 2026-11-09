@@ -162,7 +162,7 @@ public sealed class IdentidadePersistenciaTests(PostgresFixture postgres) : ICla
         var mundo = new Mundo();
         await SalvarAsync(factory, mundo.Todos());
         var ana = mundo.Ana();
-        ana.MarcarExAluno(_agora.AddYears(4));
+        ana.MarcarExAluno(ana.Id, _agora.AddYears(4));
         await SalvarAsync(factory, ana);
 
         await using var scope = factory.Services.CreateAsyncScope();

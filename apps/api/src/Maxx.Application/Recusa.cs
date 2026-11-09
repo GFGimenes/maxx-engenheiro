@@ -95,6 +95,9 @@ public enum Unicidade
 
     // O mesmo seguimento gravado duas vezes ao mesmo tempo.
     Seguimento,
+
+    // Duas linhas da base com o mesmo e-mail: a correção que corre contra outra.
+    EmailDoCadastro,
 }
 
 // Gravação recusada porque a linha mudou desde a leitura (xmin): outro pedido chegou

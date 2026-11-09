@@ -186,7 +186,7 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
     }
 
     public async Task<IReadOnlyList<CursoDaBusca>> CursosAsync(CancellationToken cancellationToken) =>
-        await db.Set<Curso>().OrderBy(curso => curso.Sigla).Select(curso => new CursoDaBusca(curso.Sigla, curso.Nome, curso.DuracaoEmSemestres)).ToListAsync(cancellationToken);
+        await db.Set<Curso>().OrderBy(curso => curso.Sigla).Select(curso => new CursoDaBusca(curso.Sigla, curso.Nome, curso.DuracaoEmSemestres, curso.Id)).ToListAsync(cancellationToken);
 
     public Task<bool> PrefixoDeOutraPessoaAsync(string prefixo, Guid usuarioId, CancellationToken cancellationToken) =>
         db.Set<PrefixoReservado>().AnyAsync(reservado => reservado.Prefixo == prefixo && reservado.UsuarioId != usuarioId, cancellationToken);

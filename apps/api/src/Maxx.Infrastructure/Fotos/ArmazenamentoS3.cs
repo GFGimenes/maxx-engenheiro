@@ -44,6 +44,17 @@ internal sealed class ArmazenamentoS3(IOptions<ArmazenamentoOptions> options) : 
         return new EnvioAssinado(chave, new Uri(url), tipoDeConteudo, tamanho, expiraEm);
     }
 
+    public async Task EnviarAsync(string chave, byte[] conteudo, string tipoDeConteudo, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(chave);
+        ArgumentNullException.ThrowIfNull(conteudo);
+        var clientes = _clientes.Value;
+        using var corpo = new MemoryStream(conteudo, writable: false);
+        await clientes.Operacao.PutObjectAsync(
+            new PutObjectRequest { BucketName = clientes.Bucket, Key = chave, InputStream = corpo, ContentType = tipoDeConteudo },
+            cancellationToken);
+    }
+
     public async Task<bool> ExisteAsync(string chave, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(chave);

@@ -66,12 +66,14 @@ services:
   # Catálogo e calendário, depois da migração e antes das réplicas. Idempotente: roda a
   # cada subida sem mudar nada se os arquivos de data/ não mudaram. O `seed demo` é à mão:
   # docker compose run --rm seeder seed demo
+  # O seed demo envia ao bucket as fotos dos posts do mundo de demonstração (passo 12).
   seeder:
     <<: *api-image
     command: ["seed", "base"]
     environment:
-      <<: *api-env
+      <<: [*api-env, *armazenamento-env]
     depends_on:
+      <<: *depende-do-bucket-local
       migrator:
         condition: service_completed_successfully
     restart: "no"

@@ -91,7 +91,7 @@ public class PostTests
     public void So_aluno_ativo_publica()
     {
         var exAluna = Aluno("20260103", "carla.dias", "carlaDias");
-        exAluna.MarcarExAluno(_agora);
+        exAluna.MarcarExAluno(exAluna.Id, _agora);
 
         foreach (var quem in new[] { exAluna, Professora(), Professora(tambemInstituicao: true), Instituicao() })
         {
@@ -155,7 +155,7 @@ public class PostTests
     public void Ex_aluno_ainda_apaga_o_proprio_post()
     {
         var post = Post.Publicar(_ana, "Oi", null, null, _agora).Post!;
-        _ana.MarcarExAluno(_agora);
+        _ana.MarcarExAluno(_ana.Id, _agora);
 
         Assert.Equal(ModoDeRemocao.Apagar, post.ModoDeRemocaoPor(_ana));
     }

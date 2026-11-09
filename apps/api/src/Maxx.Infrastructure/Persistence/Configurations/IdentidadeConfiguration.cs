@@ -73,6 +73,11 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Ignore(usuario => usuario.EhDemonstracao);
         builder.Ignore(usuario => usuario.TemFoto);
 
+        // Quem marcou o ex-aluno (passo 12, P5): sempre junto com o instante.
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(usuario => usuario.ExAlunoMarcadoPorId).OnDelete(DeleteBehavior.Restrict);
+        builder.ToTable(table => table.HasCheckConstraint(
+            "ck_usuario_ex_aluno_marcado_por", "(ex_aluno_desde IS NULL) = (ex_aluno_marcado_por_id IS NULL)"));
+
         // A foto de perfil são sempre as duas derivadas, ou nenhuma.
         builder.ToTable(table => table.HasCheckConstraint(
             "ck_usuario_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)"));

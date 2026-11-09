@@ -69,6 +69,22 @@ public static class MundoDemoReader
             {
                 erros.Add($"{email} cita a matéria \"{nome}\", que não existe em {curso.Sigla}.");
             }
+
+            var semestres = curso.Materias.SelectMany(materia => materia.Turmas).ToHashSet(StringComparer.Ordinal);
+            foreach (var aluno in curso.Alunos.Where(aluno => aluno.SemestresLetivos is not null))
+            {
+                if (aluno.SemestresLetivos!.Count == 0)
+                {
+                    erros.Add($"{aluno.Email} tem a lista de semestres letivos vazia.");
+                }
+
+                foreach (var codigo in aluno.SemestresLetivos.Where(codigo => !semestres.Contains(codigo)))
+                {
+                    erros.Add($"{aluno.Email} cursa {codigo}, que não tem turma em {curso.Sigla}.");
+                }
+
+                Repetidos(aluno.SemestresLetivos, $"semestre letivo de {aluno.Email}", erros);
+            }
         }
 
         return erros;
@@ -136,4 +152,11 @@ public sealed class AlunoDemo : PessoaDemo
     public required int Semestre { get; init; }
 
     public required List<string> Materias { get; init; }
+
+    // Os semestres letivos ("2026/1") em que cursou as matérias. Sem a lista, todos os das
+    // turmas delas (passo 12).
+    public List<string>? SemestresLetivos { get; init; }
+
+    // Ex-aluno: a instituição o marca no dia seguinte ao fim do último semestre que cursou.
+    public bool ExAluno { get; init; }
 }

@@ -125,20 +125,34 @@ public sealed record NotificarComprovacaoReprovada(Guid PremioId) : ICargaDeTrab
     public static string Tipo => "notificar-comprovacao-reprovada";
 }
 
+// A concessão direta da instituição (passo 12): o prêmio já nasce aprovado.
+public sealed record NotificarPremioConcedido(Guid PremioId) : ICargaDeTrabalho
+{
+    public static string Tipo => "notificar-premio-concedido";
+}
+
 // Agendado para o fim da janela de contestação (fluxos/04-contestacao.md).
 public sealed record TornarPremioDefinitivo(Guid PremioId) : ICargaDeTrabalho
 {
     public static string Tipo => "tornar-premio-definitivo";
 }
 
-// No worker: grava a notificação de comprovação decidida (produto.md 8). Uma por prêmio e
+// No worker: grava a notificação de comprovação decidida (produto.md 8) e a do prêmio
+// concedido direto pela instituição (passo 12). Uma por prêmio e
 // tipo, mesmo que o trabalho rode de novo; nenhuma para o prêmio que a purga já levou.
 public sealed class NotificarComprovacaoHandler(
     IPremioParticipacaoRepository premios,
     INotificacaoRepository notificacoes,
     IUnitOfWork unitOfWork,
-    TimeProvider relogio) : ITrabalhoHandler<NotificarComprovacaoAprovada>, ITrabalhoHandler<NotificarComprovacaoReprovada>
+    TimeProvider relogio)
+    : ITrabalhoHandler<NotificarComprovacaoAprovada>, ITrabalhoHandler<NotificarComprovacaoReprovada>, ITrabalhoHandler<NotificarPremioConcedido>
 {
+    public Task ExecutarAsync(NotificarPremioConcedido carga, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(carga);
+        return NotificarAsync(carga.PremioId, TipoDeNotificacao.PremioConcedido, Notificacao.PremioConcedido, cancellationToken);
+    }
+
     public Task ExecutarAsync(NotificarComprovacaoAprovada carga, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(carga);

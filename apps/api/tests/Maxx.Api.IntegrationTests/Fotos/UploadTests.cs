@@ -321,7 +321,7 @@ public sealed class UploadTests(PostgresFixture postgres, ArmazenamentoFixture a
         var coordenacao = CadastroElegivel.Instituicao(_coordenacao, "Coordenação UniMax");
         var contaDaAna = Usuario.CadastrarAluno(ana, cc, "Ana", "anaSouza", hash, agora);
         var contaDaCarla = Usuario.CadastrarAluno(carla, cc, "Carla", "carlaDias", hash, agora);
-        contaDaCarla.MarcarExAluno(agora);
+        contaDaCarla.MarcarExAluno(contaDaCarla.Id, agora);
 
         await BancoDeTeste.SalvarAsync(
             factory,

@@ -36,6 +36,7 @@ import {
   type Perfil,
 } from "./api";
 import { CelulaDaGrade } from "./CelulaDaGrade";
+import { ContaDaInstituicao } from "./ContaDaInstituicao";
 import { MenuDoPerfil } from "./MenuDoPerfil";
 
 type Aba = "posts" | "trofeus" | "medalhas";
@@ -99,6 +100,7 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
     <MenuDoPerfil
       aberto={menuAberto}
       professor={eu.data?.papeis.includes("professor") ?? false}
+      instituicao={eu.data?.papeis.includes("instituicao") ?? false}
       onFechar={() => setMenuAberto(false)}
     />
   );
@@ -115,6 +117,13 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
         <View style={styles.margem}>
           {perfil.isPending ? (
             <ActivityIndicator style={styles.espera} color={colors.ink2} />
+          ) : falhaParaTela(perfil.error).codigo === "usuario-nao-encontrado" &&
+            proprio &&
+            eu.data?.papeis.includes("instituicao") ? (
+            <ContaDaInstituicao
+              nome={eu.data.nomeDeExibicao}
+              arroba={eu.data.arroba}
+            />
           ) : falhaParaTela(perfil.error).codigo ===
             "usuario-nao-encontrado" ? (
             <EmptyState icon="user" title="Esse perfil não existe." />

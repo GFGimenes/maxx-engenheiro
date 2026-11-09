@@ -124,7 +124,7 @@ public class PremioParticipacaoTests
     [Fact]
     public void Ex_aluno_nao_reivindica()
     {
-        _ana.MarcarExAluno(_agora.AddDays(-1));
+        _ana.MarcarExAluno(_ana.Id, _agora.AddDays(-1));
 
         Assert.Equal(RecusaDaReivindicacao.ExAluno, Reivindicar(CatalogoDeTeste.P01, Livre()).Recusa);
     }
@@ -284,7 +284,7 @@ public class PremioParticipacaoTests
     public void Ex_aluno_nao_tem_a_comprovacao_aprovada_mas_pode_ter_reprovada()
     {
         var premio = Pendente();
-        _ana.MarcarExAluno(_agora);
+        _ana.MarcarExAluno(_ana.Id, _agora);
 
         Assert.Equal(RecusaDaDecisao.ExAluno, premio.Aprovar(_ana, Renata(), _agora));
         Assert.Null(premio.Reprovar(Renata(), "Ex-aluno não recebe prêmio.", _agora));
