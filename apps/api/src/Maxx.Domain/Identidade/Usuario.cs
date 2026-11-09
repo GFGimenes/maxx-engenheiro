@@ -59,6 +59,8 @@ public sealed class Usuario
 
     public DateTimeOffset? ExAlunoDesde { get; private set; }
 
+    public Guid? ExAlunoMarcadoPorId { get; private set; }
+
     public bool EhExAluno => ExAlunoDesde is not null;
 
     public DateTimeOffset CriadoEm { get; private set; }
@@ -238,11 +240,14 @@ public sealed class Usuario
         Sufixo = Identidade.Sufixo.Para(Papeis, curso, exAluno: false);
     }
 
-    public void MarcarExAluno(DateTimeOffset agora)
+    // Ato da instituição (produto.md 2.2), sem volta na fase 1: quem marcou e quando ficam na
+    // conta (passo 12, P5). Quem tem o papel de instituição, a aplicação confere.
+    public void MarcarExAluno(Guid marcadoPorId, DateTimeOffset agora)
     {
         GarantirAlunoAtivo("virar ex-aluno");
 
         ExAlunoDesde = agora;
+        ExAlunoMarcadoPorId = marcadoPorId;
         Sufixo = Identidade.Sufixo.ExAluno;
     }
 

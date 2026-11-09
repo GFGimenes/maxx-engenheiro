@@ -172,7 +172,7 @@ public sealed class RecalculoDoRankingTests(PostgresFixture postgres) : IClassFi
         await RecalcularAsync(mundo);
 
         await ExecutarAsync(mundo, async db =>
-            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Bruno.Id, Ct)).MarcarExAluno(mundo.Relogio.GetUtcNow()));
+            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Bruno.Id, Ct)).MarcarExAluno(mundo.Bruno.Id, mundo.Relogio.GetUtcNow()));
         mundo.Relogio.Avancar(TimeSpan.FromSeconds(10));
         await RecalcularAsync(mundo);
 

@@ -131,7 +131,7 @@ public sealed class PublicacaoDeAvisoTests(PostgresFixture postgres, Armazenamen
         {
             var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
             var agora = mundo.Relogio.GetUtcNow();
-            (await db.Set<Usuario>().FindAsync([mundo.Id(Bruno)], Ct))!.MarcarExAluno(agora);
+            (await db.Set<Usuario>().FindAsync([mundo.Id(Bruno)], Ct))!.MarcarExAluno(mundo.Id(Bruno), agora);
             var cc = (await db.Set<Curso>().FindAsync([mundo.CC], Ct))!;
             var cadastro = CadastroElegivel.Aluno("20260109", "fabio.nunes@al.unieduk.com.br", "Fábio Nunes", cc, 1);
             db.AddRange(cadastro, Usuario.CadastrarAluno(cadastro, cc, "Fábio Nunes", "fabioNunes", "hash", agora));

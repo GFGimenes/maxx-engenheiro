@@ -138,6 +138,46 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Academico.CorrecaoDeEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CadastroElegivelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cadastro_elegivel_id");
+
+                    b.Property<DateTimeOffset>("CorrigidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("corrigido_em");
+
+                    b.Property<Guid>("CorrigidoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("corrigido_por_id");
+
+                    b.Property<string>("EmailAnterior")
+                        .IsRequired()
+                        .HasColumnType("citext")
+                        .HasColumnName("email_anterior");
+
+                    b.Property<string>("EmailNovo")
+                        .IsRequired()
+                        .HasColumnType("citext")
+                        .HasColumnName("email_novo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_correcao_de_email");
+
+                    b.HasIndex("CadastroElegivelId")
+                        .HasDatabaseName("ix_correcao_de_email_cadastro_elegivel_id");
+
+                    b.HasIndex("CorrigidoPorId")
+                        .HasDatabaseName("ix_correcao_de_email_corrigido_por_id");
+
+                    b.ToTable("correcao_de_email", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Academico.Curso", b =>
                 {
                     b.Property<Guid>("Id")
@@ -254,6 +294,63 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("semestre_letivo", null, t =>
                         {
                             t.HasCheckConstraint("ck_semestre_letivo_numero", "numero IN (1, 2)");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Academico.TrocaDeCurso", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CadastroElegivelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cadastro_elegivel_id");
+
+                    b.Property<Guid>("CursoAnteriorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("curso_anterior_id");
+
+                    b.Property<Guid>("CursoNovoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("curso_novo_id");
+
+                    b.Property<int>("SemestreAnterior")
+                        .HasColumnType("integer")
+                        .HasColumnName("semestre_anterior");
+
+                    b.Property<int>("SemestreNovo")
+                        .HasColumnType("integer")
+                        .HasColumnName("semestre_novo");
+
+                    b.Property<DateTimeOffset>("TrocadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trocado_em");
+
+                    b.Property<Guid>("TrocadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trocado_por_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_troca_de_curso");
+
+                    b.HasIndex("CadastroElegivelId")
+                        .HasDatabaseName("ix_troca_de_curso_cadastro_elegivel_id");
+
+                    b.HasIndex("CursoAnteriorId")
+                        .HasDatabaseName("ix_troca_de_curso_curso_anterior_id");
+
+                    b.HasIndex("CursoNovoId")
+                        .HasDatabaseName("ix_troca_de_curso_curso_novo_id");
+
+                    b.HasIndex("TrocadoPorId")
+                        .HasDatabaseName("ix_troca_de_curso_trocado_por_id");
+
+                    b.ToTable("troca_de_curso", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_troca_de_curso_cursos", "curso_anterior_id <> curso_novo_id");
+
+                            t.HasCheckConstraint("ck_troca_de_curso_semestres", "semestre_anterior >= 1 AND semestre_novo >= 1");
                         });
                 });
 
@@ -731,6 +828,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ex_aluno_desde");
 
+                    b.Property<Guid?>("ExAlunoMarcadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ex_aluno_marcado_por_id");
+
                     b.Property<string>("HashDaChaveDoDispositivo")
                         .HasColumnType("text")
                         .HasColumnName("hash_da_chave_do_dispositivo");
@@ -775,6 +876,9 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_usuario_cadastro_elegivel_id");
 
+                    b.HasIndex("ExAlunoMarcadoPorId")
+                        .HasDatabaseName("ix_usuario_ex_aluno_marcado_por_id");
+
                     b.HasIndex("HashDaChaveDoDispositivo")
                         .IsUnique()
                         .HasDatabaseName("ix_usuario_hash_da_chave_do_dispositivo")
@@ -789,6 +893,8 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_usuario_demonstracao", "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
 
                             t.HasCheckConstraint("ck_usuario_ex_aluno", "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
+
+                            t.HasCheckConstraint("ck_usuario_ex_aluno_marcado_por", "(ex_aluno_desde IS NULL) = (ex_aluno_marcado_por_id IS NULL)");
 
                             t.HasCheckConstraint("ck_usuario_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
 
@@ -2023,6 +2129,23 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_cadastro_elegivel_curso_curso_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Academico.CorrecaoDeEmail", b =>
+                {
+                    b.HasOne("Maxx.Domain.Academico.CadastroElegivel", null)
+                        .WithMany()
+                        .HasForeignKey("CadastroElegivelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_correcao_de_email_cadastro_elegivel_cadastro_elegivel_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("CorrigidoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_correcao_de_email_usuario_corrigido_por_id");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Academico.Materia", b =>
                 {
                     b.HasOne("Maxx.Domain.Academico.Curso", null)
@@ -2058,6 +2181,37 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_semestre_letivo_ano_letivo_ano_letivo_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Academico.TrocaDeCurso", b =>
+                {
+                    b.HasOne("Maxx.Domain.Academico.CadastroElegivel", null)
+                        .WithMany()
+                        .HasForeignKey("CadastroElegivelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_troca_de_curso_cadastro_elegivel_cadastro_elegivel_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoAnteriorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_troca_de_curso_curso_curso_anterior_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoNovoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_troca_de_curso_curso_curso_novo_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("TrocadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_troca_de_curso_usuario_trocado_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Academico.Turma", b =>
@@ -2210,6 +2364,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_usuario_cadastro_elegivel_cadastro_elegivel_id");
+
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ExAlunoMarcadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_usuario_usuario_ex_aluno_marcado_por_id");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Mural.Aviso", b =>

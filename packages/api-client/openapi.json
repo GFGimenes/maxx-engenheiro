@@ -2676,6 +2676,338 @@
         ]
       }
     },
+    "/api/v1/instituicao/alunos": {
+      "get": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "BuscarAlunosDaBase",
+        "parameters": [
+          {
+            "name": "busca",
+            "in": "query",
+            "schema": {
+              "maxLength": 200,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlunoDaBaseResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/instituicao/alunos/{cadastroId}": {
+      "get": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "GetFichaDoAluno",
+        "parameters": [
+          {
+            "name": "cadastroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDoAlunoResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/instituicao/alunos/{cadastroId}/email": {
+      "put": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "CorrigirEmailDoAluno",
+        "parameters": [
+          {
+            "name": "cadastroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/instituicao/alunos/{cadastroId}/ex-aluno": {
+      "post": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "MarcarExAluno",
+        "parameters": [
+          {
+            "name": "cadastroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/instituicao/alunos/{cadastroId}/curso": {
+      "put": {
+        "tags": [
+          "Instituicao"
+        ],
+        "operationId": "TrocarCursoDoAluno",
+        "parameters": [
+          {
+            "name": "cadastroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrocaDeCursoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -3260,6 +3592,59 @@
   },
   "components": {
     "schemas": {
+      "AlunoDaBaseResponse": {
+        "required": [
+          "id",
+          "nomeCompleto",
+          "ra",
+          "email",
+          "cursoId",
+          "curso",
+          "semestre",
+          "demonstracao",
+          "conta"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeCompleto": {
+            "type": "string"
+          },
+          "ra": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "cursoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "curso": {
+            "type": "string"
+          },
+          "semestre": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "demonstracao": {
+            "type": "boolean"
+          },
+          "conta": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContaDoAlunoResponse"
+              }
+            ]
+          }
+        }
+      },
       "AlunoDaTurmaResponse": {
         "required": [
           "id",
@@ -3764,6 +4149,41 @@
           }
         }
       },
+      "ContaDoAlunoResponse": {
+        "required": [
+          "id",
+          "nomeDeExibicao",
+          "arroba",
+          "exAlunoDesde",
+          "foto"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "exAlunoDesde": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ContestacaoCriadaResponse": {
         "required": [
           "id",
@@ -4035,6 +4455,22 @@
           }
         }
       },
+      "EmailRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "EntradaDeDemonstracaoRequest": {
         "required": [
           "chaveDoDispositivo"
@@ -4235,6 +4671,24 @@
           "passos": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "FichaDoAlunoResponse": {
+        "required": [
+          "aluno",
+          "medalhas"
+        ],
+        "type": "object",
+        "properties": {
+          "aluno": {
+            "$ref": "#/components/schemas/AlunoDaBaseResponse"
+          },
+          "medalhas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MedalhaDaFichaResponse"
+            }
           }
         }
       },
@@ -4624,6 +5078,58 @@
           "ocorrencia": {
             "type": "integer",
             "format": "int32"
+          },
+          "concedidaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MedalhaDaFichaResponse": {
+        "required": [
+          "id",
+          "item",
+          "nomeDoItem",
+          "tier",
+          "pontos",
+          "materia",
+          "ano",
+          "bimestre",
+          "concedidaPor",
+          "concedidaEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item": {
+            "type": "string"
+          },
+          "nomeDoItem": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "materia": {
+            "type": "string"
+          },
+          "ano": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bimestre": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "concedidaPor": {
+            "type": "string"
           },
           "concedidaEm": {
             "type": "string",
@@ -5786,6 +6292,23 @@
           }
         }
       },
+      "TrocaDeCursoRequest": {
+        "required": [
+          "cursoId",
+          "semestre"
+        ],
+        "type": "object",
+        "properties": {
+          "cursoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "semestre": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "TurmaDoPerfilResponse": {
         "required": [
           "materia",
@@ -5917,6 +6440,9 @@
     },
     {
       "name": "Notificações"
+    },
+    {
+      "name": "Instituicao"
     },
     {
       "name": "Demonstracao"

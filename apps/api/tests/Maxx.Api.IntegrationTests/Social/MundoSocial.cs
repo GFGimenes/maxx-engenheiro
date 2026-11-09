@@ -95,7 +95,7 @@ internal sealed class MundoSocial : IAsyncDisposable
             [Renata] = ComSenha(Usuario.CriarPeloSeed(renata, "renataA", agora), hash),
             [Coordenacao] = ComSenha(Usuario.CriarPeloSeed(coordenacao, "coordenacao", agora), hash),
         };
-        contas[Carla].MarcarExAluno(agora);
+        contas[Carla].MarcarExAluno(contas[Carla].Id, agora);
 
         await BancoDeTeste.SalvarAsync(
             factory,

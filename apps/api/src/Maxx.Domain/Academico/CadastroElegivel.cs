@@ -92,6 +92,73 @@ public sealed class CadastroElegivel
             cursoId: null,
             semestre: null);
 
+
+    // Correção de e-mail pela instituição (produto.md 2.3, passo 12): só a linha de aluno,
+    // com ou sem conta. Confere só a forma; a unicidade é do banco. O mesmo e-mail, escrito
+    // igual, não muda nada e não gera registro; trocar só maiúsculas é correção.
+    public ResultadoDaCorrecaoDeEmail CorrigirEmail(string? novo, Guid corrigidoPorId, DateTimeOffset agora)
+    {
+        GarantirAluno("ter o e-mail corrigido");
+
+        novo = novo?.Trim();
+        if (novo is null || !EmailBemFormado(novo))
+        {
+            return new(null, RecusaDaCorrecaoDeEmail.EmailInvalido);
+        }
+
+        if (string.Equals(novo, Email, StringComparison.Ordinal))
+        {
+            return new(null, null);
+        }
+
+        var correcao = new CorrecaoDeEmail(this, Email, novo, corrigidoPorId, agora);
+        Email = novo;
+        return new(correcao, null);
+    }
+
+    // Troca de curso pela instituição (passo 12, P4): curso novo e o semestre do aluno nele.
+    // As matrículas antigas ficam. O sufixo do arroba, quando há conta, troca no Usuario.
+    public ResultadoDaTrocaDeCurso TrocarDeCurso(Curso curso, int semestre, Guid trocadoPorId, DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(curso);
+        GarantirAluno("trocar de curso");
+
+        if (curso.Id == CursoId)
+        {
+            return new(null, RecusaDaTrocaDeCurso.MesmoCurso);
+        }
+
+        if (semestre < 1 || semestre > curso.DuracaoEmSemestres)
+        {
+            return new(null, RecusaDaTrocaDeCurso.SemestreForaDoCurso);
+        }
+
+        var troca = new TrocaDeCurso(this, CursoId!.Value, Semestre!.Value, curso.Id, semestre, trocadoPorId, agora);
+        CursoId = curso.Id;
+        Semestre = semestre;
+        return new(troca, null);
+    }
+
+    public static bool EmailBemFormado(string email)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        var arroba = email.IndexOf('@', StringComparison.Ordinal);
+        return email.Length > 0
+            && email.Trim().Length == email.Length
+            && !email.Any(char.IsWhiteSpace)
+            && arroba > 0
+            && arroba == email.LastIndexOf('@')
+            && arroba < email.Length - 1;
+    }
+
+    private void GarantirAluno(string acao)
+    {
+        if (!EhAluno)
+        {
+            throw new DomainException($"Só linha de aluno pode {acao}; {Email} é {Papeis}.");
+        }
+    }
+
     // Só a forma. Os domínios aceitos são configuração do passo 3.
     private static string ValidarEmail(string email)
     {

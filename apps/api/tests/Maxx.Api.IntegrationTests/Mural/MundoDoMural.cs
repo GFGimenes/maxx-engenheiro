@@ -115,7 +115,7 @@ internal sealed class MundoDoMural : IAsyncDisposable
             [Marta] = ComSenha(Usuario.CriarPeloSeed(marta, "martaL", agora), hash),
             [Coordenacao] = ComSenha(Usuario.CriarPeloSeed(coordenacao, "coordenacao", agora), hash),
         };
-        contas[Carla].MarcarExAluno(agora);
+        contas[Carla].MarcarExAluno(contas[Carla].Id, agora);
 
         await BancoDeTeste.SalvarAsync(
             factory,

@@ -756,6 +756,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/instituicao/alunos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BuscarAlunosDaBase"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instituicao/alunos/{cadastroId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetFichaDoAluno"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instituicao/alunos/{cadastroId}/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CorrigirEmailDoAluno"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instituicao/alunos/{cadastroId}/ex-aluno": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MarcarExAluno"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/instituicao/alunos/{cadastroId}/curso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["TrocarCursoDoAluno"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -936,6 +1016,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AlunoDaBaseResponse: {
+            /** Format: uuid */
+            id: string;
+            nomeCompleto: string;
+            ra: string;
+            email: string;
+            /** Format: uuid */
+            cursoId: string;
+            curso: string;
+            /** Format: int32 */
+            semestre: number;
+            demonstracao: boolean;
+            conta: null | components["schemas"]["ContaDoAlunoResponse"];
+        };
         AlunoDaTurmaResponse: {
             /** Format: uuid */
             id: string;
@@ -1057,6 +1151,15 @@ export interface components {
             token: string;
             senha: string;
         };
+        ContaDoAlunoResponse: {
+            /** Format: uuid */
+            id: string;
+            nomeDeExibicao: string;
+            arroba: string;
+            /** Format: date-time */
+            exAlunoDesde: null | string;
+            foto: null | string;
+        };
         ContestacaoCriadaResponse: {
             /** Format: uuid */
             id: string;
@@ -1126,6 +1229,9 @@ export interface components {
             fotoUploadId: null | string;
             removerFoto: null | boolean;
         };
+        EmailRequest: {
+            email: null | string;
+        };
         EntradaDeDemonstracaoRequest: {
             chaveDoDispositivo: string;
         };
@@ -1185,6 +1291,10 @@ export interface components {
             descricao: string;
             /** Format: int32 */
             passos: number;
+        };
+        FichaDoAlunoResponse: {
+            aluno: components["schemas"]["AlunoDaBaseResponse"];
+            medalhas: components["schemas"]["MedalhaDaFichaResponse"][];
         };
         FotoDoPostResponse: {
             feed: string;
@@ -1283,6 +1393,23 @@ export interface components {
             pontos: number;
             /** Format: int32 */
             ocorrencia: number;
+            /** Format: date-time */
+            concedidaEm: string;
+        };
+        MedalhaDaFichaResponse: {
+            /** Format: uuid */
+            id: string;
+            item: string;
+            nomeDoItem: string;
+            tier: string;
+            /** Format: int32 */
+            pontos: number;
+            materia: string;
+            /** Format: int32 */
+            ano: number;
+            /** Format: int32 */
+            bimestre: number;
+            concedidaPor: string;
             /** Format: date-time */
             concedidaEm: string;
         };
@@ -1549,6 +1676,12 @@ export interface components {
             /** Format: int32 */
             versao: number;
             texto: string;
+        };
+        TrocaDeCursoRequest: {
+            /** Format: uuid */
+            cursoId: string;
+            /** Format: int32 */
+            semestre: number;
         };
         TurmaDoPerfilResponse: {
             materia: string;
@@ -3562,6 +3695,253 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    BuscarAlunosDaBase: {
+        parameters: {
+            query?: {
+                busca?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlunoDaBaseResponse"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetFichaDoAluno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cadastroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDoAlunoResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CorrigirEmailDoAluno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cadastroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    MarcarExAluno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cadastroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    TrocarCursoDoAluno: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cadastroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrocaDeCursoRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };

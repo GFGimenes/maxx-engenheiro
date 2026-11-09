@@ -159,7 +159,7 @@ public class MedalhaTests
     public void Ex_aluno_nao_recebe_medalha()
     {
         var ana = Aluna();
-        ana.MarcarExAluno(_agora.AddDays(-1));
+        ana.MarcarExAluno(ana.Id, _agora.AddDays(-1));
 
         Assert.Equal(RecusaDaConcessao.ExAluno, Conceder(CatalogoDeTeste.M01, ana).Recusa);
     }

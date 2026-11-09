@@ -221,10 +221,11 @@ public class UsuarioTests
         var ana = Ana();
         var marcacao = _agora.AddYears(4);
 
-        ana.MarcarExAluno(marcacao);
+        ana.MarcarExAluno(ana.Id, marcacao);
 
         Assert.True(ana.EhExAluno);
         Assert.Equal(marcacao, ana.ExAlunoDesde);
+        Assert.Equal(ana.Id, ana.ExAlunoMarcadoPorId);
         Assert.Equal("@anaSouza-EX", ana.Arroba.ToString());
         Assert.Single(ana.PrefixosReservados);
     }
@@ -233,9 +234,9 @@ public class UsuarioTests
     public void Ex_aluno_nao_e_marcado_duas_vezes_nem_troca_de_curso()
     {
         var ana = Ana();
-        ana.MarcarExAluno(_agora);
+        ana.MarcarExAluno(ana.Id, _agora);
 
-        Assert.Throws<DomainException>(() => ana.MarcarExAluno(_agora));
+        Assert.Throws<DomainException>(() => ana.MarcarExAluno(ana.Id, _agora));
         Assert.Throws<DomainException>(() => ana.TrocarDeCurso(_si));
     }
 
@@ -243,7 +244,7 @@ public class UsuarioTests
     public void Ex_aluno_continua_editando_o_prefixo_e_mantem_o_sufixo_ex()
     {
         var ana = Ana();
-        ana.MarcarExAluno(_agora);
+        ana.MarcarExAluno(ana.Id, _agora);
 
         ana.EditarPrefixo("aninha", _agora);
 
@@ -257,7 +258,7 @@ public class UsuarioTests
             CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque"), "renataAlbuquerque", _agora);
 
         Assert.Throws<DomainException>(() => renata.TrocarDeCurso(_cc));
-        Assert.Throws<DomainException>(() => renata.MarcarExAluno(_agora));
+        Assert.Throws<DomainException>(() => renata.MarcarExAluno(renata.Id, _agora));
     }
 
     [Fact]
