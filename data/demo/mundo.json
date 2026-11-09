@@ -1,5 +1,5 @@
 {
-  "observacao": "Mundo de demonstração do seed demo. Cursos e matérias são da UniMax; pessoas, RAs e e-mails são fictícios. Cresce por passo até o seed completo do passo 12. O seed só acrescenta o que falta: nunca apaga, e falha se uma linha que já existe divergir deste arquivo. Cada matéria lista os semestres letivos em que tem turma; professor e aluno listam as matérias, e entram em todas as turmas delas.",
+  "observacao": "Mundo de demonstração do seed demo, completo desde o passo 12. Cursos e matérias são da UniMax; pessoas, RAs e e-mails são fictícios, e o e-mail dos alunos fica no domínio reservado al.unieduk.invalid, que nunca recebe nada. O seed só acrescenta o que falta: nunca apaga, e falha se uma linha que já existe divergir deste arquivo, salvo o que a instituição corrigiu (e-mail e curso do aluno). Cada matéria lista os semestres letivos em que tem turma; o professor entra em todas as turmas das matérias dele, e o aluno nas das matérias dele nos semestres letivos que lista (sem a lista, em todos). Todo aluno do arquivo nasce com conta, sem senha; o ex-aluno é marcado pela instituição no fim do último semestre que cursou.",
   "instituicao": [
     {
       "email": "coordenacao@unieduk.com.br",
@@ -14,19 +14,27 @@
       "materias": [
         {
           "nome": "Algoritmos e Programação",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Estruturas de Dados",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Banco de Dados",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Engenharia de Software",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Redes de Computadores",
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Sistemas Operacionais",
+          "turmas": ["2026/1", "2026/2"]
         }
       ],
       "professores": [
@@ -39,68 +47,566 @@
             "Banco de Dados",
             "Engenharia de Software"
           ]
+        },
+        {
+          "email": "fernando.prado@prof.unieduk.com.br",
+          "nomeCompleto": "Fernando Prado",
+          "materias": ["Redes de Computadores", "Sistemas Operacionais"]
         }
       ],
       "alunos": [
         {
           "ra": "20260101",
-          "email": "ana.souza@al.unieduk.com.br",
+          "email": "ana.souza@al.unieduk.invalid",
           "nomeCompleto": "Ana Beatriz Souza",
           "semestre": 1,
           "materias": [
             "Algoritmos e Programação",
             "Estruturas de Dados",
             "Banco de Dados",
-            "Engenharia de Software"
-          ]
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/2"]
         },
         {
           "ra": "20260102",
-          "email": "lucas.ferreira@al.unieduk.com.br",
+          "email": "lucas.ferreira@al.unieduk.invalid",
           "nomeCompleto": "Lucas Ferreira",
           "semestre": 3,
           "materias": [
             "Algoritmos e Programação",
             "Estruturas de Dados",
             "Banco de Dados",
-            "Engenharia de Software"
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
           ]
         },
         {
           "ra": "20260103",
-          "email": "mariana.costa@al.unieduk.com.br",
+          "email": "mariana.costa@al.unieduk.invalid",
           "nomeCompleto": "Mariana Costa",
           "semestre": 4,
           "materias": [
             "Algoritmos e Programação",
             "Estruturas de Dados",
             "Banco de Dados",
-            "Engenharia de Software"
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
           ]
         },
         {
           "ra": "20260104",
-          "email": "pedro.lima@al.unieduk.com.br",
+          "email": "pedro.lima@al.unieduk.invalid",
           "nomeCompleto": "Pedro Henrique Lima",
           "semestre": 6,
           "materias": [
             "Algoritmos e Programação",
             "Estruturas de Dados",
             "Banco de Dados",
-            "Engenharia de Software"
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
           ]
         },
         {
           "ra": "20260105",
-          "email": "juliana.rocha@al.unieduk.com.br",
+          "email": "juliana.rocha@al.unieduk.invalid",
           "nomeCompleto": "Juliana Rocha",
           "semestre": 8,
           "materias": [
             "Algoritmos e Programação",
             "Estruturas de Dados",
             "Banco de Dados",
-            "Engenharia de Software"
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
           ]
+        },
+        {
+          "ra": "20260106",
+          "email": "alice.andrade@al.unieduk.invalid",
+          "nomeCompleto": "Alice Andrade",
+          "semestre": 1,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260107",
+          "email": "arthur.honorato@al.unieduk.invalid",
+          "nomeCompleto": "Arthur Honorato",
+          "semestre": 2,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260108",
+          "email": "bianca.ramos@al.unieduk.invalid",
+          "nomeCompleto": "Bianca Ramos",
+          "semestre": 3,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260109",
+          "email": "caio.coelho@al.unieduk.invalid",
+          "nomeCompleto": "Caio Coelho",
+          "semestre": 4,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260110",
+          "email": "carolina.pinto@al.unieduk.invalid",
+          "nomeCompleto": "Carolina Pinto",
+          "semestre": 5,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260111",
+          "email": "daniel.farias@al.unieduk.invalid",
+          "nomeCompleto": "Daniel Farias",
+          "semestre": 6,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260112",
+          "email": "eduarda.pacheco@al.unieduk.invalid",
+          "nomeCompleto": "Eduarda Pacheco",
+          "semestre": 7,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260113",
+          "email": "enzo.zanetti@al.unieduk.invalid",
+          "nomeCompleto": "Enzo Zanetti",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260114",
+          "email": "fernanda.medeiros@al.unieduk.invalid",
+          "nomeCompleto": "Fernanda Medeiros",
+          "semestre": 1,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260115",
+          "email": "gabriela.dias@al.unieduk.invalid",
+          "nomeCompleto": "Gabriela Dias",
+          "semestre": 2,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260116",
+          "email": "heitor.macedo@al.unieduk.invalid",
+          "nomeCompleto": "Heitor Macedo",
+          "semestre": 3,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260117",
+          "email": "igor.valente@al.unieduk.invalid",
+          "nomeCompleto": "Igor Valente",
+          "semestre": 4,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260118",
+          "email": "jessica.garcia@al.unieduk.invalid",
+          "nomeCompleto": "Jéssica Garcia",
+          "semestre": 5,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260119",
+          "email": "joao.batista@al.unieduk.invalid",
+          "nomeCompleto": "João Batista",
+          "semestre": 6,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260120",
+          "email": "julia.jardim@al.unieduk.invalid",
+          "nomeCompleto": "Júlia Jardim",
+          "semestre": 7,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260121",
+          "email": "kaique.siqueira@al.unieduk.invalid",
+          "nomeCompleto": "Kaique Siqueira",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260122",
+          "email": "laura.domingues@al.unieduk.invalid",
+          "nomeCompleto": "Laura Domingues",
+          "semestre": 1,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260123",
+          "email": "leonardo.rezende@al.unieduk.invalid",
+          "nomeCompleto": "Leonardo Rezende",
+          "semestre": 2,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260124",
+          "email": "livia.guimaraes@al.unieduk.invalid",
+          "nomeCompleto": "Lívia Guimarães",
+          "semestre": 3,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260125",
+          "email": "luana.queiroga@al.unieduk.invalid",
+          "nomeCompleto": "Luana Queiroga",
+          "semestre": 4,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260126",
+          "email": "manuela.bueno@al.unieduk.invalid",
+          "nomeCompleto": "Manuela Bueno",
+          "semestre": 5,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260127",
+          "email": "matheus.neves@al.unieduk.invalid",
+          "nomeCompleto": "Matheus Neves",
+          "semestre": 6,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260128",
+          "email": "melissa.esteves@al.unieduk.invalid",
+          "nomeCompleto": "Melissa Esteves",
+          "semestre": 7,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260129",
+          "email": "murilo.nascimento@al.unieduk.invalid",
+          "nomeCompleto": "Murilo Nascimento",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ]
+        },
+        {
+          "ra": "20260130",
+          "email": "natalia.xavier@al.unieduk.invalid",
+          "nomeCompleto": "Natália Xavier",
+          "semestre": 1,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260131",
+          "email": "nicolas.leal@al.unieduk.invalid",
+          "nomeCompleto": "Nicolas Leal",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260132",
+          "email": "olivia.campos@al.unieduk.invalid",
+          "nomeCompleto": "Olívia Campos",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260133",
+          "email": "otavio.lopes@al.unieduk.invalid",
+          "nomeCompleto": "Otávio Lopes",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260134",
+          "email": "paula.toledo@al.unieduk.invalid",
+          "nomeCompleto": "Paula Toledo",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260135",
+          "email": "renan.freitas@al.unieduk.invalid",
+          "nomeCompleto": "Renan Freitas",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260136",
+          "email": "rebeca.andrade@al.unieduk.invalid",
+          "nomeCompleto": "Rebeca Andrade",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260137",
+          "email": "samuel.honorato@al.unieduk.invalid",
+          "nomeCompleto": "Samuel Honorato",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260138",
+          "email": "sabrina.ramos@al.unieduk.invalid",
+          "nomeCompleto": "Sabrina Ramos",
+          "semestre": 8,
+          "materias": [
+            "Algoritmos e Programação",
+            "Estruturas de Dados",
+            "Banco de Dados",
+            "Engenharia de Software",
+            "Redes de Computadores",
+            "Sistemas Operacionais"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
         }
       ]
     },
@@ -111,19 +617,27 @@
       "materias": [
         {
           "nome": "Teoria Geral da Administração",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Contabilidade Gerencial",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Marketing",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Gestão de Pessoas",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Finanças Corporativas",
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Logística Empresarial",
+          "turmas": ["2026/1", "2026/2"]
         }
       ],
       "professores": [
@@ -136,68 +650,565 @@
             "Marketing",
             "Gestão de Pessoas"
           ]
+        },
+        {
+          "email": "patricia.lacerda@prof.unieduk.com.br",
+          "nomeCompleto": "Patrícia Lacerda",
+          "materias": ["Finanças Corporativas", "Logística Empresarial"]
         }
       ],
       "alunos": [
         {
           "ra": "20260201",
-          "email": "gabriel.martins@al.unieduk.com.br",
+          "email": "gabriel.martins@al.unieduk.invalid",
           "nomeCompleto": "Gabriel Martins",
           "semestre": 2,
           "materias": [
             "Teoria Geral da Administração",
             "Contabilidade Gerencial",
             "Marketing",
-            "Gestão de Pessoas"
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
           ]
         },
         {
           "ra": "20260202",
-          "email": "larissa.oliveira@al.unieduk.com.br",
+          "email": "larissa.oliveira@al.unieduk.invalid",
           "nomeCompleto": "Larissa Oliveira",
           "semestre": 3,
           "materias": [
             "Teoria Geral da Administração",
             "Contabilidade Gerencial",
             "Marketing",
-            "Gestão de Pessoas"
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
           ]
         },
         {
           "ra": "20260203",
-          "email": "rafael.gomes@al.unieduk.com.br",
+          "email": "rafael.gomes@al.unieduk.invalid",
           "nomeCompleto": "Rafael Gomes",
           "semestre": 5,
           "materias": [
             "Teoria Geral da Administração",
             "Contabilidade Gerencial",
             "Marketing",
-            "Gestão de Pessoas"
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
           ]
         },
         {
           "ra": "20260204",
-          "email": "camila.ribeiro@al.unieduk.com.br",
+          "email": "camila.ribeiro@al.unieduk.invalid",
           "nomeCompleto": "Camila Ribeiro",
           "semestre": 7,
           "materias": [
             "Teoria Geral da Administração",
             "Contabilidade Gerencial",
             "Marketing",
-            "Gestão de Pessoas"
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
           ]
         },
         {
           "ra": "20260205",
-          "email": "thiago.almeida@al.unieduk.com.br",
+          "email": "thiago.almeida@al.unieduk.invalid",
           "nomeCompleto": "Thiago Almeida",
           "semestre": 8,
           "materias": [
             "Teoria Geral da Administração",
             "Contabilidade Gerencial",
             "Marketing",
-            "Gestão de Pessoas"
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
           ]
+        },
+        {
+          "ra": "20260206",
+          "email": "tatiane.coelho@al.unieduk.invalid",
+          "nomeCompleto": "Tatiane Coelho",
+          "semestre": 1,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260207",
+          "email": "vitor.pinto@al.unieduk.invalid",
+          "nomeCompleto": "Vitor Pinto",
+          "semestre": 2,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260208",
+          "email": "yasmin.farias@al.unieduk.invalid",
+          "nomeCompleto": "Yasmin Farias",
+          "semestre": 3,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260209",
+          "email": "andre.pacheco@al.unieduk.invalid",
+          "nomeCompleto": "André Pacheco",
+          "semestre": 4,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260210",
+          "email": "clara.zanetti@al.unieduk.invalid",
+          "nomeCompleto": "Clara Zanetti",
+          "semestre": 5,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260211",
+          "email": "davi.medeiros@al.unieduk.invalid",
+          "nomeCompleto": "Davi Medeiros",
+          "semestre": 6,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260212",
+          "email": "elisa.dias@al.unieduk.invalid",
+          "nomeCompleto": "Elisa Dias",
+          "semestre": 7,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260213",
+          "email": "alice.nascimento@al.unieduk.invalid",
+          "nomeCompleto": "Alice Nascimento",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260214",
+          "email": "arthur.xavier@al.unieduk.invalid",
+          "nomeCompleto": "Arthur Xavier",
+          "semestre": 1,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260215",
+          "email": "bianca.leal@al.unieduk.invalid",
+          "nomeCompleto": "Bianca Leal",
+          "semestre": 2,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260216",
+          "email": "caio.campos@al.unieduk.invalid",
+          "nomeCompleto": "Caio Campos",
+          "semestre": 3,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260217",
+          "email": "carolina.lopes@al.unieduk.invalid",
+          "nomeCompleto": "Carolina Lopes",
+          "semestre": 4,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260218",
+          "email": "daniel.toledo@al.unieduk.invalid",
+          "nomeCompleto": "Daniel Toledo",
+          "semestre": 5,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260219",
+          "email": "eduarda.freitas@al.unieduk.invalid",
+          "nomeCompleto": "Eduarda Freitas",
+          "semestre": 6,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260220",
+          "email": "enzo.andrade@al.unieduk.invalid",
+          "nomeCompleto": "Enzo Andrade",
+          "semestre": 7,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260221",
+          "email": "fernanda.honorato@al.unieduk.invalid",
+          "nomeCompleto": "Fernanda Honorato",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260222",
+          "email": "gabriela.ramos@al.unieduk.invalid",
+          "nomeCompleto": "Gabriela Ramos",
+          "semestre": 1,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260223",
+          "email": "heitor.coelho@al.unieduk.invalid",
+          "nomeCompleto": "Heitor Coelho",
+          "semestre": 2,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260224",
+          "email": "igor.pinto@al.unieduk.invalid",
+          "nomeCompleto": "Igor Pinto",
+          "semestre": 3,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260225",
+          "email": "jessica.farias@al.unieduk.invalid",
+          "nomeCompleto": "Jéssica Farias",
+          "semestre": 4,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260226",
+          "email": "joao.pacheco@al.unieduk.invalid",
+          "nomeCompleto": "João Pacheco",
+          "semestre": 5,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260227",
+          "email": "julia.zanetti@al.unieduk.invalid",
+          "nomeCompleto": "Júlia Zanetti",
+          "semestre": 6,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260228",
+          "email": "kaique.medeiros@al.unieduk.invalid",
+          "nomeCompleto": "Kaique Medeiros",
+          "semestre": 7,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260229",
+          "email": "laura.dias@al.unieduk.invalid",
+          "nomeCompleto": "Laura Dias",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ]
+        },
+        {
+          "ra": "20260230",
+          "email": "leonardo.macedo@al.unieduk.invalid",
+          "nomeCompleto": "Leonardo Macedo",
+          "semestre": 1,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260231",
+          "email": "livia.valente@al.unieduk.invalid",
+          "nomeCompleto": "Lívia Valente",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260232",
+          "email": "luana.garcia@al.unieduk.invalid",
+          "nomeCompleto": "Luana Garcia",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260233",
+          "email": "manuela.batista@al.unieduk.invalid",
+          "nomeCompleto": "Manuela Batista",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260234",
+          "email": "matheus.jardim@al.unieduk.invalid",
+          "nomeCompleto": "Matheus Jardim",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260235",
+          "email": "melissa.siqueira@al.unieduk.invalid",
+          "nomeCompleto": "Melissa Siqueira",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260236",
+          "email": "murilo.domingues@al.unieduk.invalid",
+          "nomeCompleto": "Murilo Domingues",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260237",
+          "email": "natalia.rezende@al.unieduk.invalid",
+          "nomeCompleto": "Natália Rezende",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260238",
+          "email": "nicolas.guimaraes@al.unieduk.invalid",
+          "nomeCompleto": "Nicolas Guimarães",
+          "semestre": 8,
+          "materias": [
+            "Teoria Geral da Administração",
+            "Contabilidade Gerencial",
+            "Marketing",
+            "Gestão de Pessoas",
+            "Finanças Corporativas",
+            "Logística Empresarial"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
         }
       ]
     },
@@ -208,19 +1219,27 @@
       "materias": [
         {
           "nome": "Anatomia",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Fisiologia",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Bioquímica",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Histologia",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Farmacologia",
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Semiologia",
+          "turmas": ["2026/1", "2026/2"]
         }
       ],
       "professores": [
@@ -228,43 +1247,549 @@
           "email": "helena.duarte@prof.unieduk.com.br",
           "nomeCompleto": "Helena Duarte",
           "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+        },
+        {
+          "email": "ricardo.tavares@prof.unieduk.com.br",
+          "nomeCompleto": "Ricardo Tavares",
+          "materias": ["Farmacologia", "Semiologia"]
         }
       ],
       "alunos": [
         {
           "ra": "20260301",
-          "email": "beatriz.carvalho@al.unieduk.com.br",
+          "email": "beatriz.carvalho@al.unieduk.invalid",
           "nomeCompleto": "Beatriz Carvalho",
           "semestre": 1,
-          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/2"]
         },
         {
           "ra": "20260302",
-          "email": "felipe.araujo@al.unieduk.com.br",
+          "email": "felipe.araujo@al.unieduk.invalid",
           "nomeCompleto": "Felipe Araújo",
           "semestre": 4,
-          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
         },
         {
           "ra": "20260303",
-          "email": "isabela.moreira@al.unieduk.com.br",
+          "email": "isabela.moreira@al.unieduk.invalid",
           "nomeCompleto": "Isabela Moreira",
           "semestre": 6,
-          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
         },
         {
           "ra": "20260304",
-          "email": "gustavo.pereira@al.unieduk.com.br",
+          "email": "gustavo.pereira@al.unieduk.invalid",
           "nomeCompleto": "Gustavo Pereira",
           "semestre": 9,
-          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
         },
         {
           "ra": "20260305",
-          "email": "leticia.barbosa@al.unieduk.com.br",
+          "email": "leticia.barbosa@al.unieduk.invalid",
           "nomeCompleto": "Letícia Barbosa",
           "semestre": 12,
-          "materias": ["Anatomia", "Fisiologia", "Bioquímica", "Histologia"]
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260306",
+          "email": "olivia.queiroga@al.unieduk.invalid",
+          "nomeCompleto": "Olívia Queiroga",
+          "semestre": 1,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260307",
+          "email": "otavio.bueno@al.unieduk.invalid",
+          "nomeCompleto": "Otávio Bueno",
+          "semestre": 2,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260308",
+          "email": "paula.neves@al.unieduk.invalid",
+          "nomeCompleto": "Paula Neves",
+          "semestre": 3,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260309",
+          "email": "renan.esteves@al.unieduk.invalid",
+          "nomeCompleto": "Renan Esteves",
+          "semestre": 4,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260310",
+          "email": "rebeca.nascimento@al.unieduk.invalid",
+          "nomeCompleto": "Rebeca Nascimento",
+          "semestre": 5,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260311",
+          "email": "samuel.xavier@al.unieduk.invalid",
+          "nomeCompleto": "Samuel Xavier",
+          "semestre": 6,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260312",
+          "email": "sabrina.leal@al.unieduk.invalid",
+          "nomeCompleto": "Sabrina Leal",
+          "semestre": 7,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260313",
+          "email": "tatiane.campos@al.unieduk.invalid",
+          "nomeCompleto": "Tatiane Campos",
+          "semestre": 8,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260314",
+          "email": "vitor.lopes@al.unieduk.invalid",
+          "nomeCompleto": "Vitor Lopes",
+          "semestre": 9,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260315",
+          "email": "yasmin.toledo@al.unieduk.invalid",
+          "nomeCompleto": "Yasmin Toledo",
+          "semestre": 10,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260316",
+          "email": "andre.freitas@al.unieduk.invalid",
+          "nomeCompleto": "André Freitas",
+          "semestre": 11,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260317",
+          "email": "clara.andrade@al.unieduk.invalid",
+          "nomeCompleto": "Clara Andrade",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260318",
+          "email": "davi.honorato@al.unieduk.invalid",
+          "nomeCompleto": "Davi Honorato",
+          "semestre": 1,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260319",
+          "email": "elisa.ramos@al.unieduk.invalid",
+          "nomeCompleto": "Elisa Ramos",
+          "semestre": 2,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260320",
+          "email": "alice.domingues@al.unieduk.invalid",
+          "nomeCompleto": "Alice Domingues",
+          "semestre": 3,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260321",
+          "email": "arthur.rezende@al.unieduk.invalid",
+          "nomeCompleto": "Arthur Rezende",
+          "semestre": 4,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260322",
+          "email": "bianca.guimaraes@al.unieduk.invalid",
+          "nomeCompleto": "Bianca Guimarães",
+          "semestre": 5,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260323",
+          "email": "caio.queiroga@al.unieduk.invalid",
+          "nomeCompleto": "Caio Queiroga",
+          "semestre": 6,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260324",
+          "email": "carolina.bueno@al.unieduk.invalid",
+          "nomeCompleto": "Carolina Bueno",
+          "semestre": 7,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260325",
+          "email": "daniel.neves@al.unieduk.invalid",
+          "nomeCompleto": "Daniel Neves",
+          "semestre": 8,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260326",
+          "email": "eduarda.esteves@al.unieduk.invalid",
+          "nomeCompleto": "Eduarda Esteves",
+          "semestre": 9,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260327",
+          "email": "enzo.nascimento@al.unieduk.invalid",
+          "nomeCompleto": "Enzo Nascimento",
+          "semestre": 10,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260328",
+          "email": "fernanda.xavier@al.unieduk.invalid",
+          "nomeCompleto": "Fernanda Xavier",
+          "semestre": 11,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260329",
+          "email": "gabriela.leal@al.unieduk.invalid",
+          "nomeCompleto": "Gabriela Leal",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ]
+        },
+        {
+          "ra": "20260330",
+          "email": "heitor.campos@al.unieduk.invalid",
+          "nomeCompleto": "Heitor Campos",
+          "semestre": 1,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260331",
+          "email": "igor.lopes@al.unieduk.invalid",
+          "nomeCompleto": "Igor Lopes",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260332",
+          "email": "jessica.toledo@al.unieduk.invalid",
+          "nomeCompleto": "Jéssica Toledo",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260333",
+          "email": "joao.freitas@al.unieduk.invalid",
+          "nomeCompleto": "João Freitas",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260334",
+          "email": "julia.andrade@al.unieduk.invalid",
+          "nomeCompleto": "Júlia Andrade",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260335",
+          "email": "kaique.honorato@al.unieduk.invalid",
+          "nomeCompleto": "Kaique Honorato",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260336",
+          "email": "laura.ramos@al.unieduk.invalid",
+          "nomeCompleto": "Laura Ramos",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260337",
+          "email": "leonardo.coelho@al.unieduk.invalid",
+          "nomeCompleto": "Leonardo Coelho",
+          "semestre": 12,
+          "materias": [
+            "Anatomia",
+            "Fisiologia",
+            "Bioquímica",
+            "Histologia",
+            "Farmacologia",
+            "Semiologia"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
         }
       ]
     },
@@ -275,19 +1800,27 @@
       "materias": [
         {
           "nome": "Desvendando a Lógica Digital",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Código Criativo para IA",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Matemática Inteligente: Da Lógica aos Dados",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
         },
         {
           "nome": "Despertando a Inteligência Artificial",
-          "turmas": ["2026/2"]
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Estatística para Ciência de Dados",
+          "turmas": ["2026/1", "2026/2"]
+        },
+        {
+          "nome": "Aprendizado de Máquina",
+          "turmas": ["2026/1", "2026/2"]
         }
       ],
       "professores": [
@@ -300,68 +1833,553 @@
             "Matemática Inteligente: Da Lógica aos Dados",
             "Despertando a Inteligência Artificial"
           ]
+        },
+        {
+          "email": "vanessa.queiroz@prof.unieduk.com.br",
+          "nomeCompleto": "Vanessa Queiroz",
+          "materias": [
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
         }
       ],
       "alunos": [
         {
           "ra": "20260401",
-          "email": "vinicius.nogueira@al.unieduk.com.br",
+          "email": "vinicius.nogueira@al.unieduk.invalid",
           "nomeCompleto": "Vinícius Nogueira",
           "semestre": 1,
           "materias": [
             "Desvendando a Lógica Digital",
             "Código Criativo para IA",
             "Matemática Inteligente: Da Lógica aos Dados",
-            "Despertando a Inteligência Artificial"
-          ]
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/2"]
         },
         {
           "ra": "20260402",
-          "email": "sofia.mendes@al.unieduk.com.br",
+          "email": "sofia.mendes@al.unieduk.invalid",
           "nomeCompleto": "Sofia Mendes",
           "semestre": 2,
           "materias": [
             "Desvendando a Lógica Digital",
             "Código Criativo para IA",
             "Matemática Inteligente: Da Lógica aos Dados",
-            "Despertando a Inteligência Artificial"
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
           ]
         },
         {
           "ra": "20260403",
-          "email": "bruno.cardoso@al.unieduk.com.br",
+          "email": "bruno.cardoso@al.unieduk.invalid",
           "nomeCompleto": "Bruno Cardoso",
           "semestre": 4,
           "materias": [
             "Desvendando a Lógica Digital",
             "Código Criativo para IA",
             "Matemática Inteligente: Da Lógica aos Dados",
-            "Despertando a Inteligência Artificial"
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
           ]
         },
         {
           "ra": "20260404",
-          "email": "amanda.vieira@al.unieduk.com.br",
+          "email": "amanda.vieira@al.unieduk.invalid",
           "nomeCompleto": "Amanda Vieira",
           "semestre": 5,
           "materias": [
             "Desvendando a Lógica Digital",
             "Código Criativo para IA",
             "Matemática Inteligente: Da Lógica aos Dados",
-            "Despertando a Inteligência Artificial"
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
           ]
         },
         {
           "ra": "20260405",
-          "email": "diego.santana@al.unieduk.com.br",
+          "email": "diego.santana@al.unieduk.invalid",
           "nomeCompleto": "Diego Santana",
           "semestre": 7,
           "materias": [
             "Desvendando a Lógica Digital",
             "Código Criativo para IA",
             "Matemática Inteligente: Da Lógica aos Dados",
-            "Despertando a Inteligência Artificial"
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
           ]
+        },
+        {
+          "ra": "20260406",
+          "email": "livia.pinto@al.unieduk.invalid",
+          "nomeCompleto": "Lívia Pinto",
+          "semestre": 1,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260407",
+          "email": "luana.farias@al.unieduk.invalid",
+          "nomeCompleto": "Luana Farias",
+          "semestre": 2,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260408",
+          "email": "manuela.pacheco@al.unieduk.invalid",
+          "nomeCompleto": "Manuela Pacheco",
+          "semestre": 3,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260409",
+          "email": "matheus.zanetti@al.unieduk.invalid",
+          "nomeCompleto": "Matheus Zanetti",
+          "semestre": 4,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260410",
+          "email": "melissa.medeiros@al.unieduk.invalid",
+          "nomeCompleto": "Melissa Medeiros",
+          "semestre": 5,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260411",
+          "email": "murilo.dias@al.unieduk.invalid",
+          "nomeCompleto": "Murilo Dias",
+          "semestre": 6,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260412",
+          "email": "natalia.macedo@al.unieduk.invalid",
+          "nomeCompleto": "Natália Macedo",
+          "semestre": 7,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260413",
+          "email": "nicolas.valente@al.unieduk.invalid",
+          "nomeCompleto": "Nicolas Valente",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260414",
+          "email": "olivia.garcia@al.unieduk.invalid",
+          "nomeCompleto": "Olívia Garcia",
+          "semestre": 1,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260415",
+          "email": "otavio.batista@al.unieduk.invalid",
+          "nomeCompleto": "Otávio Batista",
+          "semestre": 2,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260416",
+          "email": "paula.jardim@al.unieduk.invalid",
+          "nomeCompleto": "Paula Jardim",
+          "semestre": 3,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260417",
+          "email": "renan.siqueira@al.unieduk.invalid",
+          "nomeCompleto": "Renan Siqueira",
+          "semestre": 4,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260418",
+          "email": "rebeca.domingues@al.unieduk.invalid",
+          "nomeCompleto": "Rebeca Domingues",
+          "semestre": 5,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260419",
+          "email": "samuel.rezende@al.unieduk.invalid",
+          "nomeCompleto": "Samuel Rezende",
+          "semestre": 6,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260420",
+          "email": "sabrina.guimaraes@al.unieduk.invalid",
+          "nomeCompleto": "Sabrina Guimarães",
+          "semestre": 7,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260421",
+          "email": "tatiane.queiroga@al.unieduk.invalid",
+          "nomeCompleto": "Tatiane Queiroga",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260422",
+          "email": "vitor.bueno@al.unieduk.invalid",
+          "nomeCompleto": "Vitor Bueno",
+          "semestre": 1,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260423",
+          "email": "yasmin.neves@al.unieduk.invalid",
+          "nomeCompleto": "Yasmin Neves",
+          "semestre": 2,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260424",
+          "email": "andre.esteves@al.unieduk.invalid",
+          "nomeCompleto": "André Esteves",
+          "semestre": 3,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260425",
+          "email": "clara.nascimento@al.unieduk.invalid",
+          "nomeCompleto": "Clara Nascimento",
+          "semestre": 4,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260426",
+          "email": "davi.xavier@al.unieduk.invalid",
+          "nomeCompleto": "Davi Xavier",
+          "semestre": 5,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260427",
+          "email": "elisa.leal@al.unieduk.invalid",
+          "nomeCompleto": "Elisa Leal",
+          "semestre": 6,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260428",
+          "email": "alice.dias@al.unieduk.invalid",
+          "nomeCompleto": "Alice Dias",
+          "semestre": 7,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260429",
+          "email": "arthur.macedo@al.unieduk.invalid",
+          "nomeCompleto": "Arthur Macedo",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ]
+        },
+        {
+          "ra": "20260430",
+          "email": "bianca.valente@al.unieduk.invalid",
+          "nomeCompleto": "Bianca Valente",
+          "semestre": 1,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/2"]
+        },
+        {
+          "ra": "20260431",
+          "email": "caio.garcia@al.unieduk.invalid",
+          "nomeCompleto": "Caio Garcia",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260432",
+          "email": "carolina.batista@al.unieduk.invalid",
+          "nomeCompleto": "Carolina Batista",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260433",
+          "email": "daniel.jardim@al.unieduk.invalid",
+          "nomeCompleto": "Daniel Jardim",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260434",
+          "email": "eduarda.siqueira@al.unieduk.invalid",
+          "nomeCompleto": "Eduarda Siqueira",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260435",
+          "email": "enzo.domingues@al.unieduk.invalid",
+          "nomeCompleto": "Enzo Domingues",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260436",
+          "email": "fernanda.rezende@al.unieduk.invalid",
+          "nomeCompleto": "Fernanda Rezende",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
+        },
+        {
+          "ra": "20260437",
+          "email": "gabriela.guimaraes@al.unieduk.invalid",
+          "nomeCompleto": "Gabriela Guimarães",
+          "semestre": 8,
+          "materias": [
+            "Desvendando a Lógica Digital",
+            "Código Criativo para IA",
+            "Matemática Inteligente: Da Lógica aos Dados",
+            "Despertando a Inteligência Artificial",
+            "Estatística para Ciência de Dados",
+            "Aprendizado de Máquina"
+          ],
+          "semestresLetivos": ["2026/1"],
+          "exAluno": true
         }
       ]
     }

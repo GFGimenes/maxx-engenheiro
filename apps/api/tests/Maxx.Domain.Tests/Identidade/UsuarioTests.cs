@@ -262,6 +262,24 @@ public class UsuarioTests
     }
 
     [Fact]
+    public void Aluno_do_mundo_nasce_do_seed_sem_senha_com_o_nome_completo_e_o_instante_dado()
+    {
+        var cadastro = AnaNaBase();
+        var inicio = new DateTimeOffset(2026, 1, 26, 3, 0, 0, TimeSpan.Zero);
+
+        var ana = Usuario.CriarAlunoPeloSeed(cadastro, _cc, "anaSouza", inicio);
+
+        Assert.Equal(("Ana Souza", "@anaSouza-CC", inicio), (ana.NomeDeExibicao, ana.Arroba.ToString(), ana.CriadoEm));
+        Assert.False(ana.TemSenha);
+        Assert.Empty(ana.AceitesDeTermo);
+        Assert.Throws<DomainException>(() => Usuario.CriarAlunoPeloSeed(AnaNaBase(), _si, "anaSouza", inicio));
+        Assert.Throws<DomainException>(() => Usuario.CriarAlunoPeloSeed(
+            CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque"), _cc, "renataA", inicio));
+        Assert.Throws<DomainException>(() => Usuario.CriarAlunoPeloSeed(
+            CadastroElegivel.AlunoDeDemonstracao("DEMOABCD1234", "Dani Demo", _cc), _cc, "daniDemo", inicio));
+    }
+
+    [Fact]
     public void Aluno_de_demonstracao_entra_sem_senha_com_lote_e_chave()
     {
         var cadastro = CadastroElegivel.AlunoDeDemonstracao("DEMOABCD2345", "Ana Paula", _cc);

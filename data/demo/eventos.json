@@ -1,12 +1,84 @@
 {
-  "observacao": "Eventos semeados do seed demo, a que o prêmio de participação se amarra. Fictícios. Cada evento lista os prêmios de participação que aceita e, quando for o caso, a sigla do curso a que se restringe. A apresentação de trabalho em sala (P17) não tem evento semeado: vai sempre por texto livre, com a matéria. Datas inclusivas, interpretadas em America/Sao_Paulo. O seed só acrescenta e falha se um evento que já existe divergir deste arquivo. O resto dos eventos, passados e futuros, chega com o seed completo do passo 12.",
+  "observacao": "Eventos semeados do seed demo, a que o prêmio de participação se amarra. Fictícios. Cada evento lista os prêmios de participação que aceita e, quando for o caso, a sigla do curso a que se restringe. A apresentação de trabalho em sala (P17) não tem evento semeado: vai sempre por texto livre, com a matéria. Datas inclusivas, interpretadas em America/Sao_Paulo. O seed só acrescenta e falha se um evento que já existe divergir deste arquivo. Desde o passo 12, com eventos passados (de 2026/1 e do começo de 2026/2) e futuros (depois de novembro de 2026), e atividades de duração como monitoria, extensão e iniciação científica.",
   "eventos": [
+    {
+      "codigo": "palestra-abertura-2026-1",
+      "nome": "Palestra de abertura do semestre",
+      "inicio": "2026-02-02",
+      "fim": "2026-02-02",
+      "itens": ["P01"]
+    },
+    {
+      "codigo": "monitoria-2026-1",
+      "nome": "Programa de monitoria do 1º semestre",
+      "inicio": "2026-02-09",
+      "fim": "2026-06-26",
+      "itens": ["P10"]
+    },
+    {
+      "codigo": "iniciacao-cientifica-2026",
+      "nome": "Programa de iniciação científica 2026",
+      "inicio": "2026-03-02",
+      "fim": "2026-11-30",
+      "itens": ["P14", "P15"]
+    },
+    {
+      "codigo": "minicurso-git-2026-1",
+      "nome": "Minicurso de Git e GitHub",
+      "inicio": "2026-03-21",
+      "fim": "2026-03-21",
+      "itens": ["P07"]
+    },
+    {
+      "codigo": "semana-academica-adm-2026-1",
+      "nome": "Semana Acadêmica de Administração",
+      "inicio": "2026-04-13",
+      "fim": "2026-04-17",
+      "itens": ["P06", "P08", "P09"],
+      "curso": "ADM"
+    },
+    {
+      "codigo": "campanha-do-agasalho-2026-1",
+      "nome": "Campanha do agasalho UniMax",
+      "inicio": "2026-05-04",
+      "fim": "2026-05-15",
+      "itens": ["P02"]
+    },
+    {
+      "codigo": "semana-academica-ia-2026-1",
+      "nome": "Semana Acadêmica de Inteligência Artificial",
+      "inicio": "2026-05-18",
+      "fim": "2026-05-22",
+      "itens": ["P06", "P08", "P09"],
+      "curso": "IA"
+    },
+    {
+      "codigo": "monitoria-2026-2",
+      "nome": "Programa de monitoria do 2º semestre",
+      "inicio": "2026-08-03",
+      "fim": "2026-12-04",
+      "itens": ["P10"]
+    },
     {
       "codigo": "palestra-abertura-2026-2",
       "nome": "Palestra de abertura do semestre",
       "inicio": "2026-08-03",
       "fim": "2026-08-03",
       "itens": ["P01"]
+    },
+    {
+      "codigo": "projeto-de-extensao-2026-2",
+      "nome": "Projeto de extensão Maxx na comunidade",
+      "inicio": "2026-08-10",
+      "fim": "2026-11-27",
+      "itens": ["P11"]
+    },
+    {
+      "codigo": "minicurso-python-2026-2",
+      "nome": "Minicurso de Python para análise de dados",
+      "inicio": "2026-08-15",
+      "fim": "2026-08-15",
+      "itens": ["P07"]
     },
     {
       "codigo": "doacao-de-sangue-2026-2",
@@ -39,6 +111,13 @@
       "curso": "MED"
     },
     {
+      "codigo": "congresso-regional-2026-2",
+      "nome": "Congresso regional de tecnologia e gestão",
+      "inicio": "2026-10-14",
+      "fim": "2026-10-16",
+      "itens": ["P12", "P15"]
+    },
+    {
       "codigo": "visita-tecnica-adm-2026-2",
       "nome": "Visita técnica a um centro de distribuição",
       "inicio": "2026-10-21",
@@ -54,12 +133,33 @@
       "itens": ["P13", "P16"]
     },
     {
+      "codigo": "feira-de-carreiras-2026-2",
+      "nome": "Feira de carreiras e estágios",
+      "inicio": "2026-11-18",
+      "fim": "2026-11-18",
+      "itens": ["P03"]
+    },
+    {
+      "codigo": "campanha-de-natal-2026-2",
+      "nome": "Campanha de Natal solidário",
+      "inicio": "2026-11-23",
+      "fim": "2026-12-04",
+      "itens": ["P02"]
+    },
+    {
       "codigo": "mostra-ia-2026-2",
       "nome": "Mostra de projetos de Inteligência Artificial",
       "inicio": "2026-11-25",
       "fim": "2026-11-26",
       "itens": ["P08", "P09"],
       "curso": "IA"
+    },
+    {
+      "codigo": "palestra-encerramento-2026-2",
+      "nome": "Palestra de encerramento do semestre",
+      "inicio": "2026-12-02",
+      "fim": "2026-12-02",
+      "itens": ["P01"]
     }
   ]
 }

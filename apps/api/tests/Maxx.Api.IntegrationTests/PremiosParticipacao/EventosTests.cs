@@ -21,8 +21,8 @@ namespace Maxx.Api.IntegrationTests.PremiosParticipacao;
 public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
     private const string _senha = "senha-boa-123";
-    private const string _anaDeCc = "ana.souza@al.unieduk.com.br";
-    private const string _gabrielDeAdm = "gabriel.martins@al.unieduk.com.br";
+    private const string _anaDeCc = "ana.souza@al.unieduk.invalid";
+    private const string _gabrielDeAdm = "gabriel.martins@al.unieduk.invalid";
     private const string _renataProfessora = "renata.albuquerque@prof.unieduk.com.br";
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -39,17 +39,22 @@ public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<Postg
 
         var eventos = await EventosAsync(ana);
 
-        // Fora: os de Medicina, Administração e IA, e a mostra, que ainda não começou.
+        // Fora: os de Medicina, Administração e IA, os que ainda não começaram (feira, mostra) e
+        // a iniciação científica, que começou em 2026/1, antes do fim do último semestre encerrado.
         Assert.Equal(
             [
                 "maratona-de-programacao-2026",
+                "congresso-regional-2026-2",
                 "semana-academica-cc-2026-2",
                 "workshop-carreira-2026-2",
                 "doacao-de-sangue-2026-2",
+                "minicurso-python-2026-2",
+                "projeto-de-extensao-2026-2",
                 "palestra-abertura-2026-2",
+                "monitoria-2026-2",
             ],
             await mundo.CodigosAsync(eventos));
-        var semana = eventos[1];
+        var semana = eventos[2];
         Assert.Equal(
             ("Semana Acadêmica de Ciência da Computação", new DateOnly(2026, 9, 14), new DateOnly(2026, 9, 18)),
             (semana.Nome, semana.Inicio, semana.Fim));
@@ -85,7 +90,7 @@ public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<Postg
     [Theory]
     [InlineData("P06", new[] { "semana-academica-cc-2026-2" })]
     [InlineData(" P13 ", new[] { "maratona-de-programacao-2026" })]
-    [InlineData("P11", new string[0])]
+    [InlineData("P11", new[] { "projeto-de-extensao-2026-2" })]
 
     // Apresentação em sala vai sempre por texto livre.
     [InlineData("P17", new string[0])]
@@ -145,7 +150,7 @@ public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<Postg
         return (await resposta.Content.ReadFromJsonAsync<List<EventoResponse>>(Ct))!;
     }
 
-    // Seed base e demo, as contas de dois alunos e a senha da professora, que o seed cria sem.
+    // Seed base e demo, e a senha de dois alunos e da professora, que o seed cria sem.
     private async Task<Mundo> MundoAsync()
     {
         var relogio = new RelogioDeTeste();
@@ -159,20 +164,16 @@ public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<Postg
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
         var hash = new Argon2idSenhaHasher().Hash(_senha);
-        foreach (var (email, prefixo) in new[] { (_anaDeCc, "anaSouza"), (_gabrielDeAdm, "gabrielMartins") })
+        foreach (var email in new[] { _anaDeCc, _gabrielDeAdm, _renataProfessora })
         {
-            var cadastro = await db.Set<CadastroElegivel>().SingleAsync(cadastro => cadastro.Email == email, Ct);
-            var curso = await db.Set<Curso>().SingleAsync(curso => curso.Id == cadastro.CursoId, Ct);
-            db.Add(Usuario.CadastrarAluno(cadastro, curso, cadastro.NomeCompleto, prefixo, hash, relogio.GetUtcNow()));
+            var conta = await (
+                    from usuario in db.Set<Usuario>()
+                    join cadastro in db.Set<CadastroElegivel>() on usuario.CadastroElegivelId equals cadastro.Id
+                    where cadastro.Email == email
+                    select usuario)
+                .SingleAsync(Ct);
+            conta.DefinirSenha(hash);
         }
-
-        var renata = await (
-                from usuario in db.Set<Usuario>()
-                join cadastro in db.Set<CadastroElegivel>() on usuario.CadastroElegivelId equals cadastro.Id
-                where cadastro.Email == _renataProfessora
-                select usuario)
-            .SingleAsync(Ct);
-        renata.DefinirSenha(hash);
         await db.SaveChangesAsync(Ct);
 
         return new Mundo(factory, relogio);

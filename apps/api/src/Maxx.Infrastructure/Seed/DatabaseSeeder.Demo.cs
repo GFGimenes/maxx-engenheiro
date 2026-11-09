@@ -1,8 +1,12 @@
+using Maxx.Application.Fila;
+using Maxx.Application.Medalhas;
+using Maxx.Application.Ranking;
 using Maxx.Domain;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +17,12 @@ namespace Maxx.Infrastructure.Seed;
 // Diferente do base, o demo só acrescenta. Linha no banco que não está no arquivo fica
 // (é onde vão morar os alunos de demonstração criados pela banca, no passo 5). Linha que
 // está nos dois e diverge faz o seed falhar: corrigir cadastro é ato da instituição, não
-// do seed.
+// do seed. Por isso o aluno é achado pelo RA, e o e-mail ou o curso que a instituição
+// corrigiu pela área web (passo 12) vencem o arquivo.
+//
+// Desde o passo 12, todo aluno do arquivo nasce com conta, sem senha, criada no início do
+// primeiro semestre que cursou; o ex-aluno é marcado pela instituição no dia seguinte ao fim
+// do último semestre que cursou (produto.md 2.2).
 public sealed partial class DatabaseSeeder
 {
     private static readonly string _tipoPremioParticipacao = NomeJson.De(TipoDeItem.PremioParticipacao);
@@ -25,7 +34,7 @@ public sealed partial class DatabaseSeeder
 
         await using var transacao = await AbrirComLockAsync(cancellationToken);
 
-        var semestres = (await db.Set<SemestreLetivo>().ToListAsync(cancellationToken))
+        var semestres = (await db.Set<SemestreLetivo>().Include(semestre => semestre.Bimestres).ToListAsync(cancellationToken))
             .ToDictionary(semestre => semestre.Codigo, StringComparer.Ordinal);
         if (semestres.Count == 0 || !await db.Set<ItemCatalogoRow>().AnyAsync(cancellationToken))
         {
@@ -47,7 +56,10 @@ public sealed partial class DatabaseSeeder
 
         await FalharSeRestricaoSemCursoAsync(demo.Siglas, cancellationToken);
 
-        demo.ContasDoSeed(relogio.GetUtcNow());
+        var inicioDoCalendario = FusoHorario.Instante(semestres.Values.Min(semestre => semestre.Inicio));
+        demo.ContasDoSeed(relogio.GetUtcNow(), mundo, inicioDoCalendario);
+        var instituicao = demo.Conta(mundo.Instituicao[0].Email);
+        demo.ContasDosAlunos(instituicao, semestres);
 
         var itens = (await db.Set<ItemCatalogoRow>().AsNoTracking()
                 .Where(item => item.Tipo == _tipoPremioParticipacao)
@@ -56,6 +68,18 @@ public sealed partial class DatabaseSeeder
         foreach (var evento in eventos.Eventos)
         {
             demo.EventoSemeado(evento, itens);
+        }
+
+        // Aluno com conta muda o divisor da raridade; ex-aluno marcado sai das visões do
+        // semestre. Um pedido de cada, se ainda não houver um pendente.
+        if (demo.Resultado.ContasDeAlunoNovas > 0)
+        {
+            await PedirSeNaoHaPendenteAsync(new RecalcularRaridade(), cancellationToken);
+        }
+
+        if (demo.Resultado.ExAlunosNovos > 0)
+        {
+            await PedirSeNaoHaPendenteAsync(new RecalcularRanking(), cancellationToken);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -69,21 +93,21 @@ public sealed partial class DatabaseSeeder
     {
         var curso = demo.Curso(json);
 
-        var turmasPorMateria = new Dictionary<string, List<Turma>>(StringComparer.Ordinal);
+        var turmasPorMateria = new Dictionary<string, List<(string Semestre, Turma Turma)>>(StringComparer.Ordinal);
         foreach (var materiaJson in json.Materias)
         {
             var materia = demo.Materia(curso, materiaJson.Nome);
             turmasPorMateria[materia.Nome] = [.. materiaJson.Turmas.Select(codigo =>
-                demo.Turma(materia, semestres.GetValueOrDefault(codigo)
+                (codigo, demo.Turma(materia, semestres.GetValueOrDefault(codigo)
                     ?? throw new SeedException(
-                        $"{json.Sigla}, {materia.Nome}: o semestre {codigo} não está no calendário. Rode `seed base` com ele.")))];
+                        $"{json.Sigla}, {materia.Nome}: o semestre {codigo} não está no calendário. Rode `seed base` com ele."))))];
         }
 
         foreach (var professorJson in json.Professores)
         {
             var professor = demo.Cadastro(
                 professorJson.Email, () => CadastroElegivel.Professor(professorJson.Email, professorJson.NomeCompleto));
-            foreach (var turma in professorJson.Materias.SelectMany(nome => turmasPorMateria[nome]))
+            foreach (var (_, turma) in professorJson.Materias.SelectMany(nome => turmasPorMateria[nome]))
             {
                 demo.Vinculo(professor, turma);
             }
@@ -91,13 +115,28 @@ public sealed partial class DatabaseSeeder
 
         foreach (var alunoJson in json.Alunos)
         {
-            var aluno = demo.Cadastro(
-                alunoJson.Email,
-                () => CadastroElegivel.Aluno(alunoJson.Ra, alunoJson.Email, alunoJson.NomeCompleto, curso, alunoJson.Semestre));
-            foreach (var turma in alunoJson.Materias.SelectMany(nome => turmasPorMateria[nome]))
+            var aluno = demo.Aluno(alunoJson, curso);
+            var cursadas = alunoJson.Materias.SelectMany(nome => turmasPorMateria[nome])
+                .Where(turma => alunoJson.SemestresLetivos?.Contains(turma.Semestre, StringComparer.Ordinal) ?? true)
+                .ToList();
+            foreach (var (_, turma) in cursadas)
             {
                 demo.Matricula(aluno, turma);
             }
+
+            demo.AlunoDoArquivo(aluno, alunoJson, [.. cursadas.Select(turma => turma.Semestre).Distinct(StringComparer.Ordinal)]);
+        }
+    }
+
+    private async Task PedirSeNaoHaPendenteAsync<TCarga>(TCarga carga, CancellationToken cancellationToken)
+        where TCarga : ICargaDeTrabalho
+    {
+        var tipo = TCarga.Tipo;
+        var pendente = await db.Set<Trabalho>()
+            .AnyAsync(trabalho => trabalho.Tipo == tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, cancellationToken);
+        if (!pendente)
+        {
+            fila.Enfileirar(carga);
         }
     }
 
@@ -135,6 +174,10 @@ public sealed partial class DatabaseSeeder
         private readonly HashSet<Guid> _cadastrosComConta = [];
         private readonly HashSet<string> _prefixos = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Evento> _eventos = new(StringComparer.Ordinal);
+        private readonly HashSet<Guid> _comEmailCorrigido = [];
+        private readonly HashSet<Guid> _comCursoTrocado = [];
+        private readonly Dictionary<Guid, Usuario> _contasDaInstituicao = [];
+        private readonly List<(CadastroElegivel Cadastro, AlunoDemo Json, List<string> Semestres)> _alunosDoArquivo = [];
 
         private int _cursosNovos;
         private int _materiasNovas;
@@ -144,11 +187,22 @@ public sealed partial class DatabaseSeeder
         private int _vinculosNovos;
         private int _contasNovas;
         private int _eventosNovos;
+        private int _contasDeAlunoNovas;
+        private int _exAlunosNovos;
 
         public IEnumerable<string> Siglas => _cursos.Keys;
 
         public ResultadoDoSeedDemo Resultado => new(
-            _cursosNovos, _materiasNovas, _turmasNovas, _cadastrosNovos, _matriculasNovas, _vinculosNovos, _contasNovas, _eventosNovos);
+            _cursosNovos,
+            _materiasNovas,
+            _turmasNovas,
+            _cadastrosNovos,
+            _matriculasNovas,
+            _vinculosNovos,
+            _contasNovas,
+            _eventosNovos,
+            _contasDeAlunoNovas,
+            _exAlunosNovos);
 
         public async Task CarregarAsync(CancellationToken cancellationToken)
         {
@@ -193,6 +247,15 @@ public sealed partial class DatabaseSeeder
             _prefixos.UnionWith(await db.Set<PrefixoReservado>()
                 .Select(reservado => reservado.Prefixo)
                 .ToListAsync(cancellationToken));
+
+            _comEmailCorrigido.UnionWith(await db.Set<CorrecaoDeEmail>().Select(correcao => correcao.CadastroElegivelId).ToListAsync(cancellationToken));
+            _comCursoTrocado.UnionWith(await db.Set<TrocaDeCurso>().Select(troca => troca.CadastroElegivelId).ToListAsync(cancellationToken));
+            foreach (var conta in await db.Set<Usuario>()
+                         .Where(usuario => usuario.Papeis == Papeis.Instituicao || usuario.Papeis == (Papeis.Professor | Papeis.Instituicao))
+                         .ToListAsync(cancellationToken))
+            {
+                _contasDaInstituicao[conta.CadastroElegivelId] = conta;
+            }
         }
 
         public Curso Curso(CursoDemo json)
@@ -272,6 +335,42 @@ public sealed partial class DatabaseSeeder
             return novo;
         }
 
+        // O aluno é achado pelo RA, a identidade dele. Nome e papel têm de bater com o arquivo;
+        // e-mail, curso e semestre também, salvo o que a instituição corrigiu pela área web
+        // (passo 12): o ato dela vence o arquivo, e o seed não desfaz a correção.
+        public CadastroElegivel Aluno(AlunoDemo json, Curso curso)
+        {
+            var novo = Construir(
+                json.Email, () => CadastroElegivel.Aluno(json.Ra, json.Email, json.NomeCompleto, curso, json.Semestre));
+            if (_porRa.TryGetValue(novo.Ra!, out var atual))
+            {
+                var emailDiverge = !string.Equals(atual.Email, novo.Email, StringComparison.OrdinalIgnoreCase)
+                    && !_comEmailCorrigido.Contains(atual.Id);
+                var cursoDiverge = (atual.CursoId, atual.Semestre) != (novo.CursoId, novo.Semestre) && !_comCursoTrocado.Contains(atual.Id);
+                if (atual.Papeis != novo.Papeis || atual.NomeCompleto != novo.NomeCompleto || emailDiverge || cursoDiverge)
+                {
+                    throw Divergencia($"cadastro {atual.Email} (RA {atual.Ra})");
+                }
+
+                return atual;
+            }
+
+            if (_cadastros.TryGetValue(novo.Email, out var dono))
+            {
+                throw new SeedException($"O e-mail {novo.Email} do RA {novo.Ra} já pertence a outra linha ({dono.Ra ?? dono.Email}). Nada foi gravado.");
+            }
+
+            db.Add(novo);
+            _cadastros[novo.Email] = novo;
+            _porRa[novo.Ra!] = novo;
+            _cadastrosNovos++;
+            return novo;
+        }
+
+        // O aluno do arquivo e os semestres letivos em que cursa: é o que decide a conta.
+        public void AlunoDoArquivo(CadastroElegivel cadastro, AlunoDemo json, List<string> semestres) =>
+            _alunosDoArquivo.Add((cadastro, json, semestres));
+
         public void Matricula(CadastroElegivel aluno, Turma turma)
         {
             if (_matriculas.Add((aluno.Id, turma.Id)))
@@ -290,10 +389,6 @@ public sealed partial class DatabaseSeeder
             }
         }
 
-        // Professor e instituição não se cadastram: nascem aqui com conta e sem senha, e o
-        // primeiro acesso é pela recuperação (produto.md 2.5). Vale para toda linha deles no
-        // banco, não só as do arquivo. Em ordem de e-mail, para o arroba sair igual a cada
-        // banco novo.
         // O evento semeado, com os itens e o curso conferidos contra o que está no banco: o
         // catálogo vem do base, e o curso, do mundo ou de uma rodada anterior.
         public void EventoSemeado(EventoDemo json, Dictionary<string, ItemPremioParticipacao> itens)
@@ -333,8 +428,15 @@ public sealed partial class DatabaseSeeder
             }
         }
 
-        public void ContasDoSeed(DateTimeOffset agora)
+        // Professor e instituição sem conta, de toda linha deles no banco, e não só das do
+        // arquivo. A conta de quem está no arquivo é criada no início do calendário: o mundo
+        // existe desde o primeiro semestre, e a notificação de aviso alcança quem tinha conta
+        // na publicação (decisão do passo 10). A de quem não está no arquivo, agora.
+        public void ContasDoSeed(DateTimeOffset agora, MundoDemo mundo, DateTimeOffset inicioDoCalendario)
         {
+            var doArquivo = mundo.Instituicao.Select(pessoa => pessoa.Email)
+                .Concat(mundo.Cursos.SelectMany(curso => curso.Professores.Select(professor => professor.Email)))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             var semConta = _cadastros.Values
                 .Where(cadastro => !cadastro.EhAluno && !_cadastrosComConta.Contains(cadastro.Id))
                 .OrderBy(cadastro => cadastro.Email, StringComparer.OrdinalIgnoreCase);
@@ -342,10 +444,61 @@ public sealed partial class DatabaseSeeder
             foreach (var cadastro in semConta)
             {
                 var prefixo = PrefixoDeArroba.Sugerir(cadastro.NomeCompleto, candidato => !_prefixos.Contains(candidato));
-                db.Add(Construir(cadastro.Email, () => Usuario.CriarPeloSeed(cadastro, prefixo, agora)));
+                var criadaEm = doArquivo.Contains(cadastro.Email) ? inicioDoCalendario : agora;
+                var conta = Construir(cadastro.Email, () => Usuario.CriarPeloSeed(cadastro, prefixo, criadaEm));
+                db.Add(conta);
+                if (conta.Papeis.HasFlag(Papeis.Instituicao))
+                {
+                    _contasDaInstituicao[cadastro.Id] = conta;
+                }
+
                 _cadastrosComConta.Add(cadastro.Id);
                 _prefixos.Add(prefixo);
                 _contasNovas++;
+            }
+        }
+
+        // A conta da instituição do arquivo: é ela que marca os ex-alunos.
+        public Usuario Conta(string email) =>
+            _cadastros.TryGetValue(email, out var cadastro) && _contasDaInstituicao.TryGetValue(cadastro.Id, out var conta)
+                ? conta
+                : throw new SeedException($"{MundoDemoReader.Arquivo}: {email} não tem conta de instituição. Nada foi gravado.");
+
+        // A conta de cada aluno do arquivo que ainda não tem uma, em ordem de e-mail, para o
+        // arroba sair igual a cada banco novo. Nasce no início do primeiro semestre que o
+        // aluno cursou; o ex-aluno é marcado pela instituição no dia seguinte ao fim do último.
+        // A conta que já existe fica como está. O curso é o atual da linha: a troca de curso
+        // feita pela instituição vence o arquivo.
+        public void ContasDosAlunos(Usuario instituicao, Dictionary<string, SemestreLetivo> semestres)
+        {
+            var cursos = _cursos.Values.ToDictionary(curso => curso.Id);
+            foreach (var (cadastro, json, codigos) in _alunosDoArquivo.OrderBy(aluno => aluno.Cadastro.Email, StringComparer.OrdinalIgnoreCase))
+            {
+                if (_cadastrosComConta.Contains(cadastro.Id))
+                {
+                    continue;
+                }
+
+                var cursados = codigos.Select(codigo => semestres[codigo]).OrderBy(semestre => semestre.Inicio).ToList();
+                if (cursados.Count == 0)
+                {
+                    throw new SeedException($"{MundoDemoReader.Arquivo}, {json.Email}: o aluno não cursa turma nenhuma. Nada foi gravado.");
+                }
+
+                var prefixo = PrefixoDeArroba.Sugerir(cadastro.NomeCompleto, candidato => !_prefixos.Contains(candidato));
+                var conta = Construir(
+                    json.Email,
+                    () => Usuario.CriarAlunoPeloSeed(cadastro, cursos[cadastro.CursoId!.Value], prefixo, FusoHorario.Instante(cursados[0].Inicio)));
+                if (json.ExAluno)
+                {
+                    conta.MarcarExAluno(instituicao.Id, FusoHorario.Instante(cursados[^1].Fim.AddDays(1)));
+                    _exAlunosNovos++;
+                }
+
+                db.Add(conta);
+                _cadastrosComConta.Add(cadastro.Id);
+                _prefixos.Add(prefixo);
+                _contasDeAlunoNovas++;
             }
         }
 

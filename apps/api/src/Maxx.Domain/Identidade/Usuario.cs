@@ -5,7 +5,8 @@ namespace Maxx.Domain.Identidade;
 
 // A conta. Liga-se a uma linha do cadastro elegível, uma para uma (um RA, uma conta), e é
 // de lá que vem o papel. Aluno se cadastra pelo app; professor e instituição nascem do
-// seed sem senha e definem a primeira pela recuperação (produto.md 2.5).
+// seed sem senha e definem a primeira pela recuperação (produto.md 2.5). Desde o passo 12, o
+// aluno do mundo da demonstração também nasce do seed, sem senha (CriarAlunoPeloSeed).
 public sealed class Usuario
 {
     private readonly List<PrefixoReservado> _prefixosReservados = [];
@@ -162,6 +163,35 @@ public sealed class Usuario
             Identidade.Sufixo.Para(cadastro.Papeis, curso: null, exAluno: false),
             hashDaSenha: null,
             agora);
+    }
+
+    // O aluno do mundo da demonstração (passo 12, P8): nasce do seed, já com conta, sem senha e
+    // sem aceite do termo, com o nome completo como nome de exibição e o instante de criação
+    // retroativo (o início do primeiro semestre que cursou). O e-mail dele fica num domínio
+    // reservado, então ninguém entra nessa conta: ela existe para o mundo ter quem pontua,
+    // posta e aparece no ranking. O aluno de verdade continua se cadastrando pelo app.
+    public static Usuario CriarAlunoPeloSeed(CadastroElegivel cadastro, Curso curso, string prefixo, DateTimeOffset criadoEm)
+    {
+        ArgumentNullException.ThrowIfNull(cadastro);
+        ArgumentNullException.ThrowIfNull(curso);
+
+        if (!cadastro.EhAluno || cadastro.Demonstracao)
+        {
+            throw new DomainException($"Só aluno do mundo da demonstração nasce do seed: {cadastro.Email}.");
+        }
+
+        if (cadastro.CursoId != curso.Id)
+        {
+            throw new DomainException($"O curso {curso.Sigla} não é o do cadastro de {cadastro.Email}.");
+        }
+
+        return new Usuario(
+            cadastro,
+            cadastro.NomeCompleto,
+            prefixo,
+            Identidade.Sufixo.Para(cadastro.Papeis, curso, exAluno: false),
+            hashDaSenha: null,
+            criadoEm);
     }
 
     // Primeiro acesso e recuperação de senha. A política já passou sobre a senha em claro.
