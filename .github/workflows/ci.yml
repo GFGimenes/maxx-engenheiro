@@ -212,7 +212,10 @@ jobs:
             dockerfile="$2"
             tags=(-t "$base/$nome:$curta")
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then tags+=(-t "$base/$nome:latest"); fi
-            docker build -f "$dockerfile" "${tags[@]}" \
+            # Sem o atestado de proveniência, a imagem sai como manifesto simples, e o GHCR
+            # lê o rótulo source, que liga o pacote a este repositório: sem a ligação, o
+            # GITHUB_TOKEN não grava o manifesto (denied).
+            docker build --provenance=false -f "$dockerfile" "${tags[@]}" \
               --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
               --label "org.opencontainers.image.revision=${GITHUB_SHA}" .
             docker push --all-tags "$base/$nome"
