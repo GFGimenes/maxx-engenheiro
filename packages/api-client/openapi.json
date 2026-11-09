@@ -2468,6 +2468,137 @@
         ]
       }
     },
+    "/api/v1/eu/notificacoes": {
+      "get": {
+        "tags": [
+          "Notificações"
+        ],
+        "operationId": "GetNotificacoes",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeNotificacoesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/notificacoes/leitura": {
+      "post": {
+        "tags": [
+          "Notificações"
+        ],
+        "operationId": "LerNotificacoes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LerNotificacoesRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/novidades": {
+      "get": {
+        "tags": [
+          "Notificações"
+        ],
+        "operationId": "GetNovidades",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NovidadesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/eu/trofeus/visto": {
+      "put": {
+        "tags": [
+          "Notificações"
+        ],
+        "operationId": "VerTrofeus",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -4268,6 +4399,21 @@
           }
         }
       },
+      "LerNotificacoesRequest": {
+        "required": [
+          "ate"
+        ],
+        "type": "object",
+        "properties": {
+          "ate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "identificador",
@@ -4380,6 +4526,91 @@
           }
         }
       },
+      "NotificacaoResponse": {
+        "required": [
+          "id",
+          "tipo",
+          "referenciaId",
+          "criadaEm",
+          "lida",
+          "item",
+          "motivo",
+          "decisao",
+          "postId",
+          "tituloDoAviso"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "referenciaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lida": {
+            "type": "boolean"
+          },
+          "item": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "motivo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decisao": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "postId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tituloDoAviso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "NovidadesResponse": {
+        "required": [
+          "sininho",
+          "mural",
+          "trofeus"
+        ],
+        "type": "object",
+        "properties": {
+          "sininho": {
+            "type": "boolean"
+          },
+          "mural": {
+            "type": "boolean"
+          },
+          "trofeus": {
+            "type": "boolean"
+          }
+        }
+      },
       "PaginaDeAlunosResponse": {
         "required": [
           "itens",
@@ -4454,6 +4685,27 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ContestacaoNaFilaResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PaginaDeNotificacoesResponse": {
+        "required": [
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificacaoResponse"
             }
           },
           "proximo": {
@@ -5443,6 +5695,9 @@
     },
     {
       "name": "Mural"
+    },
+    {
+      "name": "Notificações"
     },
     {
       "name": "Demonstracao"

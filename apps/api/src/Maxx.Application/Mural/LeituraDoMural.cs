@@ -51,6 +51,9 @@ public interface IConsultaDoMural
     // Nulo para o aviso que não existe e para o que o leitor não vê.
     Task<AvisoLido?> AvisoAsync(LeitorDoMural leitor, Guid avisoId, CancellationToken cancellationToken);
 
+    // Se há aviso no mural do leitor que ele ainda não leu: a bolinha da aba Mural.
+    Task<bool> TemNaoLidoAsync(LeitorDoMural leitor, CancellationToken cancellationToken);
+
     // Registra a leitura dos avisos visíveis ao leitor entre os pedidos (todos, sem ids) e
     // marca como lida a notificação de aviso novo de cada um. Idempotente: a leitura antiga
     // fica com o instante dela. Devolve quantas leituras novas gravou.

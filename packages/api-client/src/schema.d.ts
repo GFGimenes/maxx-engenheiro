@@ -676,6 +676,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eu/notificacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNotificacoes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eu/notificacoes/leitura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LerNotificacoes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eu/novidades": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNovidades"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eu/trofeus/visto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["VerTrofeus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -1163,6 +1227,10 @@ export interface components {
             exigeMateria: boolean;
             progresso?: null | components["schemas"]["ProgressoResponse"];
         };
+        LerNotificacoesRequest: {
+            /** Format: date-time */
+            ate: null | string;
+        };
         LoginRequest: {
             identificador: string;
             senha: string;
@@ -1196,6 +1264,27 @@ export interface components {
         MotivoRequest: {
             motivo: null | string;
         };
+        NotificacaoResponse: {
+            /** Format: uuid */
+            id: string;
+            tipo: string;
+            /** Format: uuid */
+            referenciaId: string;
+            /** Format: date-time */
+            criadaEm: string;
+            lida: boolean;
+            item: null | string;
+            motivo: null | string;
+            decisao: null | string;
+            /** Format: uuid */
+            postId: null | string;
+            tituloDoAviso: null | string;
+        };
+        NovidadesResponse: {
+            sininho: boolean;
+            mural: boolean;
+            trofeus: boolean;
+        };
         PaginaDeAlunosResponse: {
             itens: components["schemas"]["AlunoEncontradoResponse"][];
             proximo: null | string;
@@ -1210,6 +1299,10 @@ export interface components {
         };
         PaginaDeContestacoesResponse: {
             itens: components["schemas"]["ContestacaoNaFilaResponse"][];
+            proximo: null | string;
+        };
+        PaginaDeNotificacoesResponse: {
+            itens: components["schemas"]["NotificacaoResponse"][];
             proximo: null | string;
         };
         PaginaDoFeedResponse: {
@@ -3266,6 +3359,106 @@ export interface operations {
         };
     };
     LerTodosOsAvisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetNotificacoes: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginaDeNotificacoesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    LerNotificacoes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["LerNotificacoesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+        };
+    };
+    GetNovidades: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NovidadesResponse"];
+                };
+            };
+        };
+    };
+    VerTrofeus: {
         parameters: {
             query?: never;
             header?: never;

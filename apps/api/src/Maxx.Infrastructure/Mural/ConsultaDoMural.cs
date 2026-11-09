@@ -72,6 +72,14 @@ internal sealed class ConsultaDoMural(MaxxDbContext db) : IConsultaDoMural
         return Projetar(Visiveis(leitor).Where(aviso => aviso.Id == avisoId), leitor).SingleOrDefaultAsync(cancellationToken);
     }
 
+    public Task<bool> TemNaoLidoAsync(LeitorDoMural leitor, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(leitor);
+        return Visiveis(leitor).AnyAsync(
+            aviso => !db.Set<LeituraDeAviso>().Any(leitura => leitura.AvisoId == aviso.Id && leitura.UsuarioId == leitor.Id),
+            cancellationToken);
+    }
+
     // A leitura e a notificação do aviso juntas, numa transação: quem leu o aviso não fica
     // com a notificação dele acesa no sininho.
     public async Task<int> RegistrarLeituraAsync(

@@ -764,6 +764,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("sufixo");
 
+                    b.Property<DateTimeOffset?>("TrofeusVistoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trofeus_visto_em");
+
                     b.HasKey("Id")
                         .HasName("pk_usuario");
 
