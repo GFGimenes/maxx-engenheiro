@@ -481,7 +481,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("upload_pendente", null, t =>
                         {
-                            t.HasCheckConstraint("ck_upload_pendente_finalidade", "finalidade IN ('post', 'fotoDePerfil')");
+                            t.HasCheckConstraint("ck_upload_pendente_finalidade", "finalidade IN ('post', 'fotoDePerfil', 'aviso')");
 
                             t.HasCheckConstraint("ck_upload_pendente_tamanho_da_grade", "tamanho_da_grade BETWEEN 1 AND 204800");
 
@@ -794,6 +794,104 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Mural.Aviso", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("autor_id");
+
+                    b.Property<string>("ChaveDaFotoDaGrade")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_da_grade");
+
+                    b.Property<string>("ChaveDaFotoDoFeed")
+                        .HasColumnType("text")
+                        .HasColumnName("chave_da_foto_do_feed");
+
+                    b.Property<string>("Escopo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("escopo");
+
+                    b.Property<DateTimeOffset>("PublicadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("publicado_em");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("titulo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_aviso");
+
+                    b.HasIndex("AutorId", "PublicadoEm")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_aviso_autor_id_publicado_em");
+
+                    b.HasIndex("PublicadoEm", "Id")
+                        .IsDescending()
+                        .HasDatabaseName("ix_aviso_publicado_em_id");
+
+                    b.ToTable("aviso", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_aviso_escopo", "escopo IN ('faculdade', 'curso', 'turma')");
+
+                            t.HasCheckConstraint("ck_aviso_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
+
+                            t.HasCheckConstraint("ck_aviso_texto", "char_length(texto) BETWEEN 1 AND 2000");
+
+                            t.HasCheckConstraint("ck_aviso_titulo", "char_length(titulo) BETWEEN 3 AND 120");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.AvisoCurso", b =>
+                {
+                    b.Property<Guid>("AvisoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aviso_id");
+
+                    b.Property<Guid>("CursoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("curso_id");
+
+                    b.HasKey("AvisoId", "CursoId")
+                        .HasName("pk_aviso_curso");
+
+                    b.HasIndex("CursoId")
+                        .HasDatabaseName("ix_aviso_curso_curso_id");
+
+                    b.ToTable("aviso_curso", (string)null);
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.AvisoTurma", b =>
+                {
+                    b.Property<Guid>("AvisoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aviso_id");
+
+                    b.Property<Guid>("TurmaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("turma_id");
+
+                    b.HasKey("AvisoId", "TurmaId")
+                        .HasName("pk_aviso_turma");
+
+                    b.HasIndex("TurmaId")
+                        .HasDatabaseName("ix_aviso_turma_turma_id");
+
+                    b.ToTable("aviso_turma", (string)null);
+                });
+
             modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -830,7 +928,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notificacao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado', 'conquistaObtida', 'conquistaRemovida')");
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado', 'conquistaObtida', 'conquistaRemovida', 'avisoNovo')");
                         });
                 });
 
@@ -2007,6 +2105,50 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_usuario_cadastro_elegivel_cadastro_elegivel_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Mural.Aviso", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aviso_usuario_autor_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.AvisoCurso", b =>
+                {
+                    b.HasOne("Maxx.Domain.Mural.Aviso", null)
+                        .WithMany("Cursos")
+                        .HasForeignKey("AvisoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_aviso_curso_aviso_aviso_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aviso_curso_curso_curso_id");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.AvisoTurma", b =>
+                {
+                    b.HasOne("Maxx.Domain.Mural.Aviso", null)
+                        .WithMany("Turmas")
+                        .HasForeignKey("AvisoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_aviso_turma_aviso_aviso_id");
+
+                    b.HasOne("Maxx.Domain.Academico.Turma", null)
+                        .WithMany()
+                        .HasForeignKey("TurmaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aviso_turma_turma_turma_id");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Notificacoes.Notificacao", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -2343,6 +2485,13 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.Navigation("AceitesDeTermo");
 
                     b.Navigation("PrefixosReservados");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Mural.Aviso", b =>
+                {
+                    b.Navigation("Cursos");
+
+                    b.Navigation("Turmas");
                 });
 #pragma warning restore 612, 618
         }

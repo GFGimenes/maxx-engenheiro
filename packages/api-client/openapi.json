@@ -2170,6 +2170,81 @@
         ]
       }
     },
+    "/api/v1/avisos": {
+      "post": {
+        "tags": [
+          "Mural"
+        ],
+        "operationId": "PublicarAviso",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicarAvisoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvisoPublicadoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/auth/cadastro/sugestao": {
       "post": {
         "tags": [
@@ -2897,6 +2972,62 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AvisoPublicadoResponse": {
+        "required": [
+          "id",
+          "escopo",
+          "titulo",
+          "texto",
+          "foto",
+          "publicadoEm",
+          "turmaIds",
+          "cursoIds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "escopo": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "foto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FotoDoPostResponse"
+              }
+            ]
+          },
+          "publicadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "turmaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "cursoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -4481,6 +4612,64 @@
           }
         }
       },
+      "PublicarAvisoRequest": {
+        "required": [
+          "escopo",
+          "titulo",
+          "texto"
+        ],
+        "type": "object",
+        "properties": {
+          "escopo": {
+            "type": "string"
+          },
+          "titulo": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "texto": {
+            "maxLength": 10000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turmaIds": {
+            "maxItems": 50,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "cursoIds": {
+            "maxItems": 50,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "uploadId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "PublicarPostRequest": {
         "required": [
           "legenda",
@@ -4925,6 +5114,9 @@
     },
     {
       "name": "Comprovacoes"
+    },
+    {
+      "name": "Mural"
     },
     {
       "name": "Demonstracao"

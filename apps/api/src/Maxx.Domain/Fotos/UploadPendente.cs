@@ -118,7 +118,8 @@ public sealed class UploadPendente
     }
 
     // Post é só de aluno que não virou ex-aluno (produto.md 2.2 e 6.1). Foto de perfil, de
-    // aluno e de professor (produto.md 2.3); a instituição não tem perfil social.
+    // aluno e de professor (produto.md 2.3); a instituição não tem perfil social. Foto de
+    // aviso, de quem publica aviso: professor e instituição (produto.md 7, passo 10).
     public static bool PodeEnviar(Usuario usuario, FinalidadeDoUpload finalidade)
     {
         ArgumentNullException.ThrowIfNull(usuario);
@@ -126,6 +127,7 @@ public sealed class UploadPendente
         {
             FinalidadeDoUpload.Post => usuario.Papeis == Papeis.Aluno && !usuario.EhExAluno,
             FinalidadeDoUpload.FotoDePerfil => usuario.Papeis.HasFlag(Papeis.Aluno) || usuario.Papeis.HasFlag(Papeis.Professor),
+            FinalidadeDoUpload.Aviso => usuario.Papeis.HasFlag(Papeis.Professor) || usuario.Papeis.HasFlag(Papeis.Instituicao),
             _ => false,
         };
     }
@@ -135,6 +137,7 @@ public enum FinalidadeDoUpload
 {
     Post,
     FotoDePerfil,
+    Aviso,
 }
 
 public enum RecusaDoUpload

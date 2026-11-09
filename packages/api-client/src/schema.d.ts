@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/avisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicarAviso"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/cadastro/sugestao": {
         parameters: {
             query?: never;
@@ -795,6 +811,18 @@ export interface components {
             /** Format: int32 */
             semestre: null | number;
             foto: null | string;
+        };
+        AvisoPublicadoResponse: {
+            /** Format: uuid */
+            id: string;
+            escopo: string;
+            titulo: string;
+            texto: string;
+            foto: null | components["schemas"]["FotoDoPostResponse"];
+            /** Format: date-time */
+            publicadoEm: string;
+            turmaIds: string[];
+            cursoIds: string[];
         };
         CadastroRequest: {
             ra: string;
@@ -1190,6 +1218,15 @@ export interface components {
             /** Format: int32 */
             alvo: number;
             unidade?: null | string;
+        };
+        PublicarAvisoRequest: {
+            escopo: string;
+            titulo: null | string;
+            texto: null | string;
+            turmaIds?: null | string[];
+            cursoIds?: null | string[];
+            /** Format: uuid */
+            uploadId?: null | string;
         };
         PublicarPostRequest: {
             legenda: null | string;
@@ -2877,6 +2914,66 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PublicarAviso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicarAvisoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvisoPublicadoResponse"];
+                };
             };
             /** @description Bad Request */
             400: {

@@ -8,6 +8,7 @@ using Maxx.Application.Feed;
 using Maxx.Application.Fila;
 using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
+using Maxx.Application.Mural;
 using Maxx.Application.Notificacoes;
 using Maxx.Application.Perfil;
 using Maxx.Application.Posts;
@@ -24,6 +25,7 @@ using Maxx.Infrastructure.Feed;
 using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Fotos;
 using Maxx.Infrastructure.Medalhas;
+using Maxx.Infrastructure.Mural;
 using Maxx.Infrastructure.Notificacoes;
 using Maxx.Infrastructure.Perfil;
 using Maxx.Infrastructure.Persistence;
@@ -92,6 +94,8 @@ public static class DependencyInjection
         services.AddScoped<IConsultaSocial, ConsultaSocial>();
         services.AddScoped<IConsultaDoFeed, ConsultaDoFeed>();
         services.AddScoped<IConsultaDePerfil, ConsultaDePerfil>();
+        services.AddScoped<IAvisoRepository, AvisoRepository>();
+        services.AddScoped<IDistribuicaoDeAviso, DistribuicaoDeAviso>();
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
@@ -118,6 +122,7 @@ public static class DependencyInjection
         services.AddTrabalho<VerificarFechamentos, VerificacaoDeFechamentos>();
         services.AddTrabalho<FecharPeriodo, FecharPeriodoHandler>();
         services.AddTrabalho<AvaliarFechamentoDoAluno, AvaliarFechamentoDoAlunoHandler>();
+        services.AddTrabalho<NotificarAvisoNovo, NotificarAvisoNovoHandler>();
 
         // Toda verificação registrada aqui entra no /ready.
         services.AddHealthChecks()
