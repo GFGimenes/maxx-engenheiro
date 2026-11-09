@@ -5,9 +5,12 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useRef } from "react";
 
 import { useApiClient } from "../api/ApiClientProvider";
 import { FalhaDaApi } from "../api/FalhaDaApi";
+import type { Derivadas } from "../fotos/derivadas";
+import { enviarFoto } from "../fotos/envio";
 
 export type Aviso = components["schemas"]["AvisoResponse"];
 export type EscopoDoAviso = "faculdade" | "curso" | "turma";
@@ -99,5 +102,57 @@ export function useLerTodos() {
       }
     },
     onSuccess: depois,
+  });
+}
+
+export interface NovoAviso {
+  turmaIds: string[];
+  titulo: string;
+  texto: string;
+  derivadas: Derivadas | null;
+}
+
+// Os códigos que dizem que a foto enviada não serve mais: a próxima tentativa sobe de novo.
+const FOTO_PERDIDA = new Set([
+  "upload-nao-encontrado",
+  "upload-ja-usado",
+  "foto-nao-enviada",
+]);
+
+// Publicar o aviso do professor para as turmas dele (produto.md 7): sobe a foto, se houver,
+// e cria o aviso com o id do upload. Se o aviso falhar por outro motivo, a foto já enviada
+// é reaproveitada na próxima tentativa, como no novo post, sem gastar o limite de upload.
+export function usePublicarAviso() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  const enviado = useRef<{ derivadas: Derivadas; uploadId: string } | null>(
+    null,
+  );
+
+  return useMutation({
+    mutationFn: async ({ turmaIds, titulo, texto, derivadas }: NovoAviso) => {
+      let uploadId: string | null = null;
+      if (derivadas) {
+        uploadId =
+          enviado.current?.derivadas === derivadas
+            ? enviado.current.uploadId
+            : await enviarFoto(client, "aviso", derivadas);
+        enviado.current = { derivadas, uploadId };
+      }
+
+      const { data, error } = await client.POST("/api/v1/avisos", {
+        body: { escopo: "turma", turmaIds, titulo, texto, uploadId },
+      });
+      if (!data) {
+        const falha = FalhaDaApi.doCorpo(error);
+        if (falha.codigo && FOTO_PERDIDA.has(falha.codigo)) {
+          enviado.current = null;
+        }
+        throw falha;
+      }
+      enviado.current = null;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["mural"] }),
   });
 }

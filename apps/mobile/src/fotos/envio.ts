@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { FalhaDaApi } from "../api/FalhaDaApi";
 import { TIPO_DA_FOTO, type Derivadas, type FotoEscolhida } from "./derivadas";
 
-export type Finalidade = "post" | "fotoDePerfil";
+export type Finalidade = "post" | "fotoDePerfil" | "aviso";
 
 // A galeria do aparelho, ou o seletor de arquivo na web. Sem editor: o recorte é o quadrado
 // central (decisão D2). Nulo quando a pessoa desiste.

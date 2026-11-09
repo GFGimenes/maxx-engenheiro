@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { falhaParaTela } from "../api/FalhaDaApi";
+import { useEu } from "../api/useEu";
 import { FilterChip } from "../components/FilterChip";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState } from "../components/StateMessage";
@@ -40,12 +41,15 @@ const VAZIO: Record<string, string> = {
 };
 
 // A aba Mural (produto.md 7 e prancheta mural-*.png): o mural combinado da faculdade, do
-// curso e das turmas, do mais novo ao mais antigo, somente leitura. O sininho do cabeçalho
-// chega com as notificações, na etapa 6 do passo 10.
+// curso e das turmas, do mais novo ao mais antigo, somente leitura. O "+" do professor abre
+// o novo aviso para as turmas dele. O sininho do cabeçalho chega com as notificações, na
+// etapa 6 do passo 10.
 export function MuralScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const eu = useEu();
+  const ehProfessor = eu.data?.papeis.includes("professor") ?? false;
   const [escopo, setEscopo] = useState<EscopoDoAviso | null>(null);
   const mural = useMural(escopo);
   const lerTodos = useLerTodos();
@@ -67,6 +71,17 @@ export function MuralScreen() {
     <View>
       <View style={styles.topo}>
         <Logo largura={110} />
+        {ehProfessor && (
+          <Pressable
+            role="button"
+            accessibilityLabel="Novo aviso"
+            hitSlop={8}
+            onPress={() => router.push("/novo-aviso")}
+            style={styles.botao}
+          >
+            <Icon name="novo" color={colors.ink} size={tamanhos.iconeNav} />
+          </Pressable>
+        )}
       </View>
       <View style={styles.linhaDoTitulo}>
         <Text role="heading" style={[textStyles.titulo, { color: colors.ink }]}>
@@ -226,6 +241,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: espacamento.margemLateral,
     paddingTop: 4,
+  },
+  botao: {
+    width: tamanhos.alvoDeToque,
+    height: tamanhos.alvoDeToque,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: -10,
   },
   toqueLerTodos: {
     minHeight: tamanhos.alvoDeToque,
