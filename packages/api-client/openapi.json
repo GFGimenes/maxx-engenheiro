@@ -739,6 +739,83 @@
         ]
       }
     },
+    "/api/v1/rankings": {
+      "get": {
+        "tags": [
+          "Ranking"
+        ],
+        "operationId": "GetRanking",
+        "parameters": [
+          {
+            "name": "escopo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "periodo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seguidos",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/professor/turmas": {
       "get": {
         "tags": [
@@ -4414,6 +4491,69 @@
           }
         }
       },
+      "LinhaDoRankingResponse": {
+        "required": [
+          "alunoId",
+          "posicao",
+          "pontos",
+          "nomeDeExibicao",
+          "arroba",
+          "curso",
+          "nomeDoCurso",
+          "semestre",
+          "exAluno",
+          "foto"
+        ],
+        "type": "object",
+        "properties": {
+          "alunoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "posicao": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pontos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nomeDeExibicao": {
+            "type": "string"
+          },
+          "arroba": {
+            "type": "string"
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeDoCurso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "exAluno": {
+            "type": "boolean"
+          },
+          "foto": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "identificador",
@@ -4801,7 +4941,8 @@
           "seguindo",
           "euSigo",
           "foto",
-          "professor"
+          "professor",
+          "posicao"
         ],
         "type": "object",
         "properties": {
@@ -4883,6 +5024,13 @@
                 "$ref": "#/components/schemas/ProfessorDoPerfilResponse"
               }
             ]
+          },
+          "posicao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -5287,6 +5435,67 @@
           }
         }
       },
+      "RankingResponse": {
+        "required": [
+          "escopo",
+          "periodo",
+          "semestre",
+          "curso",
+          "nomeDoCurso",
+          "eu",
+          "itens",
+          "proximo"
+        ],
+        "type": "object",
+        "properties": {
+          "escopo": {
+            "type": "string"
+          },
+          "periodo": {
+            "type": "string"
+          },
+          "semestre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "curso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeDoCurso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "eu": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LinhaDoRankingResponse"
+              }
+            ]
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinhaDoRankingResponse"
+            }
+          },
+          "proximo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RaridadeResponse": {
         "required": [
           "nivel",
@@ -5680,6 +5889,9 @@
     },
     {
       "name": "Perfil"
+    },
+    {
+      "name": "Ranking"
     },
     {
       "name": "Professor"

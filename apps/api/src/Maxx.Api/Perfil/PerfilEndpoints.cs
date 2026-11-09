@@ -189,8 +189,9 @@ internal static class PerfilEndpoints
         new(TipoDeRecusa.NaoEncontrado, CodigosSociais.UsuarioNaoEncontrado, $"Usuário {usuarioId} sem perfil.");
 }
 
-// Papel em minúsculas ("aluno" ou "professor"). RA só no próprio perfil do aluno; pontos só
-// de aluno (a soma das medalhas ativas); a posição no ranking chega no passo 11.
+// Papel em minúsculas ("aluno" ou "professor"). RA só no próprio perfil do aluno; pontos e
+// posição só de aluno: os pontos acumulados e a posição no histórico geral, nula enquanto o
+// aluno não tem pontos ou o worker ainda não o pôs na tabela (passo 11).
 public sealed record PerfilResponse(
     Guid Id,
     string NomeDeExibicao,
@@ -206,7 +207,8 @@ public sealed record PerfilResponse(
     int Seguindo,
     bool EuSigo,
     FotoDoPostResponse? Foto,
-    ProfessorDoPerfilResponse? Professor)
+    ProfessorDoPerfilResponse? Professor,
+    int? Posicao)
 {
     public static PerfilResponse De(PerfilLido perfil, IArmazenamentoDeFotos armazenamento) => new(
         perfil.Id,
@@ -229,7 +231,8 @@ public sealed record PerfilResponse(
             ? new ProfessorDoPerfilResponse(
                 [.. professor.Turmas.Select(turma => new TurmaDoPerfilResponse(turma.Materia, turma.Curso, turma.Semestre))],
                 professor.MedalhasConcedidas)
-            : null);
+            : null,
+        perfil.Posicao);
 }
 
 public sealed record TurmaDoPerfilResponse(string Materia, string Curso, string Semestre);

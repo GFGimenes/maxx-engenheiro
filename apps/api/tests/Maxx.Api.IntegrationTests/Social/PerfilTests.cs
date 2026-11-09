@@ -37,7 +37,7 @@ public sealed class PerfilTests(PostgresFixture postgres, ArmazenamentoFixture a
 
         Assert.Equal(
             new PerfilResponse(
-                mundo.Id(Ana), "Ana Souza", "@anaSouza-CC", "aluno", "CC", "Ciência da Computação", 3, false, "20260101", 30, 1, 1, false, null, null),
+                mundo.Id(Ana), "Ana Souza", "@anaSouza-CC", "aluno", "CC", "Ciência da Computação", 3, false, "20260101", 30, 1, 1, false, null, null, null),
             perfil);
     }
 

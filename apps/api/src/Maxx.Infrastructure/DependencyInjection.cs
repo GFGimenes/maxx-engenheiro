@@ -97,6 +97,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaSocial, ConsultaSocial>();
         services.AddScoped<IConsultaDoFeed, ConsultaDoFeed>();
         services.AddScoped<IConsultaDePerfil, ConsultaDePerfil>();
+        services.AddScoped<IConsultaDoRanking, ConsultaDoRanking>();
         services.AddScoped<IAvisoRepository, AvisoRepository>();
         services.AddScoped<IDistribuicaoDeAviso, DistribuicaoDeAviso>();
         services.AddScoped<IConsultaDoMural, ConsultaDoMural>();

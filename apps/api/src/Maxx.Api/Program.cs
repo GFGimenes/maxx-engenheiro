@@ -15,6 +15,7 @@ using Maxx.Api.Perfil;
 using Maxx.Api.Posts;
 using Maxx.Api.Premios;
 using Maxx.Api.PremiosParticipacao;
+using Maxx.Api.Ranking;
 using Maxx.Api.Social;
 using Maxx.Infrastructure;
 using Maxx.Infrastructure.Fila;
@@ -108,6 +109,7 @@ builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.DecidirComprovac
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.FilaDeComprovacoesHandler>();
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ContestacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
+builder.Services.AddScoped<Maxx.Application.Ranking.LeituraDoRankingHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.PublicarAvisoHandler>();
 builder.Services.AddScoped<Maxx.Application.Mural.MuralHandler>();
 builder.Services.AddScoped<Maxx.Application.Notificacoes.NotificacoesHandler>();
@@ -184,6 +186,7 @@ v1.MapComprovacaoEndpoints();
 v1.MapContestacaoEndpoints();
 v1.MapAvisoEndpoints();
 v1.MapNotificacaoEndpoints();
+v1.MapRankingEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {
