@@ -241,7 +241,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres, ArmazenamentoFixture
             var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
             var lucas = await db.Set<CadastroElegivel>().SingleAsync(cadastro => cadastro.Ra == "20260102", Ct);
             var mariana = await db.Set<CadastroElegivel>().SingleAsync(cadastro => cadastro.Ra == "20260103", Ct);
-            db.Add(lucas.CorrigirEmail("lucas.f@al.unieduk.invalid", instituicao.Id, DateTimeOffset.UtcNow).Correcao!);
+            db.Add(lucas.CorrigirEmail("lucas.f@al.unieduk.invalid", new DominiosDeEmailAceitos(["al.unieduk.invalid"]), instituicao.Id, DateTimeOffset.UtcNow).Correcao!);
             db.Add(mariana.TrocarDeCurso(adm, 2, instituicao.Id, DateTimeOffset.UtcNow).Troca!);
             await db.SaveChangesAsync(Ct);
         }

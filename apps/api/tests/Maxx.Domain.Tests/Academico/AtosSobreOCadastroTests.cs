@@ -1,4 +1,5 @@
 using Maxx.Domain.Academico;
+using Maxx.Domain.Identidade;
 
 namespace Maxx.Domain.Tests.Academico;
 
@@ -10,6 +11,7 @@ public class AtosSobreOCadastroTests
     private static readonly Guid _coordenacao = Guid.CreateVersion7();
     private static readonly Curso _cc = new("Ciência da Computação", "CC", 8);
     private static readonly Curso _med = new("Medicina", "MED", 12);
+    private static readonly DominiosDeEmailAceitos _dominios = new(["al.unieduk.com.br", "prof.unieduk.com.br"]);
 
     private static CadastroElegivel Ana() =>
         CadastroElegivel.Aluno("20260101", "ana.souza@al.unieduk.com.br", "Ana Souza", _cc, 3);
@@ -19,7 +21,7 @@ public class AtosSobreOCadastroTests
     {
         var ana = Ana();
 
-        var resultado = ana.CorrigirEmail("  ana.b.souza@al.unieduk.com.br ", _coordenacao, _agora);
+        var resultado = ana.CorrigirEmail("  ana.b.souza@al.unieduk.com.br ", _dominios, _coordenacao, _agora);
 
         Assert.Null(resultado.Recusa);
         var correcao = Assert.IsType<CorrecaoDeEmail>(resultado.Correcao);
@@ -44,9 +46,23 @@ public class AtosSobreOCadastroTests
     {
         var ana = Ana();
 
-        var resultado = ana.CorrigirEmail(email, _coordenacao, _agora);
+        var resultado = ana.CorrigirEmail(email, _dominios, _coordenacao, _agora);
 
         Assert.Equal(RecusaDaCorrecaoDeEmail.EmailInvalido, resultado.Recusa);
+        Assert.Null(resultado.Correcao);
+        Assert.Equal("ana.souza@al.unieduk.com.br", ana.Email);
+    }
+
+    [Theory]
+    [InlineData("ana.souza@gmail.com")]
+    [InlineData("ana.souza@x.al.unieduk.com.br")]
+    public void Email_de_dominio_fora_da_lista_e_recusado_sem_mudar_nada(string email)
+    {
+        var ana = Ana();
+
+        var resultado = ana.CorrigirEmail(email, _dominios, _coordenacao, _agora);
+
+        Assert.Equal(RecusaDaCorrecaoDeEmail.DominioNaoAceito, resultado.Recusa);
         Assert.Null(resultado.Correcao);
         Assert.Equal("ana.souza@al.unieduk.com.br", ana.Email);
     }
@@ -56,8 +72,8 @@ public class AtosSobreOCadastroTests
     {
         var ana = Ana();
 
-        Assert.Equal(new ResultadoDaCorrecaoDeEmail(null, null), ana.CorrigirEmail("ana.souza@al.unieduk.com.br", _coordenacao, _agora));
-        Assert.NotNull(ana.CorrigirEmail("Ana.Souza@al.unieduk.com.br", _coordenacao, _agora).Correcao);
+        Assert.Equal(new ResultadoDaCorrecaoDeEmail(null, null), ana.CorrigirEmail("ana.souza@al.unieduk.com.br", _dominios, _coordenacao, _agora));
+        Assert.NotNull(ana.CorrigirEmail("Ana.Souza@al.unieduk.com.br", _dominios, _coordenacao, _agora).Correcao);
         Assert.Equal("Ana.Souza@al.unieduk.com.br", ana.Email);
     }
 
@@ -103,7 +119,7 @@ public class AtosSobreOCadastroTests
     {
         var renata = CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque");
 
-        Assert.Throws<DomainException>(() => renata.CorrigirEmail("renata.a@prof.unieduk.com.br", _coordenacao, _agora));
+        Assert.Throws<DomainException>(() => renata.CorrigirEmail("renata.a@prof.unieduk.com.br", _dominios, _coordenacao, _agora));
         Assert.Throws<DomainException>(() => renata.TrocarDeCurso(_cc, 1, _coordenacao, _agora));
     }
 }

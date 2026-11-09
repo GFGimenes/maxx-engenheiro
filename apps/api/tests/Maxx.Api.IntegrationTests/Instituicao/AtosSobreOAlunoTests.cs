@@ -135,6 +135,25 @@ public sealed class AtosSobreOAlunoTests(PostgresFixture postgres, Armazenamento
             "aluno-nao-encontrado");
     }
 
+    // A lista do appsettings.json (produto.md 2.4). Prova reversa: sem a conferência no
+    // domínio, a correção para o gmail grava e o teste falha.
+    [Theory]
+    [InlineData("elisa@gmail.com")]
+    [InlineData("elisa@x.al.unieduk.com.br")]
+    public async Task Correcao_para_dominio_fora_da_lista_e_recusada_e_nada_muda(string email)
+    {
+        await using var mundo = await CriarAsync(postgres, armazenamento);
+        var elisa = await ElisaSemContaAsync(mundo);
+        var antes = Assert.Single(await mundo.LinhasAsync<CadastroElegivel>(), linha => linha.Id == elisa).Email;
+        using var coordenacao = await mundo.ComoAsync(Coordenacao);
+
+        await AssertRecusaAsync(
+            await coordenacao.PutAsJsonAsync(Rota($"/{elisa}/email"), new { email }, Ct), HttpStatusCode.BadRequest, "dominio-nao-aceito");
+
+        Assert.Equal(antes, Assert.Single(await mundo.LinhasAsync<CadastroElegivel>(), linha => linha.Id == elisa).Email);
+        Assert.Empty(await mundo.LinhasAsync<CorrecaoDeEmail>());
+    }
+
     [Fact]
     public async Task Marcar_ex_aluno_troca_o_sufixo_registra_quem_e_pede_o_recalculo_uma_vez_so()
     {
