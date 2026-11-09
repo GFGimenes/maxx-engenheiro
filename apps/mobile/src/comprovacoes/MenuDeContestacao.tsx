@@ -14,6 +14,8 @@ interface MenuDeContestacaoProps {
   premioId: string;
   nomeDoAluno: string;
   aberto: boolean;
+  // Direto na folha de motivo: a instituição já escolheu contestar no menu do post.
+  direto?: boolean;
   onFechar: () => void;
 }
 
@@ -25,6 +27,7 @@ export function MenuDeContestacao({
   premioId,
   nomeDoAluno,
   aberto,
+  direto = false,
   onFechar,
 }: MenuDeContestacaoProps) {
   const { colors } = useTheme();
@@ -41,7 +44,7 @@ export function MenuDeContestacao({
   return (
     <>
       <Modal
-        visible={aberto && !escrevendo}
+        visible={aberto && !escrevendo && !direto}
         transparent
         animationType="slide"
         onRequestClose={fechar}
@@ -79,7 +82,7 @@ export function MenuDeContestacao({
         </View>
       </Modal>
       <FolhaDeMotivo
-        aberta={aberto && escrevendo}
+        aberta={aberto && (escrevendo || direto)}
         titulo="Contestar prêmio"
         explicacao={`A instituição decide. ${nomeDoAluno} vê que o prêmio está em averiguação.`}
         confirmar="Contestar"

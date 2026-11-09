@@ -30,6 +30,9 @@ export function ComprovacoesScreen() {
     eu.data?.papeis.some(
       (papel) => papel === "professor" || papel === "instituicao",
     ) ?? false;
+  const instituicao = eu.data?.papeis.includes("instituicao") ?? false;
+  // A instituição chega pela área dela (passo 12); o professor, pelo menu do perfil.
+  const voltarPara = instituicao ? "/instituicao" : "/perfil";
   const [eventoId, setEventoId] = useState<string | null>(null);
   const eventos = useEventosDaFila();
   const fila = useFilaDeComprovacoes(eventoId);
@@ -50,7 +53,11 @@ export function ComprovacoesScreen() {
           ? "Nada pendente neste evento."
           : "Nenhuma comprovação pendente."
       }
-      message="As reivindicações dos seus alunos aparecem aqui, das mais antigas para as mais novas."
+      message={
+        instituicao
+          ? "As reivindicações dos alunos aparecem aqui, das mais antigas para as mais novas."
+          : "As reivindicações dos seus alunos aparecem aqui, das mais antigas para as mais novas."
+      }
     />
   );
 
@@ -63,7 +70,7 @@ export function ComprovacoesScreen() {
         ]}
       >
         <View style={styles.margem}>
-          <Cabecalho titulo="Comprovações" voltarPara="/perfil" />
+          <Cabecalho titulo="Comprovações" voltarPara={voltarPara} />
         </View>
         <EmptyState
           icon="inbox"
@@ -82,7 +89,7 @@ export function ComprovacoesScreen() {
       ]}
     >
       <View style={[styles.margem, styles.topo]}>
-        <Cabecalho titulo="Comprovações" voltarPara="/perfil" />
+        <Cabecalho titulo="Comprovações" voltarPara={voltarPara} />
         {(eventos.data?.length ?? 0) > 0 && (
           <ScrollView
             horizontal

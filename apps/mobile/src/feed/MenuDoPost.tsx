@@ -36,6 +36,8 @@ interface MenuDoPostProps {
   aberto: boolean;
   onFechar: () => void;
   onRemovido: () => void;
+  // Só a instituição, sobre prêmio de participação válido (passo 12): abre a folha de motivo.
+  onContestar?: () => void;
 }
 
 // Folha que sobe de baixo, como as do Instagram, com a confirmação na própria folha.
@@ -45,6 +47,7 @@ export function MenuDoPost({
   aberto,
   onFechar,
   onRemovido,
+  onContestar,
 }: MenuDoPostProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -122,6 +125,13 @@ export function MenuDoPost({
             </>
           ) : (
             <>
+              {onContestar && (
+                <Button
+                  label="Contestar prêmio"
+                  variant="secondary"
+                  onPress={onContestar}
+                />
+              )}
               <Button
                 label={textos.botao}
                 variant="secondary"

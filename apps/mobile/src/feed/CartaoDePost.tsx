@@ -85,13 +85,16 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
       : leitor?.papeis.includes("instituicao")
         ? "remover"
         : null;
-  // O professor contesta prêmio de participação válido (produto.md 4.7). O escopo de turma e
-  // a janela de 15 dias, a API confere.
-  const contesta =
-    !acao &&
-    !!leitor?.papeis.includes("professor") &&
+  // O professor contesta prêmio de participação válido (produto.md 4.7), e a instituição
+  // também, no mesmo menu em que remove o post (passo 12). O escopo de turma e a janela de 15
+  // dias, a API confere.
+  const contestavel =
     post.premio?.tipo === "premioParticipacao" &&
     post.premio.estado === "valido";
+  const contesta =
+    !acao && !!leitor?.papeis.includes("professor") && contestavel;
+  const instituicaoContesta = acao === "remover" && contestavel;
+  const [contestando, setContestando] = useState(false);
   // A instituição não curte nem comenta (produto.md 2.1).
   const interage =
     !!leitor &&
@@ -282,7 +285,24 @@ export function CartaoDePost({ post, leitor, onRemovido }: CartaoDePostProps) {
           setMenuAberto(false);
           onRemovido?.();
         }}
+        onContestar={
+          instituicaoContesta
+            ? () => {
+                setMenuAberto(false);
+                setContestando(true);
+              }
+            : undefined
+        }
       />
+      {instituicaoContesta && post.premio && (
+        <MenuDeContestacao
+          premioId={post.premio.id}
+          nomeDoAluno={post.autor.nomeDeExibicao}
+          aberto={contestando}
+          direto
+          onFechar={() => setContestando(false)}
+        />
+      )}
       {contesta && post.premio && (
         <MenuDeContestacao
           premioId={post.premio.id}
