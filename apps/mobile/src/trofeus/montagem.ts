@@ -120,8 +120,71 @@ export const formatarPontos = (n: number) => `${formatarNumero(n)} pts`;
 export const textoDaRaridade = (percentual: number) =>
   `${percentual.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% dos alunos`;
 
+export type Instancia = NonNullable<
+  ItemDoAluno["obtidos"][number]["instancia"]
+>;
+export type Progresso = NonNullable<ItemDoAluno["progresso"]>;
+
+// A instância de uma conquista obtida, em texto: "4º bimestre de 2026", "2026/2", "2026" ou
+// "no curso" (passo 9). A API manda os números; o texto é do app.
+export function rotuloDaInstancia(instancia: Instancia): string {
+  const { periodo, ano, semestre, bimestre } = instancia;
+  switch (periodo) {
+    case "bimestre":
+      return bimestre && ano ? `${bimestre}º bimestre de ${ano}` : "bimestre";
+    case "semestre":
+      return semestre && ano ? `${ano}/${semestre}` : "semestre";
+    case "ano":
+      return ano ? `${ano}` : "ano";
+    default:
+      return "no curso";
+  }
+}
+
+const NA_INSTANCIA_VIGENTE: Record<string, string> = {
+  bimestre: "neste bimestre",
+  semestre: "neste semestre",
+  ano: "neste ano",
+  curso: "no curso",
+};
+
+// A linha de progresso da conquista que falta na instância vigente: "2 de 3 neste bimestre",
+// ou "1 de 2 matérias neste bimestre" quando o alvo são as matérias do período. A API só a
+// manda para o dono, fora do recesso e quando há alvo (passo 9).
+export function textoDoProgresso(item: ItemDoAluno): string | null {
+  const progresso = item.progresso;
+  if (!progresso) {
+    return null;
+  }
+
+  const unidade = progresso.unidade === "materias" ? " matérias" : "";
+  const onde = NA_INSTANCIA_VIGENTE[progresso.periodo] ?? "";
+  return `${formatarNumero(progresso.contagem)} de ${formatarNumero(progresso.alvo)}${unidade} ${onde}`.trim();
+}
+
+// Conquista é regra automática (prancheta trofeus-*.png): o critério, enquanto falta; obtida,
+// a instância da mais recente e quantas vezes.
+function detalheDaConquista(item: ItemDoAluno): string {
+  const [maisRecente] = item.obtidos;
+  if (!maisRecente) {
+    return `Regra automática · ${item.criterio}`;
+  }
+
+  const instancia = maisRecente.instancia
+    ? ` · ${rotuloDaInstancia(maisRecente.instancia)}`
+    : "";
+  const vezes =
+    item.obtidos.length > 1 ? ` · ${item.obtidos.length} vezes` : "";
+  return `Regra automática${instancia}${vezes}`;
+}
+
 // A linha de detalhe: o critério, ou, na medalha obtida, onde e quando veio a mais recente.
+// Na conquista, a regra automática (detalheDaConquista).
 export function detalheDaLinha(item: ItemDoAluno): string {
+  if (item.tipo === "conquista") {
+    return detalheDaConquista(item);
+  }
+
   const [maisRecente] = item.obtidos;
   if (!maisRecente || !maisRecente.materia) {
     return item.criterio;

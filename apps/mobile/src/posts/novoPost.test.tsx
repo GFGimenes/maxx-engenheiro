@@ -50,6 +50,7 @@ const EU_ALUNA = {
 };
 
 const MEDALHA_LIVRE = "0193a000-0000-7000-8000-0000000000d1";
+const CONQUISTA_LIVRE = "0193a000-0000-7000-8000-0000000000c1";
 const MEDALHA_POSTADA = "0193a000-0000-7000-8000-0000000000d2";
 const UPLOAD = "0193a000-0000-7000-8000-0000000000e1";
 
@@ -85,6 +86,34 @@ const PREMIOS = {
           bimestre: 1,
           obtidoEm: "2026-09-10T13:00:00Z",
           postId: "0193a000-0000-7000-8000-0000000000f1",
+        },
+      ],
+    },
+    {
+      codigo: "C01",
+      tipo: "conquista",
+      nome: "Cinco no bimestre",
+      criterio: "Receber cinco medalhas no mesmo bimestre.",
+      tier: "bronze",
+      pontos: 25,
+      familia: null,
+      ordemNaFamilia: null,
+      raridade: null,
+      obtidos: [
+        {
+          id: CONQUISTA_LIVRE,
+          tier: "bronze",
+          pontos: 25,
+          materia: null,
+          bimestre: null,
+          obtidoEm: "2026-11-09T13:00:00Z",
+          postId: null,
+          instancia: {
+            periodo: "bimestre",
+            ano: 2026,
+            semestre: 2,
+            bimestre: 4,
+          },
         },
       ],
     },
@@ -189,6 +218,7 @@ describe("novo post", () => {
       legenda: "Primeiro dia no campus.",
       uploadId: null,
       medalhaId: null,
+      conquistaId: null,
     });
     expect(uploads).not.toHaveBeenCalled();
     expect(mockRoteador.dismissTo).toHaveBeenCalledWith("/");
@@ -219,6 +249,7 @@ describe("novo post", () => {
       legenda: null,
       uploadId: UPLOAD,
       medalhaId: null,
+      conquistaId: null,
     });
   });
 
@@ -237,7 +268,27 @@ describe("novo post", () => {
     });
     await apertar("Publicar");
 
-    expect((await corpoDe(posts)).medalhaId).toBe(MEDALHA_LIVRE);
+    expect(await corpoDe(posts)).toMatchObject({
+      medalhaId: MEDALHA_LIVRE,
+      conquistaId: null,
+    });
+  });
+
+  it("oferece a conquista sem post, com a instância, e publica como conquista", async () => {
+    await renderComApi(<NovoPostScreen />, api);
+
+    const opcao = await screen.findByRole("checkbox", {
+      name: "Cinco no bimestre, Bronze, 25 pontos, 4º bimestre de 2026",
+    });
+    await act(async () => {
+      fireEvent.press(opcao);
+    });
+    await apertar("Publicar");
+
+    expect(await corpoDe(posts)).toMatchObject({
+      medalhaId: null,
+      conquistaId: CONQUISTA_LIVRE,
+    });
   });
 
   it("legenda acima de 1.000 caracteres mostra o erro e não deixa publicar", async () => {

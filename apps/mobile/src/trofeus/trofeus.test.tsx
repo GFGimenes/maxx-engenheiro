@@ -5,8 +5,11 @@ import { json, renderComApi } from "../test/renderComApi";
 import {
   detalheDaLinha,
   itensDaAba,
+  rotuloDaInstancia,
   textoDaRaridade,
+  textoDoProgresso,
   trilhasDaAba,
+  type Instancia,
   type ItemDoAluno,
   type PremiosDoAluno,
 } from "./montagem";
@@ -42,6 +45,17 @@ const obtido = (pontos: number, materia = "Banco de Dados", bimestre = 4) => ({
   bimestre,
   obtidoEm: "2026-11-10T13:00:00Z",
   postId: null,
+});
+
+const conquistaEm = (instancia: Instancia) => ({
+  id: `c-${instancia.periodo}-${instancia.bimestre ?? 0}`,
+  tier: "bronze",
+  pontos: 25,
+  materia: null,
+  bimestre: null,
+  obtidoEm: "2026-11-10T13:00:00Z",
+  postId: null,
+  instancia,
 });
 
 const PREMIOS: PremiosDoAluno = {
@@ -152,6 +166,95 @@ describe("montagem da tela", () => {
     expect(textoDaRaridade(0.4)).toBe("0,4% dos alunos");
     expect(textoDaRaridade(50)).toBe("50% dos alunos");
   });
+
+  it("a conquista que falta diz que é regra automática e o critério", () => {
+    expect(detalheDaLinha(PREMIOS.itens[3]!)).toBe(
+      "Regra automática · Critério de C05.",
+    );
+  });
+
+  it("a conquista obtida diz a instância da mais recente e quantas vezes", () => {
+    const c01 = item({
+      codigo: "C01",
+      tipo: "conquista",
+      obtidos: [
+        conquistaEm({
+          periodo: "bimestre",
+          ano: 2026,
+          semestre: 2,
+          bimestre: 4,
+        }),
+        conquistaEm({
+          periodo: "bimestre",
+          ano: 2026,
+          semestre: 2,
+          bimestre: 3,
+        }),
+      ],
+    });
+
+    expect(detalheDaLinha(c01)).toBe(
+      "Regra automática · 4º bimestre de 2026 · 2 vezes",
+    );
+  });
+
+  it("o rótulo da instância por período", () => {
+    expect(
+      rotuloDaInstancia({
+        periodo: "semestre",
+        ano: 2026,
+        semestre: 2,
+        bimestre: null,
+      }),
+    ).toBe("2026/2");
+    expect(
+      rotuloDaInstancia({
+        periodo: "ano",
+        ano: 2026,
+        semestre: null,
+        bimestre: null,
+      }),
+    ).toBe("2026");
+    expect(
+      rotuloDaInstancia({
+        periodo: "curso",
+        ano: null,
+        semestre: null,
+        bimestre: null,
+      }),
+    ).toBe("no curso");
+  });
+
+  it("o progresso diz quanto falta na instância vigente", () => {
+    const comProgresso = (periodo: string, contagem: number, alvo: number) =>
+      textoDoProgresso(
+        item({
+          codigo: "C",
+          tipo: "conquista",
+          progresso: { periodo, contagem, alvo },
+        }),
+      );
+
+    expect(comProgresso("bimestre", 2, 3)).toBe("2 de 3 neste bimestre");
+    expect(comProgresso("semestre", 0, 10)).toBe("0 de 10 neste semestre");
+    expect(comProgresso("ano", 5, 20)).toBe("5 de 20 neste ano");
+    expect(comProgresso("curso", 48, 1000)).toBe("48 de 1.000 no curso");
+    expect(
+      textoDoProgresso(
+        item({
+          codigo: "C03",
+          tipo: "conquista",
+          progresso: {
+            periodo: "bimestre",
+            contagem: 3,
+            alvo: 4,
+            unidade: "materias",
+          },
+        }),
+      ),
+    ).toBe("3 de 4 matérias neste bimestre");
+    expect(textoDoProgresso(PREMIOS.itens[3]!)).toBeNull();
+  });
 });
 
 describe("abas da navegação", () => {
@@ -196,12 +299,64 @@ describe("tela de Troféus", () => {
     expect(
       within(c05).getByText(" · Lendário · 0,4% dos alunos"),
     ).toBeOnTheScreen();
-    expect(within(c05).getByText("Critério de C05.")).toBeOnTheScreen();
+    expect(
+      within(c05).getByText("Regra automática · Critério de C05."),
+    ).toBeOnTheScreen();
     expect(within(c05).getByText("110")).toBeOnTheScreen();
     // Sem raridade calculada ainda, só o tier.
     expect(
       within(screen.getByTestId("premio-P01")).queryByText(/dos alunos/),
     ).toBeNull();
+  });
+
+  it("a conquista obtida mostra a instância, e a que falta, a linha de progresso", async () => {
+    premios.mockResolvedValueOnce(
+      json(200, {
+        ...PREMIOS,
+        itens: [
+          ...PREMIOS.itens.map((i) =>
+            i.codigo === "C02"
+              ? {
+                  ...i,
+                  progresso: { periodo: "bimestre", contagem: 2, alvo: 3 },
+                }
+              : i,
+          ),
+          item({
+            codigo: "C01",
+            tipo: "conquista",
+            nome: "Cinco no bimestre",
+            pontos: 25,
+            obtidos: [
+              conquistaEm({
+                periodo: "bimestre",
+                ano: 2026,
+                semestre: 2,
+                bimestre: 4,
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+    await renderComApi(<TrofeusScreen />, api);
+
+    const c01 = await screen.findByTestId("premio-C01");
+    expect(
+      within(c01).getByText("Regra automática · 4º bimestre de 2026"),
+    ).toBeOnTheScreen();
+    expect(within(c01).getByText("+25")).toBeOnTheScreen();
+    expect(within(c01).queryByTestId("progresso-C01")).toBeNull();
+
+    const c02 = screen.getByTestId("premio-C02");
+    expect(
+      within(c02).getByText("Regra automática · Critério de C02."),
+    ).toBeOnTheScreen();
+    expect(within(c02).getByText("2 de 3 neste bimestre")).toBeOnTheScreen();
+    expect(c02).toHaveProp(
+      "accessibilityLabel",
+      "Três notas 10, Prata, Lendário, não obtido, 2 de 3 neste bimestre",
+    );
   });
 
   it("na aba Medalhas, a obtida vem com o valor ganho e a trilha da família", async () => {

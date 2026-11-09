@@ -89,6 +89,10 @@ public enum Unicidade
     // A mesma pessoa curtindo o mesmo post duas vezes ao mesmo tempo.
     Curtida,
 
+    // A mesma conquista concedida duas vezes na mesma instância do período. A trava por
+    // aluno no worker evita; o índice é a rede de segurança.
+    ConquistaAtiva,
+
     // O mesmo seguimento gravado duas vezes ao mesmo tempo.
     Seguimento,
 }

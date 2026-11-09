@@ -11,17 +11,20 @@ import {
   pontosDaLinha,
   raridadeDe,
   textoDaRaridade,
+  textoDoProgresso,
   type ItemDoAluno,
 } from "./montagem";
 
 // Uma linha da lista de Troféus (prancheta trofeus-*.png): medalhão com tier e raridade,
 // nome, "Tier · Raridade · x% dos alunos", o critério ou de onde veio, e os pontos. O que
-// falta aparece apagado, com o valor do catálogo sem o "+".
+// falta aparece apagado, com o valor do catálogo sem o "+". A conquista que falta na
+// instância vigente ganha a linha de progresso ("2 de 3 neste bimestre"), sob o critério.
 export function LinhaDePremio({ item }: { item: ItemDoAluno }) {
   const { colors, name } = useTheme();
   const tier = item.tier as Tier;
   const raridade = raridadeDe(item);
   const obtido = item.obtidos.length > 0;
+  const progresso = textoDoProgresso(item);
 
   return (
     <View
@@ -32,6 +35,7 @@ export function LinhaDePremio({ item }: { item: ItemDoAluno }) {
         rotulosDeTier[tier],
         raridade && rotulosDeRaridade[raridade],
         obtido ? "obtido" : "não obtido",
+        progresso,
       ]
         .filter(Boolean)
         .join(", ")}
@@ -57,6 +61,14 @@ export function LinhaDePremio({ item }: { item: ItemDoAluno }) {
         <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
           {detalheDaLinha(item)}
         </Text>
+        {progresso && (
+          <Text
+            testID={`progresso-${item.codigo}`}
+            style={[textStyles.legenda, { color: colors.ink }]}
+          >
+            {progresso}
+          </Text>
+        )}
       </View>
       <Text
         style={[

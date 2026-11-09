@@ -998,6 +998,15 @@ export interface components {
             ra: string;
             email: string;
         };
+        InstanciaResponse: {
+            periodo: string;
+            /** Format: int32 */
+            ano: null | number;
+            /** Format: int32 */
+            semestre: null | number;
+            /** Format: int32 */
+            bimestre: null | number;
+        };
         ItemDeMedalhaResponse: {
             codigo: string;
             nome: string;
@@ -1024,6 +1033,7 @@ export interface components {
             raridade: null | components["schemas"]["RaridadeResponse"];
             obtidos: components["schemas"]["PremioObtidoResponse"][];
             exigeMateria: boolean;
+            progresso?: null | components["schemas"]["ProgressoResponse"];
         };
         LoginRequest: {
             identificador: string;
@@ -1152,6 +1162,7 @@ export interface components {
             obtidoEm: string;
             /** Format: uuid */
             postId: null | string;
+            instancia?: null | components["schemas"]["InstanciaResponse"];
         };
         PremiosDoAlunoResponse: {
             /** Format: int32 */
@@ -1172,12 +1183,22 @@ export interface components {
             /** Format: int32 */
             medalhasConcedidas: number;
         };
+        ProgressoResponse: {
+            periodo: string;
+            /** Format: int32 */
+            contagem: number;
+            /** Format: int32 */
+            alvo: number;
+            unidade?: null | string;
+        };
         PublicarPostRequest: {
             legenda: null | string;
             /** Format: uuid */
             uploadId: null | string;
             /** Format: uuid */
             medalhaId: null | string;
+            /** Format: uuid */
+            conquistaId?: null | string;
         };
         RaridadeResponse: {
             nivel: string;

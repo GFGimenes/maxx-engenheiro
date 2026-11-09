@@ -39,4 +39,13 @@ public sealed class Calendario
         var data = FusoHorario.DataLocal(instante);
         return _anos.SelectMany(ano => ano.Bimestres).FirstOrDefault(bimestre => bimestre.Contem(data));
     }
+
+    // O semestre em que conta um prêmio de participação (produto.md 4.9): o que contém a data
+    // de início do evento; no recesso, o semestre seguinte. Nulo quando o calendário ainda não
+    // tem o semestre seguinte.
+    public SemestreLetivo? SemestreDoEvento(DateOnly inicioDoEvento) =>
+        _anos.SelectMany(ano => ano.Semestres).FirstOrDefault(semestre => semestre.Fim >= inicioDoEvento);
+
+    public AnoLetivo? AnoDoSemestre(Guid semestreId) =>
+        _anos.FirstOrDefault(ano => ano.Semestres.Any(semestre => semestre.Id == semestreId));
 }

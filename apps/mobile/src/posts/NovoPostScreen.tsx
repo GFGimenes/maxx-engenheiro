@@ -73,7 +73,7 @@ export function NovoPostScreen() {
   const [preparando, setPreparando] = useState(false);
   const [erroDaFoto, setErroDaFoto] = useState<string | null>(null);
   const [legenda, setLegenda] = useState("");
-  const [medalhaId, setMedalhaId] = useState<string | null>(null);
+  const [premioId, setPremioId] = useState<string | null>(null);
   const [escolha, setEscolha] = useState<Escolha>(ESCOLHA_VAZIA);
 
   const participacao = (premios.data?.itens ?? []).filter(
@@ -92,7 +92,8 @@ export function NovoPostScreen() {
 
   const tamanhoDaLegenda = caracteres(legenda);
   const legendaLonga = tamanhoDaLegenda > LIMITE_DA_LEGENDA;
-  const vazio = legenda.trim() === "" && !derivadas && !medalhaId;
+  const premio = premios.opcoes.find((opcao) => opcao.id === premioId) ?? null;
+  const vazio = legenda.trim() === "" && !derivadas && !premio;
   const ocupado = preparando || publicar.isPending || reivindicar.isPending;
   const envio = modo === "post" ? publicar : reivindicar;
   const limparFalhas = () => {
@@ -122,7 +123,7 @@ export function NovoPostScreen() {
   const enviar = () => {
     if (modo === "post") {
       publicar.mutate(
-        { legenda, derivadas, medalhaId },
+        { legenda, derivadas, premio },
         { onSuccess: () => router.dismissTo("/") },
       );
     } else if (derivadas && evento && escolha.item) {
@@ -296,10 +297,10 @@ export function NovoPostScreen() {
               <OpcaoDePremio
                 key={premio.id}
                 premio={premio}
-                marcado={medalhaId === premio.id}
+                marcado={premioId === premio.id}
                 onPress={() => {
                   limparFalhas();
-                  setMedalhaId((atual) =>
+                  setPremioId((atual) =>
                     atual === premio.id ? null : premio.id,
                   );
                 }}
@@ -342,6 +343,7 @@ function OpcaoDePremio({
   const detalhe = [
     premio.materia,
     premio.bimestre ? `${premio.bimestre}º bimestre` : null,
+    premio.instancia,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -361,7 +363,11 @@ function OpcaoDePremio({
         pressed && styles.pressionado,
       ]}
     >
-      <Medalhao tier={premio.tier} glifo="fita" size={40} />
+      <Medalhao
+        tier={premio.tier}
+        glifo={premio.tipo === "conquista" ? "taca" : "fita"}
+        size={40}
+      />
       <View style={styles.textoDoPremio}>
         <Text style={[textStyles.secao, { color: colors.ink }]}>
           {premio.nome}

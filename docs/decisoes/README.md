@@ -130,6 +130,8 @@ DELETE FROM comentario WHERE autor_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM seguimento WHERE seguidor_id IN (SELECT usuario_id FROM alvo) OR seguido_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM comprovacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM post WHERE autor_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM progresso_de_conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
+DELETE FROM conquista WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM contestacao WHERE premio_participacao_id IN (SELECT id FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo));
 DELETE FROM premio_participacao WHERE aluno_id IN (SELECT usuario_id FROM alvo);
 DELETE FROM evento WHERE criado_por_id IN (SELECT usuario_id FROM alvo);
@@ -142,11 +144,11 @@ COMMIT;
 ```
 
 Rodado com `psql -v lote=<lote> -v ON_ERROR_STOP=1`. Os prefixos reservados, os aceites do
-termo e os refresh saem em cascata com o usuário e a família. Curtidas e comentários de
-outras pessoas nos posts do lote saem em cascata com o post. A lista cresce com os passos
-que gravam dados do aluno (prêmios, pontos): cada um acrescenta aqui a tabela dele, antes
-de `usuario`. As fotos no bucket não saem por este SQL, que só alcança o banco: saem na purga
-pela área web da instituição, no passo 12.
+termo e os refresh saem em cascata com o usuário e a família, e as evidências, com a
+conquista. Curtidas e comentários de outras pessoas nos posts do lote saem em cascata com o
+post. A lista cresce com os passos que gravam dados do aluno (prêmios, pontos): cada um
+acrescenta aqui a tabela dele, antes de `usuario`. As fotos no bucket não saem por este SQL,
+que só alcança o banco: saem na purga pela área web da instituição, no passo 12.
 
 ## Cliente
 
@@ -262,7 +264,7 @@ medalha) está em `produto.md` 4.8.
 | Notificação | Tabela `notificacao`, com usuário, tipo, referência, criada em e lida em. Uma por usuário, tipo e referência, por índice único. Medalha anulada antes do trabalho, ou apagada pela purga, não notifica. O texto é do cliente, pelo tipo, no passo 10 |
 | Bolinha de novidade | A de Troféus chega no passo 10, com o sininho. No passo 6, a notificação só é gravada |
 | Raridade | Tabela `raridade_do_item`, uma linha por item do catálogo, com alunos com o item, alunos elegíveis, raridade e quando foi calculada. A leitura só lê |
-| Numerador | Alunos distintos com ao menos uma medalha ativa do item, ex-alunos inclusive. Desde o passo 8, também o prêmio de participação válido ou definitivo; a conquista entra no passo 9 |
+| Numerador | Alunos distintos com ao menos uma medalha ativa do item, ex-alunos inclusive. Desde o passo 8, também o prêmio de participação válido ou definitivo. Desde o passo 9, também a conquista não removida, uma vez por aluno |
 | Divisor | Alunos com conta, ativos e ex-alunos, os de demonstração inclusive: o campus inteiro para item aberto, o curso atual para item restrito |
 | Troca de curso | Quem trocou de curso leva a medalha de item restrito ao curso antigo e não é elegível no curso novo: o numerador fica limitado ao divisor |
 | Faixas | Em inteiros, com "abaixo de" estrito: Lendário abaixo de 1%, Épico abaixo de 5%, Raro abaixo de 20%. Item que ninguém tem é Lendário com 0% |
@@ -313,7 +315,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 
 | Decisão | Detalhe |
 |---|---|
-| Post (D5) | Ao menos um entre medalha, foto e legenda. Legenda de até 1.000 caracteres. Não é editável. Um prêmio rende um post, por índice único `ix_post_medalha_ativa`, e a corrida responde 409, nunca 500. O passo 8 acrescentou o prêmio de participação (`ix_post_premio_participacao_ativo`, e `ck_post_um_premio` contra os dois no mesmo post); a conquista entra no passo 9 |
+| Post (D5) | Ao menos um entre medalha, foto e legenda. Legenda de até 1.000 caracteres. Não é editável. Um prêmio rende um post, por índice único `ix_post_medalha_ativa`, e a corrida responde 409, nunca 500. O passo 8 acrescentou o prêmio de participação (`ix_post_premio_participacao_ativo`, e `ck_post_um_premio` contra os dois no mesmo post). O passo 9 acrescentou a conquista (`ix_post_conquista_ativa`, e `ck_post_um_premio` passou a aceitar no máximo um dos três) |
 | Quem posta | Só aluno ativo. Ex-aluno, professor e instituição recebem 403. A medalha tem de ser do autor e não estar anulada |
 | Remoção pelo autor | Física: curtidas e comentários saem em cascata, as fotos pela fila, e o prêmio fica livre para um post novo |
 | Remoção pela instituição (D7) | Lógica, com `removido_em` e `removido_por_id`: o post some do feed, do perfil e do link, e o registro fica. No app, pelo menu "..." do post e do comentário |
@@ -462,11 +464,81 @@ pode ser decidido, remoção pela instituição, averiguação para os outros le
 | Limite | Onde é tratado |
 |---|---|
 | O ranking não é recalculado pela aprovação, contestação, decisão e remoção: a tabela de ranking não existe ainda | Passo 11 |
-| Prêmio definitivo não reavalia conquistas | Passo 9 |
+| Prêmio definitivo não reavalia conquistas | Resolvido no passo 9: o fim da janela e a confirmação da contestação enfileiram a reavaliação |
 | A conta de instituição não tem telas para a fila de contestações nem para a concessão direta | Passo 12 |
 | A remoção pela instituição que corre contra outro ato sobre o mesmo prêmio responde 404, como a corrida de duas remoções | Aceito |
 | P17 com data no recesso não acha matéria | Aceito |
 | O e2e depende do evento semeado da semana acadêmica de CC no semestre vigente | Risco "Semestre vigente na avaliação" do plano mestre |
+
+## Conquistas (passo 9)
+
+O avaliador das regras do catálogo, os gatilhos por fato e por fechamento de período, o
+recálculo na anulação, a leitura em Troféus e o post de conquista. As decisões D1 a D10
+foram fechadas no plano do passo, com as quatro perguntas dele; as demais, nas etapas. As
+regras de produto que nasceram aqui estão em `produto.md` 4.9 (semestre do prêmio de
+participação, todas as matérias, conquista removida e o post dela, progresso em Troféus) e
+8 (notificações de conquista). A especificação do avaliador foi atualizada em
+`regras-conquista.md`.
+
+### Avaliador e modelo
+
+| Decisão | Detalhe |
+|---|---|
+| Avaliador | `AvaliadorDeConquista`, no domínio: recebe a regra, a instância e os fatos, devolve contagem, alvo, se satisfaz e as evidências. Não grava nem sabe quando roda. O escape `customizada` delega a uma `IRegraCustomizada` registrada pelo nome; sem registro, erro |
+| Fato contável | `FatoContavel`: só a medalha ativa (`DaMedalha`) e o prêmio de participação definitivo (`DoPremio`) viram fato. `DescreverMedalha` descreve a anulada só para localizar as instâncias que ela tocava, nunca para contar |
+| Instância | `InstanciaDePeriodo`: tipo e id do bimestre, do semestre, do ano letivo ou do próprio aluno (período curso) |
+| Modelo (D1) | `conquista` (aluno, item, versão, tier e pontos congelados, tipo e referência do período, concedida em, removida em) e `evidencia_da_conquista` (medalha ou prêmio, nunca os dois, por check) |
+| Unicidade (D2) | Índice parcial `ix_conquista_instancia_ativa` entre as não removidas. Dentro do worker, uma violação aborta a transação do trabalho, então quem evita o disparo duplo é uma trava consultiva por aluno (`pg_advisory_xact_lock`), tomada no início de cada avaliação e solta no commit. Prova reversa: sem a trava, o teste de três consumidores simultâneos falha nas três rodadas |
+| Remoção (D3) | Lógica, com `removida_em`: a linha fica no histórico e sai do índice; se o critério volta, nasce outra |
+| Evidências (D4) | Todos os fatos contáveis da instância na concessão; no recálculo, se ainda satisfeita, o conjunto atual |
+| Progresso (D5) | `progresso_de_conquista` (aluno, item, instância, contagem, alvo), escrito pelo worker para toda conquista que um fato toca, inclusive as de fechamento. A leitura só lê |
+| Alvo dinâmico | Matérias distintas das matrículas do período; alvo zero nunca satisfaz (pergunta 3) |
+| Semestre do prêmio | O semestre que contém o início do evento; no recesso, o seguinte (pergunta 1). Sem o semestre seguinte no calendário, o prêmio ainda não é fato. Conquista de bimestre só conta medalha, e o validador do catálogo recusa outra fonte |
+| Vigência e curso | O item restrito a outro curso, ou fora da vigência na data de referência (o fim da instância; hoje, no período curso), não se aplica: não concede nem grava progresso |
+| Teste por item | Em `Maxx.Api.IntegrationTests`, sem banco: o leitor do JSON é da Infrastructure, que o domínio não conhece |
+
+### Gatilhos e worker
+
+| Decisão | Detalhe |
+|---|---|
+| Por fato (D6) | `reavaliar-conquistas`, com o aluno e o id da medalha ou do prêmio, na mesma transação do fato: concessão de medalha, fim da janela que torna o prêmio definitivo e confirmação da contestação. Avalia só as conquistas que o fato pode mexer, na instância dele |
+| Fechamento (D7) | `verificar-fechamentos` se reenfileira de hora em hora, com trava própria, e apaga as outras pendentes. Fecha cada instância encerrada (meia-noite de São Paulo do dia seguinte ao fim) sem registro em `fechamento_de_periodo`: grava o registro e enfileira `fechar-periodo` juntos. Este abre um `avaliar-fechamento-do-aluno` por aluno matriculado no período, ex-alunos inclusive, para não passar dos 60 s por trabalho. O seed base garante uma verificação pendente. Na primeira execução no calendário real, fechou os bimestres 1 a 3 e o semestre 2026/1 |
+| Carga com período | O tipo de período vai pelo nome do enum ("Bimestre"), não pelo número |
+| Congelamento (D8) | Com a instância fechada, o fato que chega concede a conquista de fechamento até a véspera do congelamento: o fim do último semestre coberto, mais 30 dias, já é congelado. Constante `InstanciaDePeriodo.DiasAteOCongelamento`, que o passo 11 herda. O primeiro fechamento roda mesmo depois do congelamento |
+| Anulação (D9) | `recalcular-conquistas-da-medalha`, sem limite de data: refaz o progresso das instâncias que a medalha tocava e reavalia só as conquistas com ela nas evidências. Nunca concede. Mudança de catálogo não remove conquista |
+| Notificação e pontos (D10) | `conquistaObtida` e `conquistaRemovida`, gravadas pelo próprio handler, na transação do trabalho; o texto chega no passo 10. Perfil e Troféus somam a conquista não removida; a raridade a conta uma vez por aluno, e conceder ou remover pede o recálculo |
+| Serviços | `AvaliacaoDeConquistas` (avaliar, gravar progresso e, se permitido, conceder) e `ContextoDasConquistas` servem aos handlers |
+
+### Leitura, tela e post
+
+| Decisão | Detalhe |
+|---|---|
+| Troféus | `GET /v1/eu/premios`, só acréscimos: `obtidos[].instancia` (`{periodo, ano, semestre, bimestre}`, em números; o texto é do app) e `itens[].progresso` (`{periodo, contagem, alvo, unidade}`), com `unidade: "materias"` no alvo dinâmico |
+| Progresso | Da instância vigente, só na conquista não obtida nela. Sem linha gravada, zero e o alvo do catálogo ou a contagem de matrículas. Fora: bimestre e semestre no recesso (ano e curso seguem), alvo zero, fora da vigência, regra customizada |
+| Perfil público | Mostra a conquista obtida com a instância; nunca o progresso |
+| Tela | "Regra automática · {critério}" na que falta, com a linha "2 de 3 neste bimestre" ou "1 de 2 matérias neste bimestre"; "Regra automática · 4º bimestre de 2026 · 2 vezes" na obtida. O critério é a frase inteira do catálogo, sem campo curto |
+| Post de conquista | `POST /v1/posts` aceita `conquistaId` (acréscimo). `post.conquista_id`, índice `ix_post_conquista_ativa`, `ck_post_um_premio` com no máximo um dos três. Recusas novas: `conquista-removida` (409) e `mais-de-um-premio` (400). O novo post oferece a conquista obtida sem post, com a taça e a instância |
+| Conquista removida e post | Como a medalha anulada: o post perde o vínculo; o que era só a conquista é apagado |
+| Purga | O SQL apaga `progresso_de_conquista` e `conquista` depois de `post`, que segura a conquista; as evidências saem em cascata |
+
+### Testes de ponta a ponta
+
+| Decisão | Detalhe |
+|---|---|
+| Fluxo | Só no celular, claro e escuro, cada execução com a sua professora e o seu aluno: quatro medalhas pela API da professora, "4 de 5 neste bimestre" em Troféus, a quinta fecha a C01 com a instância e os pontos, e o aluno posta a conquista pelo novo post. A tela de concessão já tem o e2e dela (passo 6) |
+| Espera | A tela é relida até o que se espera aparecer, por até 30 s: a avaliação é no worker |
+
+### Limites conhecidos
+
+| Limite | Onde é tratado |
+|---|---|
+| O ranking não é recalculado pela conquista concedida ou removida: a tabela de ranking não existe ainda | Passo 11 |
+| O texto das notificações de conquista e a bolinha de Troféus | Passo 10 |
+| A regra customizada não é disparada por fato nem tem progresso | Aceito: nenhuma conquista da fase 1 usa |
+| O fato que fica contável depois do fechamento não se reproduz pelo fluxo com o catálogo da fase 1 (as de fechamento contam medalha, concedida só no bimestre da data); o teste isola o mecanismo | Aceito |
+| O post de conquista no feed não mostra a instância, só o nome, o tier e os pontos | Aceito |
+| Conquistas no seed de demonstração | Passo 12 |
+| A suíte local da API disputa recurso com a pilha do compose de pé (o teste do migrador passa de 1 min); para a suíte local, pilha parada | Ocorrência de ambiente |
 
 ## Processo e qualidade
 

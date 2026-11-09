@@ -40,9 +40,16 @@ regra: {
 medalha; `tipoDeEvento` vem do item do catálogo do prêmio de participação. O avaliador
 nunca navega além do prêmio e do item dele.
 
-`alvo: "todasAsMatriculasDoPeriodo"` resolve para a quantidade de matrículas do aluno no
-período, e só faz sentido com `agruparPor: "materia"`. É o que permite "todas as
-matérias" sem o catálogo saber quantas matérias existem.
+`alvo: "todasAsMatriculasDoPeriodo"` resolve para o número de **matérias distintas** das
+turmas em que o aluno está matriculado nos semestres que a instância cobre, e só faz
+sentido com `agruparPor: "materia"`. É o que permite "todas as matérias" sem o catálogo
+saber quantas matérias existem. Só contam os fatos dessas matérias. Matéria distinta, e
+não matrícula, porque quem cursa a mesma matéria nos dois semestres do ano nunca fecharia
+a C15 contando matrículas. Sem matrícula no período, o alvo é zero, e alvo zero **nunca**
+é satisfeito (decisão do passo 9).
+
+Conquista de `periodo: "bimestre"` só conta medalha: o prêmio de participação conta no
+semestre do evento e não tem bimestre. O validador do catálogo recusa a combinação.
 
 ## 3. O que entra na contagem
 
@@ -84,10 +91,15 @@ bimestre 2 fecham C08 (cinco no semestre, se houver mais duas) e **não** fecham
 no bimestre).
 
 A instância é determinada pelo período de referência do prêmio: a medalha carrega
-bimestre e semestre; o prêmio de participação é atribuído ao semestre do evento.
+bimestre e semestre; o prêmio de participação é atribuído ao semestre do evento, o
+semestre letivo que contém a data de início dele; o evento que começa no recesso conta no
+semestre seguinte. Enquanto o calendário não tem esse semestre seguinte, o prêmio ainda
+não entra em contagem nenhuma (decisões do passo 9).
 
-Unicidade garantida por índice: `(aluno, item, tipoDePeriodo, referenciaDoPeriodo)`. É o
-índice que impede disparo duplo quando dois fatos chegam juntos.
+Unicidade garantida por índice: `(aluno, item, tipoDePeriodo, referenciaDoPeriodo)`, só
+entre as conquistas não removidas. Quem impede o disparo duplo quando dois fatos chegam
+juntos é uma trava consultiva por aluno no worker, que serializa as avaliações dele; o
+índice é a rede de segurança.
 
 ## 5. Quando o avaliador roda
 
@@ -101,8 +113,19 @@ contável depois do fechamento, até o congelamento do ranking do semestre (30 d
 fim do semestre). É o que cobre o prêmio de participação que vira definitivo já na
 virada: a conquista pontua no semestre do período a que se refere, não no da conta.
 
+A reavaliação vale até a véspera do congelamento: no dia do fim do semestre mais 30, a
+instância já está congelada. Para a instância de bimestre, conta o fim do semestre dela;
+para a de ano, o fim do segundo semestre.
+
 A avaliação acontece no worker, acionada pela fila. Nunca no caminho da requisição do
 usuário.
+
+O fechamento é um ato do worker, não uma data. A verificação de fechamentos roda de hora
+em hora: fecha cada instância encerrada (meia-noite de São Paulo do dia seguinte ao fim)
+que ainda não tem registro de fechamento, e abre um trabalho por aluno matriculado no
+período. Uma instância encerrada sem registro ainda não está fechada. O primeiro
+fechamento roda mesmo depois do congelamento: o limite vale para a reavaliação, não para o
+fechamento.
 
 ## 6. Evidências e recálculo
 
@@ -111,8 +134,12 @@ para duas coisas: responder ao aluno por que ele ganhou aquilo, e tornar o recá
 barato.
 
 Quando a instituição anula uma medalha, o worker reavalia apenas as conquistas que têm
-aquela medalha nas evidências. Se o critério deixou de ser satisfeito, a conquista é
-removida, os pontos saem, e o aluno é notificado.
+aquela medalha nas evidências, sem limite de data. Se o critério deixou de ser satisfeito,
+a conquista é removida, os pontos saem, e o aluno é notificado. A remoção é lógica: a
+conquista fica no histórico, fora do índice de unicidade, e, se o critério voltar a ser
+satisfeito, nasce outra. Se continua satisfeita, as evidências passam a ser o conjunto
+atual, para a próxima anulação achar a conquista pela medalha certa. A anulação nunca
+concede, e mudança de catálogo nunca remove conquista concedida.
 
 Prêmio de participação revogado nunca chega a ser evidência, porque só conta depois de
 definitivo e, depois de definitivo, não pode mais ser contestado.
@@ -123,6 +150,9 @@ O catálogo pode declarar `regra: { "forma": "customizada", "implementacao": "<n
 e o avaliador delega a uma classe registrada. Nenhuma conquista da fase 1 usa isso. O
 escape existe para não travar o catálogo numa regra que as duas formas não alcancem,
 não para ser o caminho padrão.
+
+Limite conhecido (passo 9): a regra customizada não declara fonte, então nenhum fato a
+dispara e ela não tem progresso. Quem a usar precisa dar a ela um gatilho próprio.
 
 ## 8. Plano de teste
 
@@ -136,3 +166,13 @@ não para ser o caminho padrão.
   antes do congelamento.
 - **Por idempotência:** dois fatos simultâneos não concedem a mesma conquista duas vezes
   na mesma instância de período.
+
+Onde cada um mora, desde o passo 9:
+
+| Plano | Testes |
+|---|---|
+| Por forma | `Maxx.Domain.Tests/Conquistas/AvaliadorDeConquistaTests.cs` |
+| Por item | `Maxx.Api.IntegrationTests/Conquistas/ConquistasDoCatalogoTests.cs`, sem banco, lendo o catálogo como o seeder lê |
+| Por fronteira, no domínio | `AvaliadorDeConquistaTests.cs`, `FatoContavelTests.cs` e `InstanciaENotificacaoTests.cs` |
+| Por fronteira, com Postgres | `ReavaliacaoDeConquistasTests.cs` (prêmio antes e depois de definitivo), `AnulacaoEConquistasTests.cs` (medalha anulada), `FechamentoDePeriodoTests.cs` (fato depois do fechamento, até a véspera do congelamento) |
+| Por idempotência | `ReavaliacaoDeConquistasTests.cs`: três consumidores ao mesmo tempo concedem uma conquista só, sem trabalho falho |

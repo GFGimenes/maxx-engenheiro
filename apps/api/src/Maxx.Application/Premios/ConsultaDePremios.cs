@@ -12,7 +12,7 @@ public interface IConsultaDePremios
 }
 
 // Pontos: a soma do que pontua hoje: as medalhas ativas e os prêmios de participação
-// válidos e definitivos.
+// válidos e definitivos, e as conquistas não removidas.
 public sealed record PremiosDoAluno(int Pontos, IReadOnlyList<FamiliaDoCatalogo> Familias, IReadOnlyList<ItemDoAluno> Itens);
 
 public sealed record FamiliaDoCatalogo(string Codigo, string Nome, string Descricao, int Passos);
@@ -30,7 +30,16 @@ public sealed record ItemDoAluno(
     int? OrdemNaFamilia,
     RaridadeAtual? Raridade,
     IReadOnlyList<PremioObtido> Obtidos,
-    bool ExigeMateria = false);
+    bool ExigeMateria = false,
+    ProgressoDaConquista? Progresso = null);
+
+// O progresso ("2 de 3") de uma conquista na instância vigente do período dela (passo 9):
+// só na conquista que o aluno ainda não obteve nessa instância, e só para o dono
+// (produto.md 9.1). Nulo também no recesso, para bimestre e semestre, e quando o aluno não
+// tem matrícula no período do alvo dinâmico.
+// EmMaterias: o alvo é o das matérias do período (todasAsMatriculasDoPeriodo), e o app diz
+// "1 de 2 matérias".
+public sealed record ProgressoDaConquista(Periodo Periodo, int Contagem, int Alvo, bool EmMaterias = false);
 
 public sealed record RaridadeAtual(Raridade Nivel, int AlunosComItem, int AlunosElegiveis)
 {
@@ -40,4 +49,17 @@ public sealed record RaridadeAtual(Raridade Nivel, int AlunosComItem, int Alunos
 
 // Tier e pontos do momento da concessão (ADR 0007), que podem diferir do catálogo de hoje.
 // PostId: o post não removido que o prêmio rendeu, se houver (um prêmio rende um post).
-public sealed record PremioObtido(Guid Id, Tier Tier, int Pontos, string? Materia, int? Bimestre, DateTimeOffset ObtidoEm, Guid? PostId);
+// Instancia: só na conquista, a instância do período em que foi obtida (passo 9).
+public sealed record PremioObtido(
+    Guid Id,
+    Tier Tier,
+    int Pontos,
+    string? Materia,
+    int? Bimestre,
+    DateTimeOffset ObtidoEm,
+    Guid? PostId,
+    InstanciaObtida? Instancia = null);
+
+// A instância de uma conquista obtida, em números para o app escrever: o bimestre (1 a 4) e
+// o ano; o semestre (1 ou 2) e o ano; o ano; ou nada, no período curso.
+public sealed record InstanciaObtida(Periodo Periodo, int? Ano, int? Semestre, int? Bimestre);

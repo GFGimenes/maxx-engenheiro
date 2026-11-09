@@ -311,6 +311,108 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("vinculo_professor", (string)null);
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Conquistas.Conquista", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aluno_id");
+
+                    b.Property<DateTimeOffset>("ConcedidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("concedida_em");
+
+                    b.Property<string>("ItemCodigo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("item_codigo");
+
+                    b.Property<int>("Pontos")
+                        .HasColumnType("integer")
+                        .HasColumnName("pontos");
+
+                    b.Property<Guid>("ReferenciaDoPeriodo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("referencia_do_periodo");
+
+                    b.Property<DateTimeOffset?>("RemovidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removida_em");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
+                    b.Property<string>("TipoDePeriodo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_periodo");
+
+                    b.Property<int>("VersaoDoItem")
+                        .HasColumnType("integer")
+                        .HasColumnName("versao_do_item");
+
+                    b.HasKey("Id")
+                        .HasName("pk_conquista");
+
+                    b.HasIndex("ItemCodigo")
+                        .HasDatabaseName("ix_conquista_item_codigo");
+
+                    b.HasIndex("AlunoId", "ItemCodigo", "TipoDePeriodo", "ReferenciaDoPeriodo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_conquista_instancia_ativa")
+                        .HasFilter("removida_em IS NULL");
+
+                    b.ToTable("conquista", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_conquista_pontos", "pontos >= 1");
+
+                            t.HasCheckConstraint("ck_conquista_tipo_de_periodo", "tipo_de_periodo IN ('bimestre', 'semestre', 'ano', 'curso')");
+
+                            t.HasCheckConstraint("ck_conquista_versao_do_item", "versao_do_item >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Conquistas.EvidenciaDaConquista", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ConquistaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conquista_id");
+
+                    b.Property<Guid?>("MedalhaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("medalha_id");
+
+                    b.Property<Guid?>("PremioParticipacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("premio_participacao_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_evidencia_da_conquista");
+
+                    b.HasIndex("ConquistaId")
+                        .HasDatabaseName("ix_evidencia_da_conquista_conquista_id");
+
+                    b.HasIndex("MedalhaId")
+                        .HasDatabaseName("ix_evidencia_da_conquista_medalha_id");
+
+                    b.HasIndex("PremioParticipacaoId")
+                        .HasDatabaseName("ix_evidencia_da_conquista_premio_participacao_id");
+
+                    b.ToTable("evidencia_da_conquista", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_evidencia_da_conquista_um_premio", "(medalha_id IS NULL) <> (premio_participacao_id IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Domain.Fotos.UploadPendente", b =>
                 {
                     b.Property<Guid>("Id")
@@ -728,7 +830,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("notificacao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado')");
+                            t.HasCheckConstraint("ck_notificacao_tipo", "tipo IN ('medalhaRecebida', 'comprovacaoAprovada', 'comprovacaoReprovada', 'contestacaoAberta', 'decisaoDeContestacao', 'premioRevogado', 'conquistaObtida', 'conquistaRemovida')");
                         });
                 });
 
@@ -1273,6 +1375,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("chave_da_foto_do_feed");
 
+                    b.Property<Guid?>("ConquistaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conquista_id");
+
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
@@ -1306,6 +1412,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_post");
 
+                    b.HasIndex("ConquistaId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_post_conquista_ativa")
+                        .HasFilter("conquista_id IS NOT NULL AND removido_em IS NULL");
+
                     b.HasIndex("MedalhaId")
                         .IsUnique()
                         .HasDatabaseName("ix_post_medalha_ativa")
@@ -1327,11 +1438,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_post_foto_completa", "(chave_da_foto_do_feed IS NULL) = (chave_da_foto_da_grade IS NULL)");
 
-                            t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL");
+                            t.HasCheckConstraint("ck_post_nao_vazio", "legenda IS NOT NULL OR chave_da_foto_do_feed IS NOT NULL OR medalha_id IS NOT NULL OR premio_participacao_id IS NOT NULL OR conquista_id IS NOT NULL");
 
                             t.HasCheckConstraint("ck_post_remocao", "(removido_em IS NULL) = (removido_por_id IS NULL)");
 
-                            t.HasCheckConstraint("ck_post_um_premio", "medalha_id IS NULL OR premio_participacao_id IS NULL");
+                            t.HasCheckConstraint("ck_post_um_premio", "num_nonnulls(medalha_id, premio_participacao_id, conquista_id) <= 1");
                         });
                 });
 
@@ -1358,6 +1469,73 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                     b.ToTable("seguimento", null, t =>
                         {
                             t.HasCheckConstraint("ck_seguimento_outro", "seguidor_id <> seguido_id");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.Conquistas.FechamentoDePeriodoRow", b =>
+                {
+                    b.Property<string>("TipoDePeriodo")
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_periodo");
+
+                    b.Property<Guid>("ReferenciaDoPeriodo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("referencia_do_periodo");
+
+                    b.Property<DateTimeOffset>("FechadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fechado_em");
+
+                    b.HasKey("TipoDePeriodo", "ReferenciaDoPeriodo")
+                        .HasName("pk_fechamento_de_periodo");
+
+                    b.ToTable("fechamento_de_periodo", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fechamento_de_periodo_tipo_de_periodo", "tipo_de_periodo IN ('bimestre', 'semestre', 'ano')");
+                        });
+                });
+
+            modelBuilder.Entity("Maxx.Infrastructure.Conquistas.ProgressoDeConquistaRow", b =>
+                {
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aluno_id");
+
+                    b.Property<string>("ItemCodigo")
+                        .HasColumnType("text")
+                        .HasColumnName("item_codigo");
+
+                    b.Property<string>("TipoDePeriodo")
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_de_periodo");
+
+                    b.Property<Guid>("ReferenciaDoPeriodo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("referencia_do_periodo");
+
+                    b.Property<int>("Alvo")
+                        .HasColumnType("integer")
+                        .HasColumnName("alvo");
+
+                    b.Property<DateTimeOffset>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizado_em");
+
+                    b.Property<int>("Contagem")
+                        .HasColumnType("integer")
+                        .HasColumnName("contagem");
+
+                    b.HasKey("AlunoId", "ItemCodigo", "TipoDePeriodo", "ReferenciaDoPeriodo")
+                        .HasName("pk_progresso_de_conquista");
+
+                    b.HasIndex("ItemCodigo")
+                        .HasDatabaseName("ix_progresso_de_conquista_item_codigo");
+
+                    b.ToTable("progresso_de_conquista", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_progresso_de_conquista_contagem", "contagem >= 0 AND alvo >= 0");
+
+                            t.HasCheckConstraint("ck_progresso_de_conquista_tipo_de_periodo", "tipo_de_periodo IN ('bimestre', 'semestre', 'ano', 'curso')");
                         });
                 });
 
@@ -1713,6 +1891,45 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_vinculo_professor_turma_turma_id");
                 });
 
+            modelBuilder.Entity("Maxx.Domain.Conquistas.Conquista", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conquista_usuario_aluno_id");
+
+                    b.HasOne("Maxx.Infrastructure.Persistence.ItemCatalogoRow", null)
+                        .WithMany()
+                        .HasForeignKey("ItemCodigo")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conquista_item_catalogo_item_codigo");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Conquistas.EvidenciaDaConquista", b =>
+                {
+                    b.HasOne("Maxx.Domain.Conquistas.Conquista", null)
+                        .WithMany("Evidencias")
+                        .HasForeignKey("ConquistaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_evidencia_da_conquista_conquista_conquista_id");
+
+                    b.HasOne("Maxx.Domain.Premios.Medalha", null)
+                        .WithMany()
+                        .HasForeignKey("MedalhaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_evidencia_da_conquista_medalha_medalha_id");
+
+                    b.HasOne("Maxx.Domain.Premios.PremioParticipacao", null)
+                        .WithMany()
+                        .HasForeignKey("PremioParticipacaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_evidencia_da_conquista_premio_participacao_premio_participa");
+                });
+
             modelBuilder.Entity("Maxx.Domain.Fotos.UploadPendente", b =>
                 {
                     b.HasOne("Maxx.Domain.Identidade.Usuario", null)
@@ -2023,6 +2240,12 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_post_usuario_autor_id");
 
+                    b.HasOne("Maxx.Domain.Conquistas.Conquista", null)
+                        .WithMany()
+                        .HasForeignKey("ConquistaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_post_conquista_conquista_id");
+
                     b.HasOne("Maxx.Domain.Premios.Medalha", null)
                         .WithMany()
                         .HasForeignKey("MedalhaId")
@@ -2059,6 +2282,23 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_seguimento_usuario_seguidor_id");
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Conquistas.ProgressoDeConquistaRow", b =>
+                {
+                    b.HasOne("Maxx.Domain.Identidade.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_progresso_de_conquista_usuario_aluno_id");
+
+                    b.HasOne("Maxx.Infrastructure.Persistence.ItemCatalogoRow", null)
+                        .WithMany()
+                        .HasForeignKey("ItemCodigo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_progresso_de_conquista_item_catalogo_item_codigo");
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Persistence.ItemCatalogoRow", b =>
                 {
                     b.HasOne("Maxx.Infrastructure.Persistence.FamiliaRow", null)
@@ -2086,6 +2326,11 @@ namespace Maxx.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Maxx.Domain.Academico.SemestreLetivo", b =>
                 {
                     b.Navigation("Bimestres");
+                });
+
+            modelBuilder.Entity("Maxx.Domain.Conquistas.Conquista", b =>
+                {
+                    b.Navigation("Evidencias");
                 });
 
             modelBuilder.Entity("Maxx.Domain.Identidade.FamiliaDeSessao", b =>

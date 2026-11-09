@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
+using Maxx.Application.Conquistas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Identidade;
+using Maxx.Infrastructure.Fila;
 using Maxx.Infrastructure.Persistence;
 using Maxx.Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +48,24 @@ public sealed class SeedBaseTests(PostgresFixture postgres) : IClassFixture<Post
                 (4, new DateOnly(2026, 9, 28), new DateOnly(2026, 12, 5)),
             ],
             ano.Bimestres.Select(bimestre => (bimestre.Numero, bimestre.Inicio, bimestre.Fim)));
+    }
+
+    // A verificação de fechamentos se reenfileira sozinha (D7 do passo 9): o seed só garante
+    // que exista uma, sem acumular a cada execução.
+    [Fact]
+    public async Task Seed_base_deixa_uma_verificacao_de_fechamentos_na_fila_e_rodar_de_novo_nao_acrescenta()
+    {
+        await using var factory = await MigradoAsync(postgres);
+
+        await factory.SeedBaseAsync(Ct);
+        await factory.SeedBaseAsync(Ct);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        Assert.Equal(
+            1,
+            await db.Set<Trabalho>().CountAsync(
+                trabalho => trabalho.Tipo == VerificarFechamentos.Tipo && trabalho.Estado == EstadoDoTrabalho.Pendente, Ct));
     }
 
     [Fact]

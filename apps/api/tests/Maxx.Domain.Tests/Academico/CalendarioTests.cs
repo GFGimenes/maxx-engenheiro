@@ -65,6 +65,36 @@ public class CalendarioTests
         Assert.Equal("2026/2", _calendario.SemestreEm(domingo)?.Codigo);
     }
 
+    // Semestre do prêmio de participação (produto.md 4.9): o que contém o início do evento;
+    // no recesso, o seguinte.
+    [Theory]
+    [InlineData(1, 26, "2026/1")]
+    [InlineData(6, 27, "2026/1")]
+    [InlineData(6, 28, "2026/2")]
+    [InlineData(7, 15, "2026/2")]
+    [InlineData(9, 27, "2026/2")]
+    [InlineData(12, 5, "2026/2")]
+    [InlineData(1, 10, "2026/1")]
+    public void Evento_conta_no_semestre_do_inicio_e_no_recesso_no_seguinte(int mes, int dia, string esperado)
+    {
+        Assert.Equal(esperado, _calendario.SemestreDoEvento(Data(mes, dia))?.Codigo);
+    }
+
+    [Fact]
+    public void Evento_no_recesso_sem_semestre_seguinte_no_calendario_nao_tem_semestre()
+    {
+        Assert.Null(_calendario.SemestreDoEvento(Data(12, 20)));
+    }
+
+    [Fact]
+    public void Ano_do_semestre_e_o_ano_letivo_que_o_contem()
+    {
+        var ano = _calendario.Anos[0];
+
+        Assert.Equal(ano, _calendario.AnoDoSemestre(ano.Semestres[1].Id));
+        Assert.Null(_calendario.AnoDoSemestre(Guid.NewGuid()));
+    }
+
     [Fact]
     public void Ano_repetido_no_calendario_e_recusado()
     {

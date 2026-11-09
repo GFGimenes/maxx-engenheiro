@@ -2,6 +2,7 @@ using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
+using Maxx.Domain.Conquistas;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Premios;
 using Maxx.Infrastructure.Persistence;
@@ -40,8 +41,8 @@ public sealed class RecalculoRow
 // calcula e deixa um pedido só para quando os dez segundos fecharem.
 //
 // O numerador são os alunos distintos com ao menos uma medalha ativa ou um prêmio de
-// participação válido ou definitivo do item (passo 8), ativos ou ex-alunos; a conquista entra
-// no passo 9. O divisor são os alunos com conta, ativos e ex-alunos, os de demonstração
+// participação válido ou definitivo do item (passo 8), ou uma conquista não removida (passo 9),
+// ativos ou ex-alunos. O divisor são os alunos com conta, ativos e ex-alunos, os de demonstração
 // inclusive: o campus inteiro para item aberto, o curso atual para item restrito.
 internal sealed partial class RecalculoDeRaridade(
     MaxxDbContext db, IFilaDeTrabalhos fila, TimeProvider relogio, ILogger<RecalculoDeRaridade> logger)
@@ -111,6 +112,18 @@ internal sealed partial class RecalculoDeRaridade(
             .Select(item => new { Codigo = item.Key, Alunos = item.Select(premio => premio.AlunoId).Distinct().Count() })
             .ToListAsync(cancellationToken);
         foreach (var item in comParticipacao)
+        {
+            comItem[item.Codigo] = item.Alunos;
+        }
+
+        // Conquista conta enquanto não removida (passo 9). Repetível por instância do
+        // período, conta uma vez por aluno (produto.md 4.3).
+        var comConquista = await db.Set<Conquista>()
+            .Where(conquista => conquista.RemovidaEm == null)
+            .GroupBy(conquista => conquista.ItemCodigo)
+            .Select(item => new { Codigo = item.Key, Alunos = item.Select(conquista => conquista.AlunoId).Distinct().Count() })
+            .ToListAsync(cancellationToken);
+        foreach (var item in comConquista)
         {
             comItem[item.Codigo] = item.Alunos;
         }

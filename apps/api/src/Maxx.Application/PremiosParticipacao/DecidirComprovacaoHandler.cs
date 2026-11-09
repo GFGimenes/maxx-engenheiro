@@ -1,5 +1,6 @@
 using Maxx.Application.Autenticacao;
 using Maxx.Application.Autorizacao;
+using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Notificacoes;
@@ -185,7 +186,12 @@ public sealed class TornarPremioDefinitivoHandler(
             return;
         }
 
-        if (!premio.TornarDefinitivoSeAJanelaFechou(relogio.GetUtcNow()))
+        if (premio.TornarDefinitivoSeAJanelaFechou(relogio.GetUtcNow()))
+        {
+            // Definitivo, o prêmio passa a contar para conquista (regras-conquista.md 3).
+            fila.Enfileirar(ReavaliarConquistas.PeloPremio(premio.AlunoId, premio.Id));
+        }
+        else
         {
             fila.Enfileirar(carga, premio.FimDaJanela);
         }
