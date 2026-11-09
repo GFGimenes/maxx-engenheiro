@@ -1,5 +1,5 @@
 {
-  "observacao": "Atividade do mundo de demonstração (passo 12): quantos alunos têm cada medalha e cada prêmio de participação, os avisos e a contestação aberta. O seed gera os fatos de forma determinística a partir daqui, com datas passadas e pelas regras do domínio, quando as contas dos alunos nascem; rodar de novo não repete nada. As conquistas não estão aqui: nascem do worker, a partir das medalhas e dos prêmios. As quantidades foram pensadas para as quatro raridades aparecerem com folga para as contas de demonstração e de teste que entram depois: um aluno só no Lendário, de 2 a 6 no Épico, de 9 a 22 no Raro e 40 ou mais no Comum. Datas e horas em America/Sao_Paulo.",
+  "observacao": "Atividade do mundo de demonstração (passo 12): quantos alunos têm cada medalha e cada prêmio de participação, os avisos e a contestação aberta. O seed gera os fatos de forma determinística a partir daqui, com datas passadas e pelas regras do domínio, quando as contas dos alunos nascem; rodar de novo não repete nada. As conquistas não estão aqui: nascem do worker, a partir das medalhas e dos prêmios. As quantidades foram pensadas para as quatro raridades aparecerem com folga para as contas de demonstração e de teste que entram depois: um aluno só no Lendário, de 2 a 6 no Épico, de 9 a 22 no Raro e 40 ou mais no Comum. Datas e horas em America/Sao_Paulo. Desde a etapa 6: as duas comprovações pendentes, os posts com foto (reivindicações aprovadas, medalhas e posts livres, com as fotos de data/demo/fotos/) e um pouco de seguimentos, curtidas e comentários.",
   "medalhas": {
     "M01": 60,
     "M02": 22,
@@ -89,7 +89,11 @@
       "autor": "renata.albuquerque@prof.unieduk.com.br",
       "escopo": "turma",
       "turmas": [
-        { "curso": "CC", "materia": "Banco de Dados", "semestre": "2026/2" },
+        {
+          "curso": "CC",
+          "materia": "Banco de Dados",
+          "semestre": "2026/2"
+        },
         {
           "curso": "CC",
           "materia": "Estruturas de Dados",
@@ -104,7 +108,11 @@
       "autor": "helena.duarte@prof.unieduk.com.br",
       "escopo": "turma",
       "turmas": [
-        { "curso": "MED", "materia": "Anatomia", "semestre": "2026/2" }
+        {
+          "curso": "MED",
+          "materia": "Anatomia",
+          "semestre": "2026/2"
+        }
       ],
       "titulo": "Aula prática no laboratório de anatomia",
       "texto": "Na próxima quinta a aula é no laboratório de anatomia. Venham de jaleco e sapato fechado.",
@@ -114,11 +122,80 @@
       "autor": "marcos.teixeira@prof.unieduk.com.br",
       "escopo": "turma",
       "turmas": [
-        { "curso": "ADM", "materia": "Marketing", "semestre": "2026/2" }
+        {
+          "curso": "ADM",
+          "materia": "Marketing",
+          "semestre": "2026/2"
+        }
       ],
       "titulo": "Estudo de caso para a próxima aula",
       "texto": "Leiam o estudo de caso que está no ambiente da turma antes da aula de segunda. Vamos discutir em grupos.",
       "publicadoEm": "2026-11-05T18:00"
     }
+  ],
+  "comprovacoesPendentes": [
+    {
+      "ra": "20260103",
+      "item": "P12",
+      "evento": "congresso-regional-2026-2",
+      "reivindicadoEm": "2026-10-27T20:15",
+      "legenda": "Apresentei nosso trabalho de banco de dados no congresso regional. Primeira vez falando para tanta gente!"
+    },
+    {
+      "ra": "20260402",
+      "item": "P07",
+      "evento": "minicurso-python-2026-2",
+      "reivindicadoEm": "2026-11-05T21:40",
+      "legenda": "Minicurso de Python para análise de dados. Saí com o primeiro gráfico pronto."
+    }
+  ],
+  "posts": {
+    "reivindicacoesComFoto": 20,
+    "medalhasComFoto": 15,
+    "livres": 15
+  },
+  "legendas": {
+    "reivindicacao": [
+      "Valeu demais participar!",
+      "Mais um evento para a conta.",
+      "Experiência incrível, recomendo para quem não foi.",
+      "Foi corrido, mas valeu cada minuto.",
+      "Registro do dia.",
+      "Que semana!"
+    ],
+    "medalha": [
+      "Estudei muito para essa.",
+      "Uma de cada vez.",
+      "Bimestre puxado, mas deu certo.",
+      "Agradeço à turma pela ajuda nos estudos.",
+      "Feliz com o resultado!"
+    ],
+    "livre": [
+      "Tarde de estudos.",
+      "Biblioteca cheia hoje.",
+      "Café e revisão para a prova.",
+      "Projeto quase pronto.",
+      "Aula prática de hoje.",
+      "Bom dia, campus.",
+      "Semana de entregas.",
+      "Hoje rendeu."
+    ]
+  },
+  "social": {
+    "seguimentosPorAluno": [3, 8],
+    "curtidasPorPost": [2, 14],
+    "comentarios": 40
+  },
+  "comentarios": [
+    "Parabéns!",
+    "Merecido!",
+    "Que legal!",
+    "Arrasou!",
+    "Muito bom, parabéns pelo esforço.",
+    "Top demais!",
+    "Bora pra próxima!",
+    "Orgulho da turma!",
+    "Quero ir no próximo.",
+    "Incrível!"
   ]
 }

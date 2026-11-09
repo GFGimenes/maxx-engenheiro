@@ -110,6 +110,19 @@ public sealed class CatalogoArquivosTests : IDisposable
         Assert.Contains(alunos, aluno => aluno.Ra == contestacao.Ra);
         Assert.Contains(contestacao.Evento, eventos);
         Assert.Contains(contestacao.ContestadaPor, pessoas);
+        Assert.All(atividade.ComprovacoesPendentes, pendente =>
+        {
+            Assert.Contains(alunos, aluno => aluno.Ra == pendente.Ra);
+            Assert.Contains(pendente.Evento, eventos);
+            Assert.Equal(TipoDeItem.PremioParticipacao, catalogo[pendente.Item].Tipo);
+        });
+
+        // As fotos: as derivadas dentro do limite do upload, a procedência de cada uma e foto
+        // para todo curso.
+        var fotos = FotosDemoReader.Ler(demo);
+        Assert.All(mundo.Cursos, curso => Assert.True(fotos.Count(foto => foto.CabeEm(curso.Sigla)) >= 10, curso.Sigla));
+        var creditos = File.ReadAllText(Path.Combine(demo, FotosDemoReader.Diretorio, "CREDITOS.md"));
+        Assert.All(fotos, foto => Assert.Contains(foto.Nome, creditos, StringComparison.Ordinal));
     }
 
     [Fact]

@@ -68,6 +68,23 @@ public static class AtividadeDemoReader
             erros.Add("contestação: concedidoEm e contestadaEm na forma aaaa-mm-ddThh:mm, e a contestação depois da concessão.");
         }
 
+        foreach (var pendente in atividade.ComprovacoesPendentes.Where(pendente => !Instante(pendente.ReivindicadoEm, out _)))
+        {
+            erros.Add($"comprovação pendente de {pendente.Ra}: reivindicadoEm {pendente.ReivindicadoEm} fora da forma aaaa-mm-ddThh:mm.");
+        }
+
+        if (atividade.Social.SeguimentosPorAluno is not [var minimo, var maximo] || minimo < 0 || maximo < minimo
+            || atividade.Social.CurtidasPorPost is not [var poucas, var muitas] || poucas < 0 || muitas < poucas)
+        {
+            erros.Add("social: seguimentosPorAluno e curtidasPorPost são intervalos [mínimo, máximo].");
+        }
+
+        if (atividade.Legendas.Reivindicacao.Count == 0 || atividade.Legendas.Medalha.Count == 0 || atividade.Legendas.Livre.Count == 0
+            || atividade.Comentarios.Count == 0)
+        {
+            erros.Add("legendas e comentários não podem vir vazios.");
+        }
+
         if (erros.Count > 0)
         {
             throw new SeedException(
@@ -95,6 +112,60 @@ public sealed class AtividadeDemo
     public ContestacaoDemo? Contestacao { get; init; }
 
     public required List<AvisoDemo> Avisos { get; init; }
+
+    // Reivindicações com foto ainda sem decisão: a fila de comprovações do mundo.
+    public required List<ComprovacaoPendenteDemo> ComprovacoesPendentes { get; init; }
+
+    public required PostsDemo Posts { get; init; }
+
+    public required LegendasDemo Legendas { get; init; }
+
+    public required SocialDemo Social { get; init; }
+
+    public required List<string> Comentarios { get; init; }
+}
+
+public sealed class ComprovacaoPendenteDemo
+{
+    public required string Ra { get; init; }
+
+    public required string Item { get; init; }
+
+    public required string Evento { get; init; }
+
+    public required string ReivindicadoEm { get; init; }
+
+    public required string Legenda { get; init; }
+}
+
+// Quantos posts com foto: reivindicações aprovadas, medalhas postadas e posts livres.
+public sealed class PostsDemo
+{
+    public required int ReivindicacoesComFoto { get; init; }
+
+    public required int MedalhasComFoto { get; init; }
+
+    public required int Livres { get; init; }
+}
+
+public sealed class LegendasDemo
+{
+    public required List<string> Reivindicacao { get; init; }
+
+    public required List<string> Medalha { get; init; }
+
+    public required List<string> Livre { get; init; }
+}
+
+// Intervalos [mínimo, máximo]: quantos colegas cada aluno ativo segue, quantas curtidas cada
+// post com foto ganha; e quantos comentários no mundo todo.
+public sealed class SocialDemo
+{
+    public required List<int> SeguimentosPorAluno { get; init; }
+
+    public required List<int> CurtidasPorPost { get; init; }
+
+    public required int Comentarios { get; init; }
 }
 
 // Um prêmio concedido direto pela instituição e contestado por um professor do aluno, ainda

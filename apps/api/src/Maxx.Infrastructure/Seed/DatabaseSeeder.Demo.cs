@@ -77,9 +77,11 @@ public sealed partial class DatabaseSeeder
         if (primeiraPopulacao && novos.Count > 0)
         {
             var atividade = AtividadeDemoReader.Ler(Path.Combine(Dados, "demo"));
-            var gerador = new GeradorDeAtividade(db, fila, demo.ParaAtividade(novos, semestres, catalogo, instituicao), agora);
-            gerador.Gerar(atividade);
-            demo.Atividade(gerador.Medalhas, gerador.Premios, gerador.Avisos);
+            var fotos = FotosDemoReader.Ler(Path.Combine(Dados, "demo"));
+            var gerador = new GeradorDeAtividade(
+                db, fila, armazenamento, demo.ParaAtividade(novos, semestres, catalogo, instituicao), fotos, agora);
+            await gerador.GerarAsync(atividade, cancellationToken);
+            demo.Atividade(gerador.Medalhas, gerador.Premios, gerador.Avisos, gerador.Posts);
         }
 
         // Depois dos fatos: ex-aluno não recebe prêmio (produto.md 2.2), e os dele são do tempo
@@ -204,6 +206,7 @@ public sealed partial class DatabaseSeeder
         private int _medalhasNovas;
         private int _premiosNovos;
         private int _avisosNovos;
+        private int _postsNovos;
 
         public IEnumerable<string> Siglas => _cursos.Keys;
 
@@ -220,7 +223,8 @@ public sealed partial class DatabaseSeeder
             _exAlunosNovos,
             _medalhasNovas,
             _premiosNovos,
-            _avisosNovos);
+            _avisosNovos,
+            _postsNovos);
 
         public async Task CarregarAsync(CancellationToken cancellationToken)
         {
@@ -559,7 +563,7 @@ public sealed partial class DatabaseSeeder
 
             return new MundoDaAtividade(
                 [.. novos.OrderBy(aluno => aluno.Cadastro.Ra, StringComparer.Ordinal)
-                    .Select(aluno => new AlunoDaAtividade(aluno.Conta, aluno.Cadastro, aluno.Curso, aluno.Turmas))],
+                    .Select(aluno => new AlunoDaAtividade(aluno.Conta, aluno.Cadastro, aluno.Curso, aluno.Turmas, aluno.ExAluno))],
                 professorDaTurma,
                 contas,
                 turmas,
@@ -571,11 +575,12 @@ public sealed partial class DatabaseSeeder
                 instituicao);
         }
 
-        public void Atividade(int medalhas, int premios, int avisos)
+        public void Atividade(int medalhas, int premios, int avisos, int posts)
         {
             _medalhasNovas += medalhas;
             _premiosNovos += premios;
             _avisosNovos += avisos;
+            _postsNovos += posts;
         }
 
         // A regra é a do domínio; aqui só se acrescenta de onde veio o dado recusado.

@@ -20,6 +20,11 @@ public interface IArmazenamentoDeFotos
     // Idempotente: chave que não existe não é erro.
     Task RemoverAsync(IReadOnlyCollection<string> chaves, CancellationToken cancellationToken);
 
+    // Grava um objeto direto pelo endereço interno. Só o seed demo usa, para as fotos do mundo
+    // de demonstração (passo 12): nenhuma rota da API chama isto, e a foto de quem usa o app
+    // continua indo direto do aparelho para o bucket.
+    Task EnviarAsync(string chave, byte[] conteudo, string tipoDeConteudo, CancellationToken cancellationToken);
+
     // Onde o app lê a foto: a CDN em produção, o emulador no desenvolvimento.
     Uri UrlDeLeitura(string chave);
 }

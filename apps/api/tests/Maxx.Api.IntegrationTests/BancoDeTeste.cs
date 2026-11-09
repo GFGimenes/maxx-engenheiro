@@ -17,9 +17,11 @@ internal static class BancoDeTeste
     // A versão vigente do termo, para os testes que criam conta pela API.
     public static TermoDeUso TermoVigente() => new(VersaoDoTermo, "Termo de teste.", DateTimeOffset.UtcNow);
 
-    public static async Task<MaxxApiFactory> MigradoAsync(PostgresFixture postgres, string? diretorioDeDados = null)
+    // configuracao: o bucket, para quem roda o seed demo (as fotos do mundo, passo 12).
+    public static async Task<MaxxApiFactory> MigradoAsync(
+        PostgresFixture postgres, string? diretorioDeDados = null, IReadOnlyDictionary<string, string>? configuracao = null)
     {
-        var factory = new MaxxApiFactory(await postgres.CreateDatabaseAsync(), diretorioDeDados: diretorioDeDados);
+        var factory = new MaxxApiFactory(await postgres.CreateDatabaseAsync(), configuracao: configuracao, diretorioDeDados: diretorioDeDados);
         await factory.MigrateAsync(Ct);
         return factory;
     }

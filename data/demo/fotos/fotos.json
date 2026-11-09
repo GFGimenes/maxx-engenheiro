@@ -1,0 +1,268 @@
+{
+  "fotos": [
+    {
+      "nome": "quadra-de-esportes",
+      "cursos": ["todos"],
+      "titulo": "Amagasaki Track-Stadium (3).jpg",
+      "autor": "MASA (talk)",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Amagasaki_Track-Stadium_(3).jpg"
+    },
+    {
+      "nome": "estadio-iluminado",
+      "cursos": ["todos"],
+      "titulo": "JfCiudadINC25PhilArenaStadiumfvf.JPG",
+      "autor": "Judgefloro",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:JfCiudadINC25PhilArenaStadiumfvf.JPG"
+    },
+    {
+      "nome": "biblioteca-corredor",
+      "cursos": ["todos"],
+      "titulo": "Matsukawa Village Library bookshelves ac (1).jpg",
+      "autor": "Asturio Cantabrio",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Matsukawa_Village_Library_bookshelves_ac_(1).jpg"
+    },
+    {
+      "nome": "biblioteca-estante",
+      "cursos": ["todos"],
+      "titulo": "Minokamo City Library bookshelves ac.jpg",
+      "autor": "Asturio Cantabrio",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Minokamo_City_Library_bookshelves_ac.jpg"
+    },
+    {
+      "nome": "livro-aberto",
+      "cursos": ["todos"],
+      "titulo": "Open book 1 (Unsplash).jpg",
+      "autor": "Alina Daniker alinadaniker",
+      "licenca": "CC0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Open_book_1_(Unsplash).jpg"
+    },
+    {
+      "nome": "notebook-e-caneta",
+      "cursos": ["CC", "IA"],
+      "titulo": "Laptop computer.jpg",
+      "autor": "KK IN HK",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Laptop_computer.jpg"
+    },
+    {
+      "nome": "codigo-na-tela",
+      "cursos": ["CC", "IA"],
+      "titulo": "RustCodeOnScreen.jpg",
+      "autor": "Slashme",
+      "licenca": "CC0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:RustCodeOnScreen.jpg"
+    },
+    {
+      "nome": "anfiteatro-azul",
+      "cursos": ["todos"],
+      "titulo": "Curtis Lecture Halls interior view1 empty class.jpg",
+      "autor": "Theonlysilentbob",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Curtis_Lecture_Halls_interior_view1_empty_class.jpg"
+    },
+    {
+      "nome": "sala-de-aula",
+      "cursos": ["todos"],
+      "titulo": "W-classroom.jpg",
+      "autor": "Canadian2006",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:W-classroom.jpg"
+    },
+    {
+      "nome": "vidrarias",
+      "cursos": ["MED"],
+      "titulo": "Verrerie de Souvigny 04.jpg",
+      "autor": "Laurajwilkinson",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Verrerie_de_Souvigny_04.jpg"
+    },
+    {
+      "nome": "tubos-de-ensaio",
+      "cursos": ["MED"],
+      "titulo": "Laboratory equipment of modern chemistry classroom.jpg",
+      "autor": "Belikov Maxim",
+      "licenca": "CC BY 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Laboratory_equipment_of_modern_chemistry_classroom.jpg"
+    },
+    {
+      "nome": "microscopio-eletronico",
+      "cursos": ["MED", "IA"],
+      "titulo": "Transmission Electron Microscope Kemira.jpg",
+      "autor": "kallerna",
+      "licenca": "Public domain",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Transmission_Electron_Microscope_Kemira.jpg"
+    },
+    {
+      "nome": "bancada-de-microscopios",
+      "cursos": ["MED"],
+      "titulo": "Amateur Microscopy Laboratory - Microscopes.jpg",
+      "autor": "R G from siehe oben, Bayern",
+      "licenca": "CC BY 2.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Amateur_Microscopy_Laboratory_-_Microscopes.jpg"
+    },
+    {
+      "nome": "estetoscopio",
+      "cursos": ["MED"],
+      "titulo": "Stethoscope 1.jpg",
+      "autor": "ernstl",
+      "licenca": "CC BY-SA 2.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Stethoscope_1.jpg"
+    },
+    {
+      "nome": "estetoscopio-na-mao",
+      "cursos": ["MED"],
+      "titulo": "Stethoscope in use.jpg",
+      "autor": "Stethoscopes",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Stethoscope_in_use.jpg"
+    },
+    {
+      "nome": "esqueletos-do-museu",
+      "cursos": ["MED"],
+      "titulo": "Anatomischen Museum Basel 2.JPG",
+      "autor": "Mikatu",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Anatomischen_Museum_Basel_2.JPG"
+    },
+    {
+      "nome": "modelo-anatomico-de-cavalo",
+      "cursos": ["MED"],
+      "titulo": "Cheval Dr Auzoux ENVT3.JPG",
+      "autor": "Darreenvt",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Cheval_Dr_Auzoux_ENVT3.JPG"
+    },
+    {
+      "nome": "predio-de-tijolos",
+      "cursos": ["todos"],
+      "titulo": "Commerce Building, Lincoln University Campus, New Zealand 28.jpg",
+      "autor": "Michal Klajban",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Commerce_Building,_Lincoln_University_Campus,_New_Zealand_28.jpg"
+    },
+    {
+      "nome": "cafe-e-notebook",
+      "cursos": ["todos"],
+      "titulo": "Stammtisch Köln Juni 2006.jpg",
+      "autor": "Raimond Spekking",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Stammtisch_K%C3%B6ln_Juni_2006.jpg"
+    },
+    {
+      "nome": "leitura",
+      "cursos": ["todos"],
+      "titulo": "Flickr - cyclonebill - Kaffe (32).jpg",
+      "autor": "cyclonebill",
+      "licenca": "CC BY-SA 2.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Flickr_-_cyclonebill_-_Kaffe_(32).jpg"
+    },
+    {
+      "nome": "quadro-de-equacoes",
+      "cursos": ["CC", "IA", "ADM"],
+      "titulo": "Équations-modifications.jpg",
+      "autor": "Luc Comeau-Montasse",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:%C3%89quations-modifications.jpg"
+    },
+    {
+      "nome": "arduino",
+      "cursos": ["CC", "IA"],
+      "titulo": "Arduino avr atmega8-1.jpg",
+      "autor": "DustyDingo",
+      "licenca": "Public domain",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Arduino_avr_atmega8-1.jpg"
+    },
+    {
+      "nome": "placa-de-circuito",
+      "cursos": ["CC", "IA"],
+      "titulo": "Printed Circuit Board 2.jpg",
+      "autor": "Balurbala",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Printed_Circuit_Board_2.jpg"
+    },
+    {
+      "nome": "taca-vermelha",
+      "cursos": ["todos"],
+      "titulo": "The FA Cup Trophy.jpg",
+      "autor": "Carlos yo",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:The_FA_Cup_Trophy.jpg"
+    },
+    {
+      "nome": "taca-de-prata",
+      "cursos": ["todos"],
+      "titulo": "Blue Darter Trophy.jpg",
+      "autor": "RoyalxOptimum",
+      "licenca": "CC BY-SA 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Blue_Darter_Trophy.jpg"
+    },
+    {
+      "nome": "auditorio",
+      "cursos": ["todos"],
+      "titulo": "Kyiv auditorium at Wikimania 2024.jpg",
+      "autor": "Balise42",
+      "licenca": "CC BY 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Kyiv_auditorium_at_Wikimania_2024.jpg"
+    },
+    {
+      "nome": "servidores",
+      "cursos": ["CC", "IA"],
+      "titulo": "BalticServers data center.jpg",
+      "autor": "BalticServers.com",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:BalticServers_data_center.jpg"
+    },
+    {
+      "nome": "impressora-3d",
+      "cursos": ["CC", "IA"],
+      "titulo": "Printing with a 3D printer at Makers Party Bangalore 2013 11.JPG",
+      "autor": "Subhashish Panigrahi",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Printing_with_a_3D_printer_at_Makers_Party_Bangalore_2013_11.JPG"
+    },
+    {
+      "nome": "impressora-3d-e-notebook",
+      "cursos": ["CC", "IA"],
+      "titulo": "Felix 3D Printer - Printing Set-up With Examples.JPG",
+      "autor": "Jonathan Juursema",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Felix_3D_Printer_-_Printing_Set-up_With_Examples.JPG"
+    },
+    {
+      "nome": "anotacoes-de-calculo",
+      "cursos": ["ADM", "IA"],
+      "titulo": "Marie Curies notebook Wellcome L0066922.jpg",
+      "autor": "Desconhecido",
+      "licenca": "CC BY 4.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Marie_Curies_notebook_Wellcome_L0066922.jpg"
+    },
+    {
+      "nome": "caderno-e-caneta",
+      "cursos": ["todos"],
+      "titulo": "Moleskine Evernote Smart Notebook and pen (8401944314).jpg",
+      "autor": "Guy Sie from Utrecht, Netherlands",
+      "licenca": "CC BY-SA 2.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Moleskine_Evernote_Smart_Notebook_and_pen_(8401944314).jpg"
+    },
+    {
+      "nome": "mesa-de-estudo",
+      "cursos": ["todos"],
+      "titulo": "Testing the Evernote Smart Notebook by Moleskine at Starbucks (7881464082).jpg",
+      "autor": "Brooks Duncan from Vancouver, Canada",
+      "licenca": "CC BY 2.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Testing_the_Evernote_Smart_Notebook_by_Moleskine_at_Starbucks_(7881464082).jpg"
+    },
+    {
+      "nome": "calculadora",
+      "cursos": ["ADM"],
+      "titulo": "Casio fx-85WA 20050529.jpg",
+      "autor": "Christian \"VisualBeo\" Horvat",
+      "licenca": "CC BY-SA 3.0",
+      "fonte": "https://commons.wikimedia.org/wiki/File:Casio_fx-85WA_20050529.jpg"
+    }
+  ]
+}

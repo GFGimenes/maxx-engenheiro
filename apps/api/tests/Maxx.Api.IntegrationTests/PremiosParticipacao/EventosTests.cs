@@ -18,7 +18,8 @@ namespace Maxx.Api.IntegrationTests.PremiosParticipacao;
 // GET /v1/eventos contra o seed demo de verdade (data/demo/eventos.json) e o calendário de
 // 2026. 2026/2 vai de 27/07 a 05/12. O login acontece no relógio de agora, porque o token é
 // validado no relógio da máquina; depois o relógio da aplicação vai para o dia do teste.
-public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
+public sealed class EventosTests(PostgresFixture postgres, Fotos.ArmazenamentoFixture armazenamento)
+    : IClassFixture<PostgresFixture>, IClassFixture<Fotos.ArmazenamentoFixture>
 {
     private const string _senha = "senha-boa-123";
     private const string _anaDeCc = "ana.souza@al.unieduk.invalid";
@@ -156,6 +157,7 @@ public sealed class EventosTests(PostgresFixture postgres) : IClassFixture<Postg
         var relogio = new RelogioDeTeste();
         var factory = new MaxxApiFactory(
             await postgres.CreateDatabaseAsync(),
+            configuracao: armazenamento.Configuracao,
             servicos: colecao => colecao.Replace(ServiceDescriptor.Singleton<TimeProvider>(relogio)));
         await factory.MigrateAsync(Ct);
         await factory.SeedBaseAsync(Ct);

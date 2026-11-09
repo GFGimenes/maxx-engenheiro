@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Text.Json.Nodes;
+using Maxx.Api.IntegrationTests.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Ranking;
 using Maxx.Domain.Academico;
@@ -15,7 +16,9 @@ using static Maxx.Api.IntegrationTests.BancoDeTeste;
 namespace Maxx.Api.IntegrationTests;
 
 // `seed demo` contra o Postgres real, sempre depois do base.
-public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>, IDisposable
+// O bucket é o emulador: o seed demo envia as fotos dos posts do mundo (passo 12).
+public sealed class SeedDemoTests(PostgresFixture postgres, ArmazenamentoFixture armazenamento)
+    : IClassFixture<PostgresFixture>, IClassFixture<ArmazenamentoFixture>, IDisposable
 {
     private readonly CopiaDeDados _copia = new();
 
@@ -36,8 +39,8 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         // para os 150 alunos, 30 deles ex-alunos; os 22 eventos de data/demo/eventos.json.
         // Os fatos da atividade têm o teste próprio (SeedAtividadeTests).
         Assert.Equal(
-            new ResultadoDoSeedDemo(4, 24, 48, 159, 1512, 48, 9, 22, 150, 30, 0, 0, 0),
-            resultado with { MedalhasNovas = 0, PremiosNovos = 0, AvisosNovos = 0 });
+            new ResultadoDoSeedDemo(4, 24, 48, 159, 1512, 48, 9, 22, 150, 30, 0, 0, 0, 0),
+            resultado with { MedalhasNovas = 0, PremiosNovos = 0, AvisosNovos = 0, PostsNovos = 0 });
         Assert.Equal(9, resultado.AvisosNovos);
 
         await using var scope = factory.Services.CreateAsyncScope();
@@ -104,7 +107,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), resultado);
         Assert.Equal(antes, await ContagensAsync(factory));
     }
 
@@ -243,7 +246,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
             await db.SaveChangesAsync(Ct);
         }
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), await factory.SeedDemoAsync(Ct));
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), await factory.SeedDemoAsync(Ct));
 
         // Sem o registro do ato, a mesma divergência é do arquivo, e falha.
         _copia.Alterar("demo/mundo.json", mundo => Alunos(mundo, "CC")[3]!["email"] = "pedro.h.lima@al.unieduk.invalid");
@@ -267,7 +270,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         }));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0), resultado);
     }
 
     [Fact]
@@ -397,7 +400,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
         _copia.Alterar("demo/eventos.json", raiz => Eventos(raiz).Add(Evento("palestra-extra-2026-2", "P01")));
         var resultado = await factory.SeedDemoAsync(Ct);
 
-        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), resultado);
+        Assert.Equal(new ResultadoDoSeedDemo(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0), resultado);
     }
 
     [Fact]
@@ -502,7 +505,7 @@ public sealed class SeedDemoTests(PostgresFixture postgres) : IClassFixture<Post
 
     private async Task<MaxxApiFactory> ComBaseAsync()
     {
-        var factory = await MigradoAsync(postgres, _copia.Diretorio);
+        var factory = await MigradoAsync(postgres, _copia.Diretorio, armazenamento.Configuracao);
         await factory.SeedBaseAsync(Ct);
         return factory;
     }

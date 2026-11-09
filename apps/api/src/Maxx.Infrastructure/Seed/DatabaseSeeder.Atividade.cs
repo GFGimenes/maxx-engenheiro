@@ -1,12 +1,15 @@
 using Maxx.Application.Conquistas;
 using Maxx.Application.Fila;
+using Maxx.Application.Fotos;
 using Maxx.Application.Mural;
 using Maxx.Application.PremiosParticipacao;
 using Maxx.Domain.Academico;
 using Maxx.Domain.Catalogo;
+using Maxx.Domain.Fotos;
 using Maxx.Domain.Identidade;
 using Maxx.Domain.Mural;
 using Maxx.Domain.Premios;
+using Maxx.Domain.Social;
 using Maxx.Infrastructure.Persistence;
 
 namespace Maxx.Infrastructure.Seed;
@@ -32,14 +35,21 @@ public sealed partial class DatabaseSeeder
     private sealed class GeradorDeAtividade(
         MaxxDbContext db,
         IFilaDeTrabalhos fila,
+        IArmazenamentoDeFotos armazenamento,
         MundoDaAtividade mundo,
+        IReadOnlyList<FotoDemo> fotos,
         DateTimeOffset agora)
     {
+        private const string _jpeg = "image/jpeg";
+
         private readonly Random _sorte = new(20262);
         private readonly DateOnly _corte = Min(_ultimoDiaDosFatos, FusoHorario.DataLocal(agora).AddDays(-1));
         private readonly Dictionary<(Guid Aluno, string Item), List<Medalha>> _medalhas = [];
         private readonly HashSet<string> _chavesDePremio = new(StringComparer.Ordinal);
         private readonly Dictionary<Guid, double> _empenho = [];
+        private readonly List<Post> _posts = [];
+        private AtividadeDemo _atividade = null!;
+        private int _reivindicacoesComFoto;
 
         public int Medalhas { get; private set; }
 
@@ -47,12 +57,25 @@ public sealed partial class DatabaseSeeder
 
         public int Avisos { get; private set; }
 
-        public void Gerar(AtividadeDemo atividade)
+        public int Posts => _posts.Count;
+
+        public int Fotos { get; private set; }
+
+        public async Task GerarAsync(AtividadeDemo atividade, CancellationToken cancellationToken)
         {
+            _atividade = atividade;
+            _reivindicacoesComFoto = atividade.Posts.ReivindicacoesComFoto;
             foreach (var aluno in mundo.Alunos)
             {
                 // Empenho de 0,15 a 1, concentrado embaixo: poucos alunos ganham muito.
                 _empenho[aluno.Conta.Id] = 0.15 + (0.85 * Math.Pow(_sorte.NextDouble(), 2));
+            }
+
+            // Os fatos explícitos primeiro: seguram a chave de deduplicação do prêmio antes do
+            // sorteio.
+            foreach (var pendente in atividade.ComprovacoesPendentes)
+            {
+                await ComprovacaoPendenteAsync(pendente, cancellationToken);
             }
 
             if (atividade.Contestacao is { } contestacao)
@@ -67,14 +90,18 @@ public sealed partial class DatabaseSeeder
 
             foreach (var (codigo, alunos) in atividade.PremiosParticipacao.OrderBy(par => par.Key, StringComparer.Ordinal))
             {
-                PremiosDoItem(codigo, alunos);
+                await PremiosDoItemAsync(codigo, alunos, cancellationToken);
             }
+
+            await PostsDeMedalhaAsync(atividade.Posts.MedalhasComFoto, cancellationToken);
+            await PostsLivresAsync(atividade.Posts.Livres, cancellationToken);
 
             foreach (var aviso in atividade.Avisos)
             {
                 Publicar(aviso);
             }
 
+            Social(atividade.Social);
             PedirConquistas();
         }
 
@@ -149,7 +176,7 @@ public sealed partial class DatabaseSeeder
             return vagas;
         }
 
-        private void PremiosDoItem(string codigo, int alunos)
+        private async Task PremiosDoItemAsync(string codigo, int alunos, CancellationToken cancellationToken)
         {
             if (!mundo.ItensDePremio.TryGetValue(codigo, out var doCatalogo))
             {
@@ -177,9 +204,22 @@ public sealed partial class DatabaseSeeder
 
                 var evento = possiveis[_sorte.Next(possiveis.Count)];
                 var aprovadoEm = FusoHorario.Instante(Min(Min(evento.Fim.AddDays(2), evento.Inicio.AddDays(20)), _corte), new TimeOnly(15, 0));
-                if (Conceder(aluno, item, versao, evento, aprovadoEm) is not { } premio)
+
+                // Parte dos prêmios do semestre em curso nasce como o app faz: o aluno reivindica
+                // com um post com foto e um professor dele aprova. O resto, concessão direta da
+                // instituição, sem post.
+                var reivindica = _reivindicacoesComFoto > 0 && !aluno.ExAluno && SemestreDoEvento(evento.Inicio) == SemestreEmCurso;
+                var premio = reivindica
+                    ? await ReivindicadoComFotoAsync(aluno, item, versao, evento, Reivindicacao(evento, aprovadoEm), aprovadoEm, Sorteada(_atividade.Legendas.Reivindicacao), cancellationToken)
+                    : Conceder(aluno, item, versao, evento, aprovadoEm);
+                if (premio is null)
                 {
                     continue;
+                }
+
+                if (reivindica)
+                {
+                    _reivindicacoesComFoto--;
                 }
 
                 // Passada a janela de 15 dias, o prêmio é definitivo pela regra do próprio
@@ -217,6 +257,180 @@ public sealed partial class DatabaseSeeder
             Premios++;
             return premio;
         }
+
+        // A reivindicação pelo app (produto.md 4.7): post com foto, comprovação e, quando aprovada,
+        // a aprovação de um professor do aluno naquele semestre. Sem aprovar, fica na fila.
+        private async Task<PremioParticipacao?> ReivindicadoComFotoAsync(
+            AlunoDaAtividade aluno,
+            ItemPremioParticipacao item,
+            int versao,
+            Evento evento,
+            DateTimeOffset reivindicadoEm,
+            DateTimeOffset? aprovadoEm,
+            string legenda,
+            CancellationToken cancellationToken)
+        {
+            var dia = FusoHorario.DataLocal(reivindicadoEm);
+            var ultimoEncerrado = mundo.Semestres.Where(semestre => semestre.Fim < dia).MaxBy(semestre => semestre.Fim);
+            var reivindicado = PremioParticipacao.Reivindicar(item, versao, aluno.Conta, aluno.Curso, evento, null, ultimoEncerrado, reivindicadoEm);
+            if (reivindicado.Premio is not { } premio || _chavesDePremio.Contains(premio.ChaveDeDeduplicacao))
+            {
+                return null;
+            }
+
+            var upload = await FotoAsync(aluno, reivindicadoEm, cancellationToken);
+            var post = Post.Reivindicar(aluno.Conta, legenda, upload, premio, reivindicadoEm).Post
+                ?? throw Erro($"post de reivindicação de {aluno.Cadastro.Ra} recusado.");
+            var comprovacao = Comprovacao.De(premio, post.Id);
+            if (aprovadoEm is { } instante)
+            {
+                var semestre = SemestreDoEvento(evento.Inicio);
+                var turma = aluno.Turmas.First(turma => turma.SemestreLetivoId == semestre?.Id);
+                if (premio.Aprovar(aluno.Conta, mundo.ProfessorDaTurma[turma.Id], instante) is { } recusa)
+                {
+                    throw Erro($"aprovação da reivindicação de {aluno.Cadastro.Ra} recusada: {recusa}.");
+                }
+            }
+
+            _chavesDePremio.Add(premio.ChaveDeDeduplicacao);
+            db.AddRange(premio, post, comprovacao);
+            _posts.Add(post);
+            Premios++;
+            return premio;
+        }
+
+        private async Task ComprovacaoPendenteAsync(ComprovacaoPendenteDemo json, CancellationToken cancellationToken)
+        {
+            var reivindicadoEm = Local(json.ReivindicadoEm);
+            if (reivindicadoEm > agora)
+            {
+                return;
+            }
+
+            var aluno = mundo.Alunos.SingleOrDefault(candidato => candidato.Cadastro.Ra == json.Ra)
+                ?? throw Erro($"comprovação pendente: o RA {json.Ra} não é de aluno do arquivo.");
+            if (!mundo.ItensDePremio.TryGetValue(json.Item, out var doCatalogo))
+            {
+                throw Erro($"comprovação pendente: {json.Item} não é prêmio de participação do catálogo.");
+            }
+
+            var evento = mundo.Eventos.GetValueOrDefault(json.Evento) ?? throw Erro($"comprovação pendente: o evento {json.Evento} não existe.");
+            _ = await ReivindicadoComFotoAsync(aluno, doCatalogo.Item, doCatalogo.Versao, evento, reivindicadoEm, null, json.Legenda, cancellationToken)
+                ?? throw Erro($"comprovação pendente de {json.Ra} em {json.Evento} recusada pelas regras do evento.");
+        }
+
+        // Medalhas do semestre em curso que o aluno postou com foto, horas depois de ganhar.
+        private async Task PostsDeMedalhaAsync(int quantos, CancellationToken cancellationToken)
+        {
+            var candidatas = _medalhas.Values.SelectMany(lista => lista)
+                .Where(medalha => medalha.SemestreLetivoId == SemestreEmCurso?.Id)
+                .OrderBy(medalha => medalha.ConcedidaEm)
+                .ToList();
+            foreach (var medalha in candidatas.OrderBy(_ => _sorte.Next()).Take(quantos).OrderBy(medalha => medalha.ConcedidaEm))
+            {
+                var aluno = mundo.Alunos.Single(candidato => candidato.Conta.Id == medalha.AlunoId);
+                var instante = Min(medalha.ConcedidaEm.AddHours(3), agora.AddDays(-1));
+                var upload = await FotoAsync(aluno, instante, cancellationToken);
+                var post = Post.Publicar(aluno.Conta, Sorteada(_atividade.Legendas.Medalha), upload, medalha, instante).Post
+                    ?? throw Erro($"post da medalha de {aluno.Cadastro.Ra} recusado.");
+                db.Add(post);
+                _posts.Add(post);
+            }
+        }
+
+        // Posts só com foto e legenda, dos alunos ativos, nos últimos dois meses.
+        private async Task PostsLivresAsync(int quantos, CancellationToken cancellationToken)
+        {
+            var ativos = mundo.Alunos.Where(aluno => !aluno.ExAluno).ToList();
+            for (var i = 0; i < quantos; i++)
+            {
+                var aluno = ativos[_sorte.Next(ativos.Count)];
+                var instante = Instante(_corte.AddDays(-60), _corte);
+                var upload = await FotoAsync(aluno, instante, cancellationToken);
+                var post = Post.Publicar(aluno.Conta, Sorteada(_atividade.Legendas.Livre), upload, null, instante).Post
+                    ?? throw Erro($"post livre de {aluno.Cadastro.Ra} recusado.");
+                db.Add(post);
+                _posts.Add(post);
+            }
+        }
+
+        // Uma foto do curso do aluno, enviada ao bucket com chave aleatória nova, como o upload
+        // do app: o pedido de upload, as duas derivadas e, ao publicar, a confirmação.
+        private async Task<UploadPendente> FotoAsync(AlunoDaAtividade aluno, DateTimeOffset instante, CancellationToken cancellationToken)
+        {
+            var doCurso = fotos.Where(foto => foto.CabeEm(aluno.Curso.Sigla)).ToList();
+            var foto = doCurso[_sorte.Next(doCurso.Count)];
+            var upload = UploadPendente.Pedir(aluno.Conta, FinalidadeDoUpload.Post, _jpeg, foto.Feed.Length, foto.Grade.Length, instante).Upload
+                ?? throw Erro($"upload da foto {foto.Nome} recusado.");
+            await armazenamento.EnviarAsync(upload.ChaveDoFeed, foto.Feed, _jpeg, cancellationToken);
+            await armazenamento.EnviarAsync(upload.ChaveDaGrade, foto.Grade, _jpeg, cancellationToken);
+            db.Add(upload);
+            Fotos += 2;
+            return upload;
+        }
+
+        // Seguimentos entre colegas de curso, e curtidas e comentários nos posts com foto. Só
+        // de alunos ativos, que é quem interage pelo app.
+        private void Social(SocialDemo social)
+        {
+            var ativos = mundo.Alunos.Where(aluno => !aluno.ExAluno).ToList();
+            var porCurso = mundo.Alunos.GroupBy(aluno => aluno.Curso.Id).ToDictionary(grupo => grupo.Key, grupo => grupo.ToList());
+            var pares = new HashSet<(Guid, Guid)>();
+            foreach (var aluno in ativos)
+            {
+                var colegas = porCurso[aluno.Curso.Id].Where(colega => colega.Conta.Id != aluno.Conta.Id).ToList();
+                var quantos = _sorte.Next(social.SeguimentosPorAluno[0], social.SeguimentosPorAluno[1] + 1);
+                foreach (var colega in colegas.OrderBy(_ => _sorte.Next()).Take(quantos))
+                {
+                    var instante = Instante(_corte.AddDays(-90), _corte);
+                    if (pares.Add((aluno.Conta.Id, colega.Conta.Id))
+                        && Seguimento.Seguir(aluno.Conta, colega.Conta, professorDoSeguido: false, instante) is { } seguimento)
+                    {
+                        db.Add(seguimento);
+                    }
+                }
+            }
+
+            foreach (var post in _posts)
+            {
+                var autor = mundo.Alunos.Single(aluno => aluno.Conta.Id == post.AutorId);
+                var quantas = _sorte.Next(social.CurtidasPorPost[0], social.CurtidasPorPost[1] + 1);
+                foreach (var quem in porCurso[autor.Curso.Id].Where(aluno => !aluno.ExAluno && aluno != autor).OrderBy(_ => _sorte.Next()).Take(quantas))
+                {
+                    if (Curtida.Curtir(quem.Conta, post, Min(post.CriadoEm.AddMinutes(_sorte.Next(5, 600)), agora)) is { } curtida)
+                    {
+                        db.Add(curtida);
+                    }
+                }
+            }
+
+            for (var i = 0; i < social.Comentarios && _posts.Count > 0; i++)
+            {
+                var post = _posts[_sorte.Next(_posts.Count)];
+                var autor = mundo.Alunos.Single(aluno => aluno.Conta.Id == post.AutorId);
+                var colegas = porCurso[autor.Curso.Id].Where(aluno => !aluno.ExAluno && aluno != autor).ToList();
+                var quem = colegas[_sorte.Next(colegas.Count)];
+                var instante = Min(post.CriadoEm.AddMinutes(_sorte.Next(10, 900)), agora);
+                if (Comentario.Escrever(quem.Conta, post, Sorteada(_atividade.Comentarios), instante).Comentario is { } comentario)
+                {
+                    db.Add(comentario);
+                }
+            }
+        }
+
+        // O semestre que contém o último dia dos fatos: o que está em curso no mundo.
+        private SemestreLetivo? SemestreEmCurso => mundo.Semestres.FirstOrDefault(semestre => semestre.Contem(_corte));
+
+        // O aluno reivindica um dia antes da aprovação, e nunca antes de o evento começar.
+        private static DateTimeOffset Reivindicacao(Evento evento, DateTimeOffset aprovadoEm)
+        {
+            var umDiaAntes = aprovadoEm.AddDays(-1).AddHours(5);
+            var inicio = FusoHorario.Instante(evento.Inicio, new TimeOnly(20, 0));
+            var reivindicadoEm = umDiaAntes > inicio ? umDiaAntes : inicio;
+            return reivindicadoEm < aprovadoEm ? reivindicadoEm : aprovadoEm.AddHours(-1);
+        }
+
+        private string Sorteada(List<string> opcoes) => opcoes[_sorte.Next(opcoes.Count)];
 
         // O evento é do curso do aluno e cai num semestre que ele cursou.
         private bool PodeTer(AlunoDaAtividade aluno, Evento evento) =>
@@ -348,6 +562,8 @@ public sealed partial class DatabaseSeeder
 
         private static DateOnly Min(DateOnly a, DateOnly b) => a < b ? a : b;
 
+        private static DateTimeOffset Min(DateTimeOffset a, DateTimeOffset b) => a < b ? a : b;
+
         private static SeedException Erro(string mensagem) => new($"{AtividadeDemoReader.Arquivo}: {mensagem} Nada foi gravado.");
     }
 
@@ -364,7 +580,7 @@ public sealed partial class DatabaseSeeder
         IReadOnlyDictionary<string, (ItemPremioParticipacao Item, int Versao)> ItensDePremio,
         Usuario Instituicao);
 
-    private sealed record AlunoDaAtividade(Usuario Conta, CadastroElegivel Cadastro, Curso Curso, IReadOnlyList<Turma> Turmas);
+    private sealed record AlunoDaAtividade(Usuario Conta, CadastroElegivel Cadastro, Curso Curso, IReadOnlyList<Turma> Turmas, bool ExAluno);
 
     // O aluno do arquivo que ganhou conta nesta rodada, com as turmas que cursa e o último
     // semestre dele, que decide quando o ex-aluno é marcado.
