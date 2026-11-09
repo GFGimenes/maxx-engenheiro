@@ -11,7 +11,7 @@
 name: maxx
 
 x-api-image: &api-image
-  image: ghcr.io/gfgimenes/maxx-api:${MAXX_IMAGEM_TAG:?defina no .env}
+  image: ghcr.io/gfgimenes/maxx-engenheiro-api:${MAXX_IMAGEM_TAG:?defina no .env}
 
 # Log do Docker com teto, para o disco da VPS não encher com o tempo.
 x-log: &log
@@ -114,7 +114,7 @@ services:
   # HTTPS automático: com o endereço do site em https://, o Caddy pede o certificado ao
   # Let's Encrypt pela porta 80 e redireciona HTTP para HTTPS.
   caddy:
-    image: ghcr.io/gfgimenes/maxx-caddy:${MAXX_IMAGEM_TAG:?defina no .env}
+    image: ghcr.io/gfgimenes/maxx-engenheiro-caddy:${MAXX_IMAGEM_TAG:?defina no .env}
     <<: *log
     environment:
       MAXX_SITE_ADDRESS: ${MAXX_URL_PUBLICA:?defina no .env}

@@ -217,6 +217,6 @@ jobs:
               --label "org.opencontainers.image.revision=${GITHUB_SHA}" .
             docker push --all-tags "$base/$nome"
           }
-          publicar maxx-api apps/api/Dockerfile
-          publicar maxx-caddy infra/caddy/Dockerfile
+          publicar maxx-engenheiro-api apps/api/Dockerfile
+          publicar maxx-engenheiro-caddy infra/caddy/Dockerfile
           echo "Publicado: $curta"
