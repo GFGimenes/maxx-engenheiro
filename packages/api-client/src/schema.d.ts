@@ -1189,6 +1189,7 @@ export interface components {
             contagem: number;
             /** Format: int32 */
             alvo: number;
+            unidade?: null | string;
         };
         PublicarPostRequest: {
             legenda: null | string;

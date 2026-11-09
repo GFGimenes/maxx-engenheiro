@@ -30,14 +30,14 @@ public sealed class LeituraDeConquistasTests(PostgresFixture postgres) : IClassF
 
         // Contagem gravada pelo worker, na instância vigente de cada período.
         Assert.Equal(new ProgressoResponse("bimestre", 2, 3), itens["C02"].Progresso);
-        Assert.Equal(new ProgressoResponse("bimestre", 1, 2), itens["C03"].Progresso);
+        Assert.Equal(new ProgressoResponse("bimestre", 1, 2, "materias"), itens["C03"].Progresso);
         Assert.Equal(new ProgressoResponse("semestre", 5, 10), itens["C07"].Progresso);
         Assert.Equal(new ProgressoResponse("ano", 5, 20), itens["C12"].Progresso);
         Assert.Equal(new ProgressoResponse("curso", 5, 50), itens["C16"].Progresso);
 
         // Nenhum fato ainda: zero, com o alvo do catálogo ou as matérias do período.
         Assert.Equal(new ProgressoResponse("semestre", 0, 3), itens["C05"].Progresso);
-        Assert.Equal(new ProgressoResponse("semestre", 0, 2), itens["C10"].Progresso);
+        Assert.Equal(new ProgressoResponse("semestre", 0, 2, "materias"), itens["C10"].Progresso);
 
         // Medalha e prêmio de participação não têm progresso nem instância.
         Assert.Null(itens["M01"].Progresso);

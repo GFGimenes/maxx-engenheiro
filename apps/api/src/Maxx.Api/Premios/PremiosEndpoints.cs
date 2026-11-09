@@ -64,7 +64,8 @@ internal static class PremiosEndpoints
                         : null))],
                 item.ExigeMateria,
                 !soObtidos && item.Progresso is { } progresso
-                    ? new ProgressoResponse(ProfessorEndpoints.Nome(progresso.Periodo), progresso.Contagem, progresso.Alvo)
+                    ? new ProgressoResponse(
+                        ProfessorEndpoints.Nome(progresso.Periodo), progresso.Contagem, progresso.Alvo, progresso.EmMaterias ? "materias" : null)
                     : null))]);
 }
 
@@ -93,7 +94,9 @@ public sealed record ItemDoAlunoResponse(
 // O progresso ("2 de 3") da conquista na instância vigente do período dela (passo 9), em
 // "bimestre", "semestre", "ano" ou "curso". Só na rota do próprio aluno; o perfil público
 // nunca o leva (produto.md 9.1).
-public sealed record ProgressoResponse(string Periodo, int Contagem, int Alvo);
+// Unidade: "materias" quando o alvo é o das matérias do período (regra de todas as matérias);
+// nula, quando é um número de prêmios. Acréscimo do passo 9.
+public sealed record ProgressoResponse(string Periodo, int Contagem, int Alvo, string? Unidade = null);
 
 // Percentual dos alunos que têm o item, com uma casa: "x% dos alunos".
 public sealed record RaridadeResponse(string Nivel, double Percentual);

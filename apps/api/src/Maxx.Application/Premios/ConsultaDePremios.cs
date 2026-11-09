@@ -37,7 +37,9 @@ public sealed record ItemDoAluno(
 // só na conquista que o aluno ainda não obteve nessa instância, e só para o dono
 // (produto.md 9.1). Nulo também no recesso, para bimestre e semestre, e quando o aluno não
 // tem matrícula no período do alvo dinâmico.
-public sealed record ProgressoDaConquista(Periodo Periodo, int Contagem, int Alvo);
+// EmMaterias: o alvo é o das matérias do período (todasAsMatriculasDoPeriodo), e o app diz
+// "1 de 2 matérias".
+public sealed record ProgressoDaConquista(Periodo Periodo, int Contagem, int Alvo, bool EmMaterias = false);
 
 public sealed record RaridadeAtual(Raridade Nivel, int AlunosComItem, int AlunosElegiveis)
 {

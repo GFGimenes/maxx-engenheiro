@@ -173,7 +173,7 @@ internal sealed class ConsultaDePremios(MaxxDbContext db, TimeProvider relogio) 
                 : (0, alvoDoCatalogo.Fixo ?? await MateriasDoPeriodoAsync(cadastroId, instancia.Semestres(calendario), cancellationToken));
             if (alvo > 0)
             {
-                progressos[item.Codigo] = new ProgressoDaConquista(item.Periodo, contagem, alvo);
+                progressos[item.Codigo] = new ProgressoDaConquista(item.Periodo, contagem, alvo, alvoDoCatalogo.EhTodasAsMatriculasDoPeriodo);
             }
         }
 
