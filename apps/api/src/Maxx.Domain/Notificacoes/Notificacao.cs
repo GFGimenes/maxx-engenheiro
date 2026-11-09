@@ -144,4 +144,8 @@ public enum TipoDeNotificacao
     PremioRevogado,
     ConquistaObtida,
     ConquistaRemovida,
+
+    // Aviso novo no mural (passo 10). Gravada em lote pelo worker, uma por destinatário
+    // fixado na publicação, sem passar por uma fábrica daqui: a referência é o aviso.
+    AvisoNovo,
 }

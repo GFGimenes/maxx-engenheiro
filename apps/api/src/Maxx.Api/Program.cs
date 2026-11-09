@@ -8,6 +8,8 @@ using Maxx.Api.Fotos;
 using Maxx.Api.Health;
 using Maxx.Api.LimiteDeTaxa;
 using Maxx.Api.Medalhas;
+using Maxx.Api.Mural;
+using Maxx.Api.Notificacoes;
 using Maxx.Api.OpenApi;
 using Maxx.Api.Perfil;
 using Maxx.Api.Posts;
@@ -106,6 +108,9 @@ builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.DecidirComprovac
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.FilaDeComprovacoesHandler>();
 builder.Services.AddScoped<Maxx.Application.PremiosParticipacao.ContestacaoHandler>();
 builder.Services.AddScoped<Maxx.Application.Perfil.BuscaDeAlunosHandler>();
+builder.Services.AddScoped<Maxx.Application.Mural.PublicarAvisoHandler>();
+builder.Services.AddScoped<Maxx.Application.Mural.MuralHandler>();
+builder.Services.AddScoped<Maxx.Application.Notificacoes.NotificacoesHandler>();
 
 var app = builder.Build();
 
@@ -177,6 +182,8 @@ v1.MapPerfilEndpoints();
 v1.MapEventoEndpoints();
 v1.MapComprovacaoEndpoints();
 v1.MapContestacaoEndpoints();
+v1.MapAvisoEndpoints();
+v1.MapNotificacaoEndpoints();
 v1.MapGroup("/auth").AllowAnonymous().MapCadastroEndpoints().MapLoginEndpoints().MapRecuperacaoEndpoints();
 if (demonstracao)
 {

@@ -139,6 +139,13 @@ public class UploadPendenteTests
         { "professora", FinalidadeDoUpload.FotoDePerfil, true },
         { "professora e instituição", FinalidadeDoUpload.FotoDePerfil, true },
         { "instituição", FinalidadeDoUpload.FotoDePerfil, false },
+
+        // Foto de aviso: quem publica aviso, professor e instituição (produto.md 7).
+        { "aluna", FinalidadeDoUpload.Aviso, false },
+        { "ex-aluna", FinalidadeDoUpload.Aviso, false },
+        { "professora", FinalidadeDoUpload.Aviso, true },
+        { "professora e instituição", FinalidadeDoUpload.Aviso, true },
+        { "instituição", FinalidadeDoUpload.Aviso, true },
     };
 
     [Theory]

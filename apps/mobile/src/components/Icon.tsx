@@ -119,6 +119,20 @@ const ICONES = {
   // chevron-right e x do Lucide.
   voltar: [{ d: "m15 18-6-6 6-6", modo: "aberto" }],
   avancar: [{ d: "m9 18 6-6-6-6", modo: "aberto" }],
+  // bell do Lucide: o sininho das notificações, no cabeçalho do feed e do Mural.
+  sino: [
+    {
+      d: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9",
+    },
+    { d: "M10.3 21a1.94 1.94 0 0 0 3.4 0", modo: "aberto" },
+  ],
+  // chevron-down do Lucide: o cartão recolhido do mural, que abre ao toque.
+  abrir: [{ d: "m6 9 6 6 6-6", modo: "aberto" }],
+  // check-check do Lucide: o "Ler todos" do mural.
+  lerTodos: [
+    { d: "M18 6 7 17l-5-5", modo: "aberto" },
+    { d: "m22 10-7.5 7.5L13 16", modo: "aberto" },
+  ],
   fechar: [
     { d: "M18 6 6 18", modo: "aberto" },
     { d: "m6 6 12 12", modo: "aberto" },

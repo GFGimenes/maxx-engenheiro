@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -12,6 +12,7 @@ import { useEu } from "../api/useEu";
 import { Screen } from "../components/Screen";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { Logo } from "../marca/Logo";
+import { useVerTrofeus } from "../notificacoes/api";
 import { TrilhaFamilia } from "../premios/TrilhaFamilia";
 import { SecaoDeReivindicacoes } from "../premiosParticipacao/SecaoDeReivindicacoes";
 import { textStyles } from "../theme/fonts";
@@ -35,13 +36,19 @@ const ABAS = [
 ] as const;
 
 // A tela de Troféus (prancheta trofeus-*.png): o catálogo do próprio aluno, o que falta, o
-// critério e a raridade por escassez. A posição no ranking, o sininho e a bolinha de
-// prêmio novo chegam nos passos 10 e 11.
+// critério e a raridade por escassez. Abrir a aba apaga a bolinha de prêmio novo (passo 10,
+// pergunta 5), sem ler o sininho. A posição no ranking chega no passo 11.
 export function TrofeusScreen() {
   const { colors } = useTheme();
   const eu = useEu();
   const ehAluno = eu.data?.papeis.includes("aluno") ?? false;
   const premios = usePremios(ehAluno);
+  const { mutate: verTrofeus } = useVerTrofeus();
+  useEffect(() => {
+    if (ehAluno) {
+      verTrofeus();
+    }
+  }, [ehAluno, verTrofeus]);
   const [aba, setAba] = useState<AbaDeTrofeus>("trofeus");
   const [mostrarNaoObtidos, setMostrarNaoObtidos] = useState(true);
 

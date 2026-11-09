@@ -16,14 +16,15 @@ import { useEu } from "../api/useEu";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState } from "../components/StateMessage";
 import { Logo } from "../marca/Logo";
+import { Sininho } from "../notificacoes/Sininho";
 import { useTheme } from "../theme/ThemeProvider";
 import { espacamento, tamanhos } from "../theme/tokens";
 import { useFeed } from "./api";
 import { CartaoDePost } from "./CartaoDePost";
 
-// A Home (produto.md 6.2 e prancheta do feed): o logo e o "+" do novo post no topo, e os
-// posts de quem a pessoa segue intercalados com recomendações, rolando sem fim. O sininho
-// chega com as notificações, no passo 10.
+// A Home (produto.md 6.2 e prancheta do feed): o logo, o "+" do novo post e o sininho das
+// notificações (passo 10) no topo, e os posts de quem a pessoa segue intercalados com
+// recomendações, rolando sem fim.
 export function FeedScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -49,17 +50,20 @@ export function FeedScreen() {
   const cabecalho = (
     <View style={styles.topo}>
       <Logo largura={110} />
-      {ehAluno && (
-        <Pressable
-          role="button"
-          accessibilityLabel="Novo post"
-          hitSlop={8}
-          onPress={() => router.push("/novo-post")}
-          style={styles.botao}
-        >
-          <Icon name="novo" color={colors.ink} size={tamanhos.iconeNav} />
-        </Pressable>
-      )}
+      <View style={styles.acoes}>
+        {ehAluno && (
+          <Pressable
+            role="button"
+            accessibilityLabel="Novo post"
+            hitSlop={8}
+            onPress={() => router.push("/novo-post")}
+            style={styles.botao}
+          >
+            <Icon name="novo" color={colors.ink} size={tamanhos.iconeNav} />
+          </Pressable>
+        )}
+        <Sininho />
+      </View>
     </View>
   );
 
@@ -152,12 +156,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: espacamento.margemLateral,
     paddingVertical: 8,
   },
+  acoes: { flexDirection: "row", alignItems: "center" },
   botao: {
     width: tamanhos.alvoDeToque,
     height: tamanhos.alvoDeToque,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: -10,
+    marginRight: 4,
   },
   espera: { marginTop: 48 },
   estado: { paddingHorizontal: espacamento.margemLateral, paddingTop: 48 },

@@ -86,6 +86,13 @@ const MENSAGENS = {
   // Perfil e busca (CodigosDoPerfil.cs)
   "busca-sem-criterio": "Digite ao menos 2 letras ou escolha um filtro.",
   "foto-de-perfil-ambigua": "Escolha trocar ou remover a foto.",
+  // Mural (CodigosDoMural.cs); escopo, upload e foto repetem os da medalha e do post.
+  "aviso-nao-permitido": "Você não pode publicar aviso aqui.",
+  "alvos-do-aviso-invalidos": "Escolha para quem vai o aviso.",
+  "curso-nao-encontrado": "Esse curso não existe mais.",
+  "titulo-do-aviso-invalido": "O título precisa ter de 3 a 120 caracteres.",
+  "texto-do-aviso-invalido": "O texto precisa ter de 1 a 2.000 caracteres.",
+  "aviso-nao-encontrado": "Esse aviso não está mais no seu mural.",
   // Paginação (CodigosDaPaginacao.cs)
   "cursor-invalido": "Não deu para carregar mais. Puxe para atualizar.",
   // Genéricos, pelo status (DomainExceptionHandler.cs)
