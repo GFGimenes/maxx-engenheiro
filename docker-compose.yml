@@ -109,7 +109,7 @@ services:
       DOTNET_ENVIRONMENT: Production
       # O e-mail sai daqui, por um trabalho da fila. Sem a URL o worker não sobe.
       App__UrlPublica: ${MAXX_URL_PUBLICA:-http://localhost}
-      # SMTP: o Mailpit local por padrão. O provedor da VPS entra no passo 13, pelo .env.
+      # SMTP: o Mailpit local por padrão. Na VPS, o docker-compose.producao.yml exige o Brevo.
       Email__Remetente: ${MAXX_EMAIL_REMETENTE:-Maxx <nao-responda@maxx.local>}
       Email__Smtp__Host: ${MAXX_SMTP_HOST:-mailpit}
       Email__Smtp__Porta: ${MAXX_SMTP_PORTA:-1025}

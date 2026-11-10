@@ -84,6 +84,20 @@ demonstração voltam a responder 404.
 Logs: `dc logs -f --tail=200 api worker caddy`. O log de cada contêiner tem teto de
 5 arquivos de 10 MB.
 
+## Purga de um lote de demonstração
+
+Depois da avaliação (e do ensaio), pela área da instituição, nunca por SQL à mão:
+
+1. Desligar a demonstração (`dc up -d`), para ninguém entrar no lote durante a purga.
+2. Em `/instituicao/purga`, escolher o lote e digitar o nome dele de novo. Banco e fila
+   saem numa transação; as fotos do lote vão para o trabalho `remover-fotos`.
+3. Esperar a fila esvaziar (`/api/health/worker` com `disponiveis` em 0).
+4. **Limpar o cache da CDN**: painel da Cloudflare, Caching, Purge Cache, Purge Everything
+   na zona de `fotos.maxx-unimax.com`. Sem isso, a borda continua servindo a foto que já
+   tinha em cache até ela expirar, mesmo fora do bucket.
+5. Conferir: nenhum usuário com o lote, o registro em `purga_da_demonstracao`, e a URL de
+   uma foto do lote em 404 pela CDN.
+
 ## Seed de demonstração
 
 Uma vez, depois da primeira subida. Ele sobe as fotos dos posts do mundo para o R2 e

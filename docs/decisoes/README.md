@@ -25,14 +25,14 @@ seis assumidas de propósito, na seção 12 daquele documento.
 
 | Decisão | Detalhe |
 |---|---|
-| Hospedagem | Docker Compose em uma VPS, Caddy na frente, HTTPS automático com HSTS e cabeçalhos de segurança, CSP no build web |
+| Hospedagem | Docker Compose em uma VPS (Hetzner CX23, `app.maxx-unimax.com`), Caddy na frente, HTTPS automático com HSTS e cabeçalhos de segurança, CSP no build web. Imagens publicadas no GHCR pela CI, implantadas pelo `infra/deploy.sh`. Ver Endurecimento e ensaio (passo 13) e `docs/operacao.md` |
 | Réplicas | Duas réplicas de API sem estado atrás do Caddy: resiliência de deploy, não capacidade |
 | Storage | Cloudflare R2 com a CDN da Cloudflare em produção. No compose, na CI e nos testes de integração, o emulador VersityGW, compatível com S3; trocar um pelo outro muda só o `.env`. Ver Posts, upload e feed (passo 7) |
 | Migrations | Contêiner separado com advisory lock, antes de subir as réplicas. Nunca no startup da aplicação |
 | Worker | Contêiner separado, `Maxx.Api worker`, uma réplica, consumindo a fila do Postgres (ADR 0008). Ver Medalhas, fila e worker (passo 6) |
-| Backup | `pg_dump` noturno para o bucket, mais dump manual obrigatório antes de cada migration, com restauração testada uma vez |
+| Backup | `pg_dump` noturno no disco da VPS (`/opt/maxx/backups`, rotação de 14 dias), mais dump antes de cada migration pelo `deploy.sh`, com restauração testada. O envio para um bucket sem domínio público é pendência fora da fase 1 (decidido no passo 13) |
 | Avaliação | Sem plano B local: a VPS é o único ambiente. A avaliação é remota, antes de 05/12, sem apresentação presencial: cada avaliador entra na VPS pela própria conexão, e não há rede do campus nem aparelho compartilhado de que dependa. O ensaio do passo 13 confirma o acesso de fora, por conexões diferentes |
-| CI | GitHub Actions, seis jobs: api, mobile, api-client, e2e, segurança e build (imagens da API e do Caddy com o build web) |
+| CI | GitHub Actions, seis jobs: api, mobile, api-client, e2e, segurança e build (imagens da API e do Caddy com o build web, varridas pelo Trivy), mais `publicar`, que leva as imagens ao GHCR com os seis verdes (passo 13) |
 
 ## Dados
 
@@ -77,7 +77,7 @@ ele deixou abertas. Fechadas no plano do passo 3.
 | Normalização da senha | NFC antes do hash, no cadastro e no login: o "ç" composto de um teclado e o decomposto de outro são a mesma senha |
 | Tolerância de relógio | 30 segundos na validação do access token; as réplicas estão no mesmo host |
 | Chave em desenvolvimento | Sem `Jwt__Chave` em Development, a API gera uma chave por processo, que some no restart. Nenhuma chave versionada, nem a de desenvolvimento |
-| E-mail | SMTP genérico com MailKit; Mailpit no compose local. Provedor da VPS escolhido no passo 13 |
+| E-mail | SMTP genérico com MailKit; Mailpit no compose local; Brevo na VPS (`smtp-relay.brevo.com`, StartTls), remetente `nao-responda@maxx-unimax.com` (passo 13) |
 | Envio de e-mail | Desde o passo 6, por um trabalho da fila do Postgres (ADR 0008), executado só pelo worker, que é quem tem o SMTP. O pedido de recuperação grava o pedido sem token e enfileira só o id dele, na mesma transação: nenhum segredo espera em claro na fila. O worker emite o token, grava o hash e manda o e-mail na transação do trabalho. Falha de envio desfaz o hash e volta com o recuo da fila; a retentativa emite outro token. Pedido já encerrado quando o trabalho roda (outro link trocou a senha) não gera e-mail. Se o envio sai e a transação não fecha, o link que chegou não vale, e o usuário pede outro |
 | Contas de professor e instituição | Criadas pelo seed demo, sem senha, para toda linha de professor e de instituição que estiver no banco, não só as do arquivo; primeiro acesso pela recuperação de senha. Ver `produto.md` 2.5 |
 | Login exigido | Toda rota de `/v1` exige login, e a pública declara `AllowAnonymous`. A exigência fica no grupo `/v1`, e não numa `FallbackPolicy`, porque a fallback vale também para pedido sem endpoint, e rota inexistente tem de continuar 404 |
@@ -156,7 +156,7 @@ que só alcança o banco: saem na purga pela área web da instituição, desde o
 | Decisão | Detalhe |
 |---|---|
 | Stack | Expo com React Native e TypeScript, Expo Router, um código para web, Android e iOS |
-| Prioridade | A web é o acesso principal da fase 1; o nativo fica pronto para publicar, com APK gerado, sem publicação em loja |
+| Prioridade | A web é o acesso principal da fase 1; o nativo fica no mesmo código, sem publicação em loja. O APK e a fumaça com Maestro saíram da fase 1 por prazo (passo 13): pendência fora da fase |
 | Contrato | `openapi-typescript` e `openapi-fetch`, com hooks TanStack Query escritos à mão. A CI falha se o cliente gerado divergir do OpenAPI |
 | Cache | Consulta com stale-while-revalidate no app; ETag com 304 no perfil e nos avisos; micro-cache em memória da primeira página do feed só se o teste de carga pedir. Nada que dependa de quem pede vai para cache compartilhado |
 | Feed | Paginação por cursor com índice, sem offset, e semente de sessão dentro do cursor para a recomendação aleatória ser estável durante a sessão |
@@ -310,7 +310,7 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 | Confirmação | O post ou a foto de perfil confirmam o upload, depois de o HEAD achar os dois objetos. Upload de outro usuário ou de outra finalidade recebe 404 `upload-nao-encontrado`; já confirmado, 409 `upload-ja-usado`, também na corrida. Não há prazo próprio na confirmação: até a limpeza de 24 horas, o upload pendente ainda serve |
 | Upload abandonado | O trabalho `limpar-upload-abandonado`, adiado 24 horas e enfileirado na mesma transação da assinatura, apaga os objetos e a linha se o upload continuar pendente. Confirmado, não toca. Idempotente, com `xmin` contra a confirmação simultânea |
 | Remoção de fotos | Post apagado, foto de perfil trocada ou removida: os objetos saem pelo trabalho `remover-fotos`, enfileirado na mesma transação. Remover chave que já não existe não é erro |
-| Verificação do R2 | `VerificacaoDoR2Tests`, pulado por padrão e fora da CI: com `MAXX_VERIFICAR_R2=1` e as `MAXX_ARMAZENAMENTO_*` do bucket real, prova no R2 o que o emulador prova na CI (tipo e tamanho presos, leitura pela CDN sem login, remoção), e o CORS do PUT com `MAXX_VERIFICAR_R2_ORIGEM`. Roda uma vez à mão, quando a conta existir |
+| Verificação do R2 | `VerificacaoDoR2Tests`, pulado por padrão e fora da CI: com `MAXX_VERIFICAR_R2=1` e as `MAXX_ARMAZENAMENTO_*` do bucket real, prova no R2 o que o emulador prova na CI (tipo e tamanho presos, leitura pela CDN sem login, remoção), e o CORS do PUT com `MAXX_VERIFICAR_R2_ORIGEM`. Roda uma vez à mão, quando a conta existir. Rodado no passo 13, na VPS, com o teste do envio direto do seed: 7 de 7 |
 
 ### Post e interações
 
@@ -375,13 +375,13 @@ nasceram aqui (post de medalha anulada e de prêmio revogado) estão em `produto
 
 | Limite | Onde é tratado |
 |---|---|
-| O teste do índice do feed desliga a varredura (`enable_seqscan = off`): prova que o índice serve, não que o planejador o escolhe com pouco dado | k6 do passo 13 |
-| A busca não tem teste com `EXPLAIN` dos índices de trigramas | k6 do passo 13 |
+| O teste do índice do feed desliga a varredura (`enable_seqscan = off`): prova que o índice serve, não que o planejador o escolhe com pouco dado | Passo 13: com o volume do seed demo o planejador ainda prefere a varredura (52 posts); provar a escolha com volume real é pendência fora da fase 1 |
+| A busca não tem teste com `EXPLAIN` dos índices de trigramas | Resolvido no passo 13: com `enable_seqscan = off`, a consulta real usa os dois índices de trigramas (`BitmapOr`); com 159 usuários, o planejador prefere a varredura |
 | Seguir no meio da sessão pode repetir um post já visto como recomendação, e deixar de seguir pode tirar um da sessão. O feed não guarda estado no servidor; puxar para atualizar resolve | Aceito |
-| A migration cria extensões: o usuário do banco precisa de `CREATE EXTENSION` | Passo 13, revisar na VPS |
-| O PUT de Blob no Android e no iOS só passa pelo Jest | Maestro do passo 13 |
+| A migration cria extensões: o usuário do banco precisa de `CREATE EXTENSION` | Revisado no passo 13: na VPS, o usuário é o dono do banco e superusuário (o `POSTGRES_USER` da imagem), e as extensões foram criadas. Um papel com menos privilégio para API e worker é pendência fora da fase 1 |
+| O PUT de Blob no Android e no iOS só passa pelo Jest | Aceito: o APK e o Maestro saíram da fase 1 por prazo (passo 13), e o PUT no nativo continua só no Jest |
 | HEIC não abre no Chrome: quem escolher um vê "Não deu para abrir essa foto. Escolha outra." | Aceito |
-| A conferência do `content-length` assinado foi provada no emulador, não no R2 | `VerificacaoDoR2Tests`, quando a conta existir |
+| A conferência do `content-length` assinado foi provada no emulador, não no R2 | Resolvido no passo 13: o R2 recusa o tamanho diferente do assinado (`VerificacaoDoR2Tests` na VPS) |
 | As fotos do lote de demonstração não saem pelo SQL da purga (D14) | Resolvido no passo 12: a purga pela área web manda as fotos do lote para a remoção do bucket na mesma transação |
 
 ## Prêmios de participação (passo 8)
@@ -609,9 +609,9 @@ notificações e novo aviso do professor).
 | Os destinatários do aviso de curso são lidos pelo curso atual: quem trocar de curso entre a publicação e o trabalho do worker (segundos) é lido pelo curso novo | Aceito |
 | A tela de aviso de faculdade e de curso da instituição | Resolvido no passo 12 |
 | Avisos no seed de demonstração | Resolvido no passo 12: pela fábrica do domínio, com a notificação pelo worker |
-| O p95 do mural com ETag e das novidades perguntadas a cada 60 s por usuário | k6 do passo 13 |
+| O p95 do mural com ETag e das novidades perguntadas a cada 60 s por usuário | Medido no passo 13 (carga reduzida): mural 33 ms e novidades 35 ms de p95 |
 | Sem push: a bolinha só acende quando o app pergunta (foco ou 60 s) | Fase 2, push nativo |
-| Na suíte e2e inteira rodada localmente (Windows, pilha no ar há horas, banco com os dados de muitas rodadas), o e2e da medalha estoura os 30 s: a página do aluno não volta a desenhar depois do recarregamento que segue a anulação. Sozinho, passa; na CI, passou de primeira em todas as etapas do passo, entre 12 e 16 s | Ocorrência de ambiente; acompanhar no passo 13 |
+| Na suíte e2e inteira rodada localmente (Windows, pilha no ar há horas, banco com os dados de muitas rodadas), o e2e da medalha estoura os 30 s: a página do aluno não volta a desenhar depois do recarregamento que segue a anulação. Sozinho, passa; na CI, passou de primeira em todas as etapas do passo, entre 12 e 16 s | Ocorrência de ambiente: no passo 13, a suíte local inteira teve 3 falhas de prazo, cada uma num tema só, que passaram em série. Na CI, nenhuma |
 | Medalhas concedidas em sequência rápida: a reavaliação da primeira roda com as outras já gravadas e pode conceder a conquista antes de as outras medalhas serem notificadas; no sininho, a conquista obtida aparece entre as medalhas | Aceito: o avaliador conta os fatos do momento |
 
 ## Rankings (passo 11)
@@ -685,10 +685,10 @@ histórico geral).
 |---|---|
 | A posição é eventualmente consistente: por alguns segundos o aluno vê os pontos novos e a posição antiga | Aceito (ADR 0005) |
 | Marcar ex-aluno e trocar de curso ainda não pedem o recálculo: os atos não existem fora do teste | Resolvido no passo 12: os dois atos da área pedem na mesma transação |
-| Worker morto congela o ranking sem erro em tela | Passo 13, verificação de saúde e alerta |
-| O p95 da leitura do ranking e do perfil com a posição | k6 do passo 13 |
+| Worker morto congela o ranking sem erro em tela | Resolvido no passo 13: `/api/health/worker` e monitor de fora |
+| O p95 da leitura do ranking e do perfil com a posição | Medido no passo 13 (carga reduzida): ranking 47 e 39 ms, perfil 26 ms e feed 71 ms de p95 |
 | O topo do ranking local mostra as contas deixadas pelas rodadas de e2e | Aceito; desde o passo 12, o seed completo põe 150 alunos com pontos à frente delas |
-| Numa rodada local da solução inteira (domínio e integração juntos), um teste de contestação estourou o tempo da conexão com o contêiner de armazenamento; sozinho e na CI, passou | Ocorrência de ambiente; acompanhar no passo 13 |
+| Numa rodada local da solução inteira (domínio e integração juntos), um teste de contestação estourou o tempo da conexão com o contêiner de armazenamento; sozinho e na CI, passou | Ocorrência de ambiente. Repetiu-se uma vez no passo 13, numa rodada local da solução inteira (`PedidosDosPremiosTests`, conexão com o contêiner de armazenamento); sozinho e na CI, passou |
 
 ## Área web da instituição (passo 12)
 
@@ -777,8 +777,8 @@ mundo do seed e a purga).
 
 | Limite | Onde é tratado |
 |---|---|
-| A lista de domínios de e-mail aceitos (`produto.md` 2.4) não existe: a correção confere só a forma | Passo 13, como configuração; o seed já usa domínio reservado |
-| O e-mail da instituição e dos professores do seed é de domínio real: o primeiro acesso deles pela recuperação depende do SMTP da VPS | Passo 13, provedor de e-mail |
+| A lista de domínios de e-mail aceitos (`produto.md` 2.4) não existe: a correção confere só a forma | Resolvido no passo 13: `Cadastro:DominiosDeEmailAceitos` |
+| O e-mail da instituição e dos professores do seed é de domínio real: o primeiro acesso deles pela recuperação depende do SMTP da VPS | Resolvido no passo 13: os e-mails passaram para `maxx-unimax.com`, entregues ao autor pelo Email Routing, e o Brevo envia |
 | Um banco local anterior ao passo 12 falha no `seed demo` (os 20 alunos mudaram de e-mail): recriar o volume | Aceito |
 | A atividade nasce só na primeira população: aluno acrescentado depois ganha conta sem fatos | Aceito |
 | Nenhuma conquista de fechamento (todas as matérias) aparece com a distribuição semeada | Aceito |
@@ -787,6 +787,87 @@ mundo do seed e a purga).
 | O seed sobe as fotos antes do commit: falha depois disso deixa objetos sem dono no bucket | Aceito |
 
 ## Endurecimento e ensaio (passo 13)
+
+Produção na VPS, segurança da borda e das imagens, saúde do worker, backup, carga reduzida e
+o ensaio da demonstração remota. As perguntas do plano foram fechadas nele; a ordem foi
+mudada pelo autor para o deploy vir antes do endurecimento, e cada etapa que mexeu na API
+ou no Caddy foi conferida no ar. O roteiro de operação está em `docs/operacao.md`, e o do
+ensaio, em `docs/ensaio.md`.
+
+### Produção
+
+| Decisão | Detalhe |
+|---|---|
+| Compose de produção | `docker-compose.producao.yml`, independente do local: imagens do GHCR pela `MAXX_IMAGEM_TAG`, sem build, sem Mailpit e sem emulador; SMTP e R2 obrigatórios; Caddy em 80 e 443 com os volumes `caddy-data` e `caddy-config` (sem eles, cada recriação pediria certificado novo); log de cada contêiner com teto de 5 arquivos de 10 MB. Nunca menciona a flag da demonstração: ela vem do `docker-compose.demo.yml` por cima |
+| Variáveis | Os nomes em `.env.producao.example`; os valores só no `/opt/maxx/.env`, escrito pelo autor. O job `build` valida o compose de produção com um valor falso em cada nome, sozinho e com a demonstração: prova que a lista está completa |
+| HTTPS | O endereço do site no Caddy é a `MAXX_URL_PUBLICA` com `https://`, e o certificado do Let's Encrypt sai sozinho pela porta 80. DNS na Cloudflare sem proxy |
+| Imagens | `ghcr.io/gfgimenes/maxx-engenheiro-api` e `-caddy`, públicas (não carregam segredo; a VPS puxa sem login). O job `publicar` roda depois dos seis jobs: na `main`, `latest` e `sha-<curto>`; por disparo à mão numa branch, só `sha-<curto>`, para implantar antes de a rodada chegar à `main`. Nome próprio do repositório, para não disputar com o outro do TCC |
+| Proveniência | `docker build --provenance=false`: com o índice de atestado, o pacote não se ligava ao repositório pelo rótulo `source`, e o `GITHUB_TOKEN` recebia `denied` no manifesto |
+| Implantação | `infra/deploy.sh <sha> [demo]`: traz do repositório, no mesmo commit, os arquivos do compose e os scripts; para se faltar nome no `.env`; troca a tag; puxa; faz o dump; sobe, com o migrator antes das réplicas. Ele se baixa a si mesmo e troca o arquivo com `mv`, porque o bash lê o script aos poucos enquanto roda |
+| Usuário do banco | Na VPS, o usuário é o `POSTGRES_USER` da imagem: dono do banco e superusuário, o que cobre o `CREATE EXTENSION` da migration do passo 7. Decidido manter; o papel com menos privilégio para API e worker é pendência fora da fase 1 |
+
+### Seed e R2 na VPS
+
+| Decisão | Detalhe |
+|---|---|
+| E-mails do seed | Os 9 endereços de professor e instituição passaram de `unieduk.com.br` para `maxx-unimax.com`, com os mesmos nomes antes do arroba: o primeiro acesso pela recuperação mandaria e-mail para caixas reais da UniEduk. O Email Routing da Cloudflare entrega tudo nesse domínio ao autor |
+| Envio direto ao R2 | O `PutObject` do AWSSDK assina o corpo em pedaços (`STREAMING-AWS4-HMAC-SHA256-PAYLOAD`), que o R2 recusa e o emulador aceita: o primeiro `seed demo` na VPS caiu nisso. `UseChunkEncoding = false` no `EnviarAsync`, com um teste novo no `VerificacaoDoR2Tests` que falha no R2 sem a correção |
+| Seed demo na VPS | 56 s. A fila (975 trabalhos disponíveis) esvaziou em 21 s, contra 66 s locais; 234 conquistas e 412 linhas de ranking pelo worker |
+
+### Borda
+
+| Decisão | Detalhe |
+|---|---|
+| CSP | `default-src 'self'`; `script-src 'self'` (o build do Expo não tem script inline); `style-src 'self' 'unsafe-inline'`, porque o react-native-web injeta `<style>` em tempo de execução e o build traz o `expo-reset` inline; `img-src` com a URL de leitura da CDN; `connect-src` com o endpoint do R2; `blob:` e `data:` para a prévia e as derivadas no cliente; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`. Os dois endereços vêm das variáveis do bucket, sem nada da conta no repositório |
+| Demais cabeçalhos | `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy` e `Cross-Origin-Opener-Policy`; o `Server` sai |
+| HSTS | Um ano, sem subdomínios nem preload, só no que foi servido por HTTPS: em `http://localhost` ficaria preso no navegador de quem desenvolve |
+| Teste | `e2e/tests/cabecalhos.spec.ts`: os cabeçalhos na web e na API, e o login sem nenhuma violação da CSP. A CSP vale também no compose local e na CI, então os fluxos com foto a exercitam. Rodado também contra a VPS, com o HSTS |
+
+### Domínios de e-mail aceitos
+
+| Decisão | Detalhe |
+|---|---|
+| Configuração | `Cadastro:DominiosDeEmailAceitos` no `appsettings.json`: não é segredo e é igual em todo ambiente. Vazia ou mal formada, a API não sobe. Traz os três domínios da faculdade, o `al.unieduk.invalid` dos alunos do seed e o `maxx-unimax.com` dos professores e da instituição do seed (`produto.md` 2.4) |
+| Regra | `DominiosDeEmailAceitos` no domínio: o domínio inteiro, sem maiúsculas; subdomínio de um aceito não é aceito |
+| Onde | No cadastro (sugestão, disponibilidade e cadastro), antes da base, com `email-fora-da-faculdade` ("Use o e-mail da faculdade."); na correção pela instituição, com `dominio-nao-aceito` ("Esse domínio de e-mail não é aceito."). Dois códigos porque o app tem um texto por código |
+
+### Saúde do worker
+
+| Decisão | Detalhe |
+|---|---|
+| Batimento | O laço do worker grava o instante numa tabela de uma linha (`batimento_do_worker`), no máximo a cada 15 s |
+| Rota | `GET /api/health/worker`, anônima e fora de `/v1`: 200, ou 503 com o mesmo corpo e a lista `problemas`. Só idades, contagens e códigos |
+| Problemas | `worker-parado`: batimento com mais de 2 minutos. `fila-parada`: trabalho disponível esperando há mais de 5 minutos, contados do que vier depois entre a chegada e a disponibilidade (o seed enfileira com datas passadas). `trabalho-falho`: falho nas últimas 24 horas, pelo `disponivel_em`, que no falho é o instante da falha. Limites em `SaudeDoWorkerOptions` |
+| Alerta | Monitor de fora (UptimeRobot, do autor) a cada 5 minutos, que também avisa se a VPS cair. Nada de cron com SMTP no host |
+| No ar | Com o worker parado, 503 `worker-parado` aos 149 s; religado, 200 |
+
+### Backup
+
+| Decisão | Detalhe |
+|---|---|
+| Onde | `/opt/maxx/backups`, só do root, `pg_dump -Fc`. O dump só ganha o nome final depois de o `pg_restore --list` lê-lo. Rotação de 14 dias pelo próprio script |
+| Quando | Toda noite às 03:00 de São Paulo (`maxx-backup.timer`, com o fuso no `OnCalendar`) e antes de toda migration, pelo `deploy.sh` |
+| Restauração | `infra/backup/restaurar-teste.sh` restaura num Postgres descartável e compara a contagem de cada tabela com a produção: 46 tabelas iguais, em 1 s. A primeira versão dava falso positivo, comparando dois arquivos vazios; agora recusa a comparação sem tabela contada |
+| Fora do disco | O envio para um bucket sem domínio público é pendência fora da fase 1: hoje o backup não sobrevive à perda do disco da VPS |
+
+### Node e dependências
+
+| Decisão | Detalhe |
+|---|---|
+| Node 24 | Avaliado e não adotado. O Expo 58, o React Native 0.88 e o Metro declaram `^24.3.0`, mas na CI com o Node 24 o teste "novo post no modo de reivindicação › recusa da API vira mensagem e a tela continua" falhou (a mensagem da recusa não aparece), e passa no 22. Pela regra do autor, a CI não ficou verde de primeira e o 22 voltou. A causa não foi investigada: pendência |
+| `npm audit` | Os 33 achados abaixo do corte (1 baixo, 32 moderados) vêm de três avisos: `glob` (GHSA-3g3m-2fjr-6pw4), `minimatch` (GHSA-g3hv-75wg-m249) e `deepmerge` (GHSA-gcqx-w48m-w2h4, sem versão corrigida). Chegam só por ferramenta de build, teste e lint (CLI e Metro do Expo, Jest, ESLint); nada vai no bundle. O `audit fix` sem `--force` não muda nada, e com `--force` rebaixa o `expo` para 52 e o `jest` para 29. Sem mudança, revisitar a cada atualização do Expo. Os três do `minimatch` do passo 1 são o mesmo aviso |
+
+### Ensaio
+
+| Decisão | Detalhe |
+|---|---|
+| Quando e como | 10/11/2026, com a demonstração ligada e o lote `ensaio-2026-11`. Duas conexões, abaixo das três do roteiro: iPhone 12 com Safari no 5G da Claro (primeiro acesso) e no Wi-Fi de casa; professor e instituição no computador, na banda larga |
+| Números | Tela de login com o botão da demonstração em 4 s no 5G, com o cache limpo. Posição nova no ranking 2 s depois da medalha. Pico de CPU de 9% (worker, Postgres e réplicas) e no máximo 180 MiB numa réplica. Nenhum erro e nenhum trabalho falho |
+| Regras confirmadas | O professor de outro curso não enxerga o aluno (escopo de turma); o aviso de curso chega ao Mural na hora; o app volta pela lembrança do aparelho |
+| Achado de tela | Na reivindicação, tocar no prêmio escolhido não reabria a lista, e o "Trocar prêmio" passava despercebido. Corrigido depois do ensaio: tocar de novo no prêmio devolve a lista |
+| Purga de ensaio | Pela tela, 2 alunos e 6 fotos. Banco e fila limpos, objetos fora do bucket |
+| Cache da CDN | **Limite conhecido.** Depois da purga, a URL exata de uma foto do lote ainda respondia 200 pela borda da Cloudflare (`cf-cache-status: HIT`), com o objeto já fora do bucket. Mitigação: a limpeza do cache de `fotos.maxx-unimax.com` no painel da Cloudflare entrou como passo da rotina da purga; feita no ensaio, a URL passou a 404 |
+| Depois | Lote da avaliação: `banca-2026` |
 
 ### Varredura das imagens
 
