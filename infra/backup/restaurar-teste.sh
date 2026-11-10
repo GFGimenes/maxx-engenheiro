@@ -25,13 +25,19 @@ docker exec -i "$nome" pg_restore -U postgres -d restaurado --no-owner --exit-on
 echo "restauração: $(( $(date +%s) - inicio )) s"
 
 # Uma linha por tabela: "tabela|linhas". As contagens exatas, não a estimativa do catálogo.
-contar='SELECT format($$SELECT %L || $s$|$s$ || count(*) FROM %I.%I$$, table_name, table_schema, table_name)
+contar='SELECT format($$SELECT %L || $s$|$s$ || count(*) FROM %I.%I;$$, table_name, table_schema, table_name)
         FROM information_schema.tables
         WHERE table_schema = $$public$$ AND table_type = $$BASE TABLE$$ ORDER BY table_name'
-"${dc[@]}" exec -T postgres sh -c "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tAc '$contar' | psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tA" > /tmp/contagem-producao.txt
-docker exec "$nome" sh -c "psql -U postgres -d restaurado -tAc '$contar' | psql -U postgres -d restaurado -tA" > /tmp/contagem-restaurada.txt
+# ON_ERROR_STOP: uma contagem que falha derruba o script, em vez de deixar o arquivo vazio.
+"${dc[@]}" exec -T postgres sh -c "set -e; psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tAc '$contar' > /tmp/contar.sql; psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -v ON_ERROR_STOP=1 -tA -f /tmp/contar.sql" > /tmp/contagem-producao.txt
+docker exec "$nome" sh -c "set -e; psql -U postgres -d restaurado -tAc '$contar' > /tmp/contar.sql; psql -U postgres -d restaurado -v ON_ERROR_STOP=1 -tA -f /tmp/contar.sql" > /tmp/contagem-restaurada.txt
 
-tabelas=$(wc -l < /tmp/contagem-restaurada.txt)
+# Dois arquivos vazios seriam "iguais": sem tabela contada, não houve prova nenhuma.
+tabelas=$(grep -c '|' /tmp/contagem-restaurada.txt || true)
+if [ "$tabelas" -eq 0 ] || [ "$(grep -c '|' /tmp/contagem-producao.txt || true)" -eq 0 ]; then
+  echo "FALHA: nenhuma tabela contada; a comparação não prova nada."
+  exit 1
+fi
 if diff /tmp/contagem-producao.txt /tmp/contagem-restaurada.txt; then
   echo "conferido: $tabelas tabelas com a mesma contagem de linhas da produção"
 else
