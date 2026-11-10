@@ -109,6 +109,11 @@ public static class DependencyInjection
 
         // Fila no Postgres (ADR 0008): a API e o worker enfileiram; só o worker consome.
         services.AddOptions<FilaOptions>();
+
+        // A saúde do worker (ADR 0005): o worker grava o batimento, a API responde por ele.
+        services.AddOptions<SaudeDoWorkerOptions>();
+        services.AddSingleton<RegistroDeBatimento>();
+        services.AddScoped<IConsultaDaSaudeDoWorker, ConsultaDaSaudeDoWorker>();
         services.AddScoped<IFilaDeTrabalhos, FilaDeTrabalhos>();
         services.AddSingleton<TiposDeTrabalho>();
         services.AddSingleton<ConsumidorDeTrabalhos>();

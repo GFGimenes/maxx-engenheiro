@@ -5,6 +5,7 @@ const MENSAGENS = {
   // Autenticação (CodigosDeRecusa.cs)
   "cadastro-nao-encontrado":
     "Não achamos esse RA com esse e-mail. Confira os dois.",
+  "email-fora-da-faculdade": "Use o e-mail da faculdade.",
   "conta-existente":
     "Esse RA já tem conta. Use Esqueci minha senha para entrar.",
   "prefixo-invalido": "Use de 3 a 30 letras ou números, começando por letra.",
@@ -99,6 +100,7 @@ const MENSAGENS = {
   "aluno-nao-encontrado": "Esse aluno não está na base.",
   "aluno-sem-conta": "Esse aluno ainda não criou a conta.",
   "email-invalido": "Confira o e-mail digitado.",
+  "dominio-nao-aceito": "Esse domínio de e-mail não é aceito.",
   "email-em-uso": "Esse e-mail já é de outra pessoa da base.",
   "mesmo-curso": "O aluno já é desse curso.",
   "semestre-invalido": "Esse curso não tem esse semestre.",

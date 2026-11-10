@@ -116,8 +116,11 @@ o instante.
 | `@prof.unieduk.com.br` | Professor |
 | `@unieduk.com.br` | Interno: administração, funcionários, instituição |
 
-A lista de domínios aceitos é configuração do seed. O papel do usuário vem do cadastro
-na base, nunca do domínio do e-mail.
+A lista de domínios aceitos é configuração da API, conferida no cadastro do aluno e na
+correção de e-mail pela instituição. Ela também traz os dois domínios do mundo de
+demonstração: `al.unieduk.invalid`, reservado, dos alunos fictícios, e `maxx-unimax.com`,
+dos professores e da instituição do seed, que recebem o e-mail do primeiro acesso. O papel
+do usuário vem do cadastro na base, nunca do domínio do e-mail.
 
 ### 2.5 Cadastro e login
 

@@ -98,8 +98,8 @@ interface EscolhaDaReivindicacaoProps {
 // Reivindicação de prêmio de participação (produto.md 4.6 e 4.7): o prêmio, o evento, da
 // lista ou digitado com nome e período, e a matéria quando o prêmio pede (apresentação em
 // sala). Sem prancheta: segue a identidade visual, em linhas como as do modal de medalha.
-// Escolhido o prêmio, a lista recolhe para ele, com "Trocar prêmio": o catálogo tem 17 itens
-// e empurraria o evento para longe da foto.
+// Escolhido o prêmio, a lista recolhe para ele, com "Trocar prêmio" (ou um toque nele de
+// novo) para devolvê-la: o catálogo tem 17 itens e empurraria o evento para longe da foto.
 export function EscolhaDaReivindicacao({
   itens,
   valor,
@@ -117,6 +117,9 @@ export function EscolhaDaReivindicacao({
   const digitado = exigeMateria || valor.eventoId === OUTRO_EVENTO;
   const mudar = (parcial: Partial<Escolha>) =>
     onChange({ ...valor, ...parcial });
+  // Devolve a lista inteira, mantendo o nome e as datas já digitados.
+  const trocarPremio = () =>
+    onChange({ ...valor, item: null, eventoId: null, materiaId: null });
 
   return (
     <View style={styles.coluna}>
@@ -132,14 +135,18 @@ export function EscolhaDaReivindicacao({
             key={opcao.codigo}
             marcada={valor.item === opcao.codigo}
             rotulo={`${opcao.nome}, ${rotulosDeTier[opcao.tier as Tier]}, ${opcao.pontos} pontos`}
+            // Tocar de novo no prêmio escolhido devolve a lista, como "Trocar prêmio": é o
+            // gesto que se tenta primeiro (achado do ensaio, passo 13).
             onPress={() =>
-              onChange({
-                ...ESCOLHA_VAZIA,
-                item: opcao.codigo,
-                nome: valor.nome,
-                inicio: valor.inicio,
-                fim: valor.fim,
-              })
+              valor.item === opcao.codigo
+                ? trocarPremio()
+                : onChange({
+                    ...ESCOLHA_VAZIA,
+                    item: opcao.codigo,
+                    nome: valor.nome,
+                    inicio: valor.inicio,
+                    fim: valor.fim,
+                  })
             }
           >
             <Medalhao tier={opcao.tier as Tier} glifo="taca" size={40} />
@@ -156,17 +163,7 @@ export function EscolhaDaReivindicacao({
         ))}
         {item && (
           <View style={styles.trocar}>
-            <TextLink
-              label="Trocar prêmio"
-              onPress={() =>
-                onChange({
-                  ...valor,
-                  item: null,
-                  eventoId: null,
-                  materiaId: null,
-                })
-              }
-            />
+            <TextLink label="Trocar prêmio" onPress={trocarPremio} />
           </View>
         )}
       </View>

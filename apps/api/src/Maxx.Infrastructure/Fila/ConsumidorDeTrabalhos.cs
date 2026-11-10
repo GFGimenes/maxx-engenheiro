@@ -123,15 +123,34 @@ public sealed partial class ConsumidorDeTrabalhos(
 }
 
 // O laço do worker: processa enquanto houver trabalho e, com a fila vazia, espera o
-// intervalo ocioso antes de olhar de novo.
+// intervalo ocioso antes de olhar de novo. A cada volta, o batimento (no máximo um por
+// intervalo), que a API lê em /health/worker: laço parado, batimento velho.
 internal sealed partial class ServicoDoWorker(
-    ConsumidorDeTrabalhos consumidor, IOptions<FilaOptions> options, ILogger<ServicoDoWorker> logger) : BackgroundService
+    ConsumidorDeTrabalhos consumidor,
+    RegistroDeBatimento batimento,
+    IOptions<FilaOptions> options,
+    ILogger<ServicoDoWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         LogIniciado(logger);
         while (!stoppingToken.IsCancellationRequested)
         {
+            try
+            {
+                await batimento.BaterSeDevidoAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+#pragma warning disable CA1031 // Sem banco, sem batimento: é o sinal que o monitor procura.
+            catch (Exception falha)
+#pragma warning restore CA1031
+            {
+                LogFalhaNoBatimento(logger, falha.GetType().Name, falha.Message);
+            }
+
             bool havia;
             try
             {
@@ -168,4 +187,7 @@ internal sealed partial class ServicoDoWorker(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Falha ao consumir a fila: {Tipo}: {Erro}")]
     private static partial void LogFalhaNoConsumo(ILogger logger, string tipo, string erro);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Falha ao gravar o batimento do worker: {Tipo}: {Erro}")]
+    private static partial void LogFalhaNoBatimento(ILogger logger, string tipo, string erro);
 }

@@ -1810,6 +1810,25 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Maxx.Infrastructure.Fila.BatimentoDoWorker", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("BatidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("batido_em");
+
+                    b.HasKey("Id")
+                        .HasName("pk_batimento_do_worker");
+
+                    b.ToTable("batimento_do_worker", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_batimento_do_worker_unico", "id = 1");
+                        });
+                });
+
             modelBuilder.Entity("Maxx.Infrastructure.Fila.Trabalho", b =>
                 {
                     b.Property<long>("Id")

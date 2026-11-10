@@ -20,6 +20,7 @@ public sealed class AtosSobreOAlunoHandler(
     IConsultaDaInstituicao consulta,
     IRecuperacaoDeSenhaRepository recuperacoes,
     IFilaDeTrabalhos fila,
+    DominiosDeEmailAceitos dominios,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
@@ -52,10 +53,15 @@ public sealed class AtosSobreOAlunoHandler(
         var cadastro = await alunos.CadastroDeAlunoAsync(cadastroId, cancellationToken) ?? throw AlunoNaoEncontrado(cadastroId);
         var agora = relogio.GetUtcNow();
 
-        var resultado = cadastro.CorrigirEmail(email, quem.Id, agora);
+        var resultado = cadastro.CorrigirEmail(email, dominios, quem.Id, agora);
         if (resultado.Recusa is RecusaDaCorrecaoDeEmail.EmailInvalido)
         {
             throw new RecusaException(TipoDeRecusa.Invalido, CodigosDaInstituicao.EmailInvalido, "E-mail fora da forma.");
+        }
+
+        if (resultado.Recusa is RecusaDaCorrecaoDeEmail.DominioNaoAceito)
+        {
+            throw new RecusaException(TipoDeRecusa.Invalido, CodigosDaInstituicao.DominioNaoAceito, "E-mail fora dos domínios aceitos.");
         }
 
         if (resultado.Correcao is not { } correcao)

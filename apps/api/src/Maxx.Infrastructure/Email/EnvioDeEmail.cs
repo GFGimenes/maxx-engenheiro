@@ -7,8 +7,8 @@ using MimeKit;
 
 namespace Maxx.Infrastructure.Email;
 
-// SMTP genérico (decisoes/README.md, E-mail): Mailpit no compose local, provedor da VPS no
-// passo 13. A senha do SMTP só por variável de ambiente.
+// SMTP genérico (decisoes/README.md, E-mail): Mailpit no compose local, Brevo na VPS
+// (passo 13). A senha do SMTP só por variável de ambiente.
 public sealed class EmailOptions
 {
     public const string Section = "Email";

@@ -5,8 +5,9 @@ on:
   push:
   workflow_dispatch:
 
+# O disparo à mão (publicar pela branch) não cancela o push da mesma branch, nem o contrário.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 permissions:
@@ -172,9 +173,72 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # Prova que o .env.producao.example lista toda variável que o compose de produção
+      # exige: com um valor falso em cada nome, sozinho e com a demonstração por cima.
+      - name: Compose de produção válido
+        run: |
+          sed -n 's/^\([A-Z_]*\)=.*/\1=falso/p' .env.producao.example > producao.env
+          docker compose --env-file producao.env -f docker-compose.producao.yml config -q
+          docker compose --env-file producao.env -f docker-compose.producao.yml -f docker-compose.demo.yml config -q
       - name: Imagens da API e do Caddy com o build web
         run: |
           cp .env.example .env
           # Chave descartável, uma por execução: o .env.example vem sem chave de propósito.
           sed -i "s|^MAXX_JWT_CHAVE=.*|MAXX_JWT_CHAVE=$(openssl rand -base64 48)|" .env
           docker compose build
+      # As duas imagens que vão para a VPS, com o mesmo corte do NuGet e do npm: alto ou
+      # crítico falha o job. Só o que já tem correção publicada (--ignore-unfixed): o que a
+      # imagem base ainda não corrigiu não tem ação possível aqui. Segredo esquecido dentro
+      # da imagem também falha.
+      - name: Imagens vulneráveis (Trivy, alto ou crítico)
+        env:
+          TRIVY_VERSION: 0.76.1
+        run: |
+          curl -sSfLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt" \
+            | grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" | sha256sum -c -
+          tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" trivy
+          # As duas sempre, e o job falha no fim: a primeira com achado não esconde a segunda.
+          falhou=0
+          for imagem in maxx-api:local maxx-caddy:latest; do
+            ./trivy image --quiet --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed \
+              --ignorefile .trivyignore.yaml --exit-code 1 "$imagem" || falhou=1
+          done
+          exit "$falhou"
+
+  # Imagens da API e do Caddy no GHCR, só com os seis jobs verdes. No push da main, com as
+  # tags latest e sha-<curto>; no disparo à mão por uma branch, só sha-<curto>, para o
+  # deploy e o ensaio antes de a rodada chegar à main. A VPS puxa sem login: o pacote é
+  # público e as imagens não carregam segredo.
+  publicar:
+    name: publicar
+    needs: [api, mobile, api-client, e2e, seguranca, build]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Entra no GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Constrói e publica
+        run: |
+          base="ghcr.io/gfgimenes"
+          curta="sha-${GITHUB_SHA::7}"
+          publicar() {
+            nome="$1"
+            dockerfile="$2"
+            tags=(-t "$base/$nome:$curta")
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then tags+=(-t "$base/$nome:latest"); fi
+            # Sem o atestado de proveniência, a imagem sai como manifesto simples, e o GHCR
+            # lê o rótulo source, que liga o pacote a este repositório: sem a ligação, o
+            # GITHUB_TOKEN não grava o manifesto (denied).
+            docker build --provenance=false -f "$dockerfile" "${tags[@]}" \
+              --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+              --label "org.opencontainers.image.revision=${GITHUB_SHA}" .
+            docker push --all-tags "$base/$nome"
+          }
+          publicar maxx-engenheiro-api apps/api/Dockerfile
+          publicar maxx-engenheiro-caddy infra/caddy/Dockerfile
+          echo "Publicado: $curta"

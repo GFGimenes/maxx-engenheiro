@@ -367,6 +367,23 @@ Decisões do passo em `decisoes/README.md`, Área web da instituição (passo 12
   `openapi-typescript` via `@redocly/openapi-core`. Registrados no passo 1: só ferramenta
   de geração, fora do app, abaixo do corte alto ou crítico do job de segurança.
 
+Fechado em 10/11/2026, com a ordem mudada pelo autor: o deploy veio antes do endurecimento,
+e cada etapa que mexeu na API ou no Caddy foi conferida no ar. Cortes declarados pelo
+autor: a carga a 2.000 usuários virtuais virou uma carga reduzida (50 usuários por 2
+minutos, de dentro da VPS, com o volume do seed demo) mais os planos com `EXPLAIN ANALYZE`;
+o backup fica no disco da VPS; o APK e o Maestro saem da fase 1. Entrou também, aprovado no
+plano: o Trivy nas duas imagens, com uma exceção com prazo (05/12/2026) para o binário do
+Caddy; e, depois do ensaio, a correção da troca de prêmio na reivindicação. Decisões do
+passo em `decisoes/README.md`, Endurecimento e ensaio (passo 13); operação em
+`operacao.md`; ensaio em `ensaio.md`.
+
+Ficam pendentes fora da fase 1 (seção 5): o cenário de carga do ADR 0005; a escolha dos
+índices do feed e da busca pelo planejador com volume real; o backup num bucket sem domínio
+público; o papel do banco com menos privilégio; o APK e a fumaça com Maestro, com o PUT da
+foto no Android, que continua só no Jest; a troca pelo Node 24, com o teste que falha nele;
+a imagem corrigida do Caddy, antes de 05/12/2026; e a limpeza do cache da CDN feita pela
+própria purga.
+
 ---
 
 ## 5. Fase 2
@@ -377,18 +394,30 @@ usuário, posts salvos, sub-papéis de coordenação e secretaria, verificação
 cadastro, publicação nas lojas. No termo de uso: base legal da LGPD e direitos do
 titular, canal de contato e prazo de guarda dos dados.
 
+Pendências técnicas que o passo 13 deixou fora da fase 1, por prazo:
+
+| Pendência | Por quê | Onde está registrada |
+|---|---|---|
+| Carga a 2.000 usuários virtuais com 3.200 alunos (ADR 0005), e a escolha dos índices do feed e da busca pelo planejador com esse volume | Cortada por prazo; a carga reduzida ficou abaixo do alvo de p95 em todas as rotas | `decisoes/README.md`, passo 13, Carga e planos |
+| Backup num bucket sem domínio público | Hoje o dump fica só no disco da VPS | Idem, Backup |
+| Papel do banco com menos privilégio para API e worker | O usuário da VPS é o dono e superusuário | Idem, Produção |
+| APK e fumaça com Maestro, inclusive o PUT da foto no Android | Cortados por prazo; o nativo só passa pelo Jest | `decisoes/README.md`, Cliente, Prioridade |
+| Node 24 LTS | Um teste do cliente falha nele | Idem, Node e dependências |
+| Imagem do Caddy com `x/net` corrigido | A exceção do Trivy expira em 05/12/2026 | Idem, Varredura das imagens |
+| Limpeza do cache da CDN pela própria purga | Hoje é um passo à mão no painel da Cloudflare | Idem, Ensaio |
+
 ## 6. Riscos acompanhados
 
 | Risco | Onde é tratado |
 |---|---|
 | Conexão de cada avaliador na avaliação remota | Não há apresentação presencial: a avaliação é remota, antes de 05/12, e cada avaliador entra pela própria conexão na VPS. Passo 13, ensaio da demonstração remota. Não há ambiente local alternativo |
-| Worker morto congela ranking sem erro em tela | Passo 13, verificação de saúde e alerta |
-| Bundle da web grande no primeiro acesso | Passo 13, medição no ensaio com celular real |
-| Fila disputando I/O com o feed no pico | Passo 13, primeiro lugar a olhar se o p95 não bater |
+| Worker morto congela ranking sem erro em tela | Resolvido no passo 13: `/api/health/worker` responde 503 com o worker parado (conferido na VPS), e um monitor de fora avisa |
+| Bundle da web grande no primeiro acesso | Medido no ensaio do passo 13: tela de login em 4 s no 5G, num iPhone 12 com o cache limpo |
+| Fila disputando I/O com o feed no pico | Não apareceu na carga reduzida do passo 13 (p95 abaixo de 75 ms em todas as rotas, worker no máximo a 9% de CPU no ensaio). Volta a valer no cenário de 2.000 usuários, pendente |
 | Avaliador de conquista é ponto único de falha lógica | Passo 9, teste por forma, por item e por fronteira |
 | Foto pública para quem tem o link | Decisão consciente, ADR 0002, coberta pelo termo de uso no passo 5 |
 | Semestre vigente na avaliação | A demonstração só oferece cursos com turma no semestre vigente, e o e2e dela depende disso: no recesso (2026/2 termina em 05/12/2026), `GET /v1/demo` vem sem cursos, e o e2e da medalha não acha turma vigente nem bimestre para conceder. A avaliação acontece antes de 05/12 e não há apresentação presencial, então o semestre vigente cobre. Depois disso, os e2e da demonstração e da medalha falham até o calendário ganhar o semestre seguinte |
-| Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. Acompanhar no passo 13 |
+| Resposta perdida no meio de um refresh | Se a rede cai ou a página recarrega com o refresh em voo, o cliente fica com o token antigo, a próxima renovação conta como reuso e a pessoa volta ao login. A decisão atual não tem janela de tolerância. No ensaio do passo 13 não aconteceu; segue sem tolerância na fase 1 |
 | Limite de taxa no e2e | Os fluxos com conta rodam só no celular, cada teste com a própria conta, e o teste do limite só no `celular-claro`. Mais testes de login podem esbarrar nos 30 por minuto por IP. No fechamento do passo 8, uma rodada local da suíte inteira (69 testes, em paralelo) teve uma falha no teste do limite do login, que passou nas outras; o limite é por réplica, e há duas atrás do Caddy |
-| Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest até o Maestro do passo 13. No nativo, o link de senha nova abre no navegador |
-| Timeout do Jest no runner da CI | No passo 9, o job `mobile` falhou em pushes que só mexiam na API: o primeiro teste de um arquivo (`cadastro`, `comprovacoes`, `feed`) passou dos 5 s do Jest no runner, pelo custo de carregar o arquivo (localmente, 725 ms). No push da etapa 2, três tentativas seguidas falharam no mesmo teste. O tempo limite dos testes do cliente subiu para 15 s (`testTimeout` no `package.json` do app). Acompanhar no passo 13: se o primeiro teste de algum arquivo chegar perto disso, aquecer o transform em vez de subir de novo o limite |
+| Nativo sem teste em aparelho | Secure store, sessão e telas de autenticação só passam pelo Jest: o APK e o Maestro saíram da fase 1 no passo 13. No nativo, o link de senha nova abre no navegador |
+| Timeout do Jest no runner da CI | No passo 9, o job `mobile` falhou em pushes que só mexiam na API: o primeiro teste de um arquivo (`cadastro`, `comprovacoes`, `feed`) passou dos 5 s do Jest no runner, pelo custo de carregar o arquivo (localmente, 725 ms). No push da etapa 2, três tentativas seguidas falharam no mesmo teste. O tempo limite dos testes do cliente subiu para 15 s (`testTimeout` no `package.json` do app). No passo 13, o job `mobile` passou em todas as rodadas com o Node 22, sem falha de tempo. Se o primeiro teste de algum arquivo chegar perto dos 15 s, aquecer o transform em vez de subir de novo o limite |

@@ -51,7 +51,18 @@ internal sealed class ArmazenamentoS3(IOptions<ArmazenamentoOptions> options) : 
         var clientes = _clientes.Value;
         using var corpo = new MemoryStream(conteudo, writable: false);
         await clientes.Operacao.PutObjectAsync(
-            new PutObjectRequest { BucketName = clientes.Bucket, Key = chave, InputStream = corpo, ContentType = tipoDeConteudo },
+            new PutObjectRequest
+            {
+                BucketName = clientes.Bucket,
+                Key = chave,
+                InputStream = corpo,
+                ContentType = tipoDeConteudo,
+
+                // O corpo assinado de uma vez, não em pedaços: o R2 recusa o
+                // STREAMING-AWS4-HMAC-SHA256-PAYLOAD, que é o padrão do SDK e que o emulador
+                // aceita. Provado só contra o R2 (VerificacaoDoR2Tests).
+                UseChunkEncoding = false,
+            },
             cancellationToken);
     }
 

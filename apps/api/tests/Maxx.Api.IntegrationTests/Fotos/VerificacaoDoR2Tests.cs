@@ -82,6 +82,24 @@ public sealed class VerificacaoDoR2Tests : IAsyncDisposable
         Assert.NotEqual(HttpStatusCode.OK, leitura.StatusCode);
     }
 
+    // O envio direto da API, que só o seed demo usa para as fotos do mundo. O R2 recusa o
+    // corpo assinado em pedaços (STREAMING-AWS4-HMAC-SHA256-PAYLOAD), que o emulador aceita:
+    // foi o que derrubou o primeiro seed demo na VPS.
+    [Fact]
+    public async Task Envio_direto_do_seed_e_aceito_e_lido_pela_cdn()
+    {
+        var bytes = Bytes(_tamanho);
+        var chave = $"verificacao/{Guid.NewGuid():N}.jpg";
+        _enviadas.Add(chave);
+
+        await Armazenamento().EnviarAsync(chave, bytes, _jpeg, Ct);
+
+        var leitura = await _http.GetAsync(Armazenamento().UrlDeLeitura(chave), Ct);
+        Assert.Equal(HttpStatusCode.OK, leitura.StatusCode);
+        Assert.Equal(_jpeg, leitura.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(bytes, await leitura.Content.ReadAsByteArrayAsync(Ct));
+    }
+
     [Fact]
     public async Task Cors_libera_o_put_do_app_com_content_type()
     {

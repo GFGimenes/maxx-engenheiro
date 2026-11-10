@@ -131,8 +131,8 @@ Não invente sinônimo: nada de `Award`, `Prize`, `Badge`, `Reward`, `Trophy` no
 | Domínio | xUnit, unitário, sem banco. TDD onde couber |
 | Integração | xUnit com Testcontainers e Postgres real |
 | Cliente | Jest com preset `jest-expo` e Testing Library |
-| e2e | Playwright contra o build web; Maestro mínimo no nativo, no passo 13 |
-| Carga | k6 versionado, 2.000 usuários virtuais, rodado nos passos de endurecimento |
+| e2e | Playwright contra o build web. O Maestro no nativo saiu da fase 1 (passo 13): pendência |
+| Carga | k6 versionado em `carga/`. No passo 13, carga reduzida (50 usuários virtuais por 2 minutos, na VPS); o cenário de 2.000 usuários virtuais é pendência fora da fase 1 |
 
 ## Git
 
