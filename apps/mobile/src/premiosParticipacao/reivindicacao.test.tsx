@@ -337,6 +337,28 @@ describe("novo post no modo de reivindicação", () => {
     expect(screen.queryByRole("heading", { name: "Evento" })).toBeNull();
   });
 
+  // Achado do ensaio (passo 13): no iPhone, tocar no prêmio escolhido não reabria a lista, e
+  // o "Trocar prêmio" passou despercebido. Tocar nele de novo também devolve a lista.
+  it("tocar de novo no prêmio escolhido devolve a lista para trocar", async () => {
+    await noModoDeReivindicacao();
+
+    await apertar(/Semana acadêmica/, "radio");
+    expect(
+      screen.queryByRole("radio", { name: /Apresentação de trabalho em sala/ }),
+    ).toBeNull();
+
+    await apertar(/Semana acadêmica/, "radio");
+    expect(
+      await screen.findByRole("radio", {
+        name: /Apresentação de trabalho em sala/,
+      }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole("radio", { name: /Semana acadêmica/ }),
+    ).not.toBeChecked();
+    expect(screen.queryByRole("heading", { name: "Evento" })).toBeNull();
+  });
+
   it("voltar ao modo Post mostra as medalhas e o botão Publicar", async () => {
     await noModoDeReivindicacao();
     await apertar("Post", "radio");

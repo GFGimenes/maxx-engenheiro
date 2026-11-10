@@ -31,6 +31,9 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
     private static readonly CadastroRequest _maria = new("20260103", "maria.silva@al.unieduk.com.br", "Maria", "mariaS", _senha, VersaoDoTermo);
     private static readonly CadastroRequest _outraMaria = new("20260104", "maria.c.silva@al.unieduk.com.br", "Maria C.", "mariaC", _senha, VersaoDoTermo);
 
+    // Na base, mas com e-mail de domínio que a faculdade não usa (produto.md 2.4).
+    private static readonly CadastroRequest _gil = new("20260105", "gil.ramos@gmail.com", "Gil", "gilRamos", _senha, VersaoDoTermo);
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
@@ -97,6 +100,30 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
         var response = await client.PostAsJsonAsync(_sugestao, new { ra = _ana.Ra, email = " ANA.Souza@AL.unieduk.com.br " }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // Mesmo com o par na base, o e-mail de domínio fora da lista (produto.md 2.4) é recusado
+    // nas três rotas, antes de a base ser consultada. Prova reversa: sem a conferência, o
+    // cadastro do Gil nasce com 201 e o teste falha.
+    [Fact]
+    public async Task Email_fora_dos_dominios_aceitos_e_recusado_nas_tres_rotas_e_a_conta_nao_nasce()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+
+        await AssertRecusaAsync(
+            await client.PostAsJsonAsync(_sugestao, new { ra = _gil.Ra, email = _gil.Email }, Ct),
+            HttpStatusCode.BadRequest,
+            "email-fora-da-faculdade");
+        await AssertRecusaAsync(
+            await client.PostAsJsonAsync(_disponibilidade, new { ra = _gil.Ra, email = _gil.Email, prefixo = "gilRamos" }, Ct),
+            HttpStatusCode.BadRequest,
+            "email-fora-da-faculdade");
+        await AssertRecusaAsync(await client.PostAsJsonAsync(_cadastro, _gil, Ct), HttpStatusCode.BadRequest, "email-fora-da-faculdade");
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        Assert.Equal(0, await db.Set<Usuario>().CountAsync(Ct));
     }
 
     [Fact]
@@ -417,6 +444,7 @@ public sealed class CadastroTests(PostgresFixture postgres) : IClassFixture<Post
             CadastroElegivel.Aluno(_bruno.Ra, _bruno.Email, "Bruno Lima", cc, 3),
             CadastroElegivel.Aluno(_maria.Ra, _maria.Email, "Maria Clara Fernandes da Silva", cc, 1),
             CadastroElegivel.Aluno(_outraMaria.Ra, _outraMaria.Email, "Maria Clara da Silva", cc, 2),
+            CadastroElegivel.Aluno(_gil.Ra, _gil.Email, "Gil Ramos", cc, 1),
             CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque", ra: "PROF-1"));
         return factory;
     }

@@ -1,0 +1,13 @@
+# Exceções do Trivy (job build da CI). Cada uma com justificativa e validade: passada a
+# data, o Trivy volta a cobrar sozinho. Registro em docs/decisoes/README.md, passo 13.
+vulnerabilities:
+  # golang.org/x/net/html, negação de serviço com HTML montado para isso. Está no binário
+  # oficial do Caddy (v2.11.9 ainda declara x/net v0.60.0; a correção é a 0.62.0). O nosso
+  # Caddy só serve os arquivos estáticos do build web e faz proxy de /api: sem templates nem
+  # markdown, os caminhos que interpretam HTML. A saída é a imagem corrigida do Caddy,
+  # quando sair.
+  - id: CVE-2026-78661
+    paths:
+      - usr/bin/caddy
+    statement: Caddy só serve estáticos e faz proxy de /api, sem templates nem markdown.
+    expired_at: 2026-12-05

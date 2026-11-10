@@ -84,6 +84,7 @@ public sealed record ResultadoDaCorrecaoDeEmail(CorrecaoDeEmail? Correcao, Recus
 public enum RecusaDaCorrecaoDeEmail
 {
     EmailInvalido,
+    DominioNaoAceito,
 }
 
 public sealed record ResultadoDaTrocaDeCurso(TrocaDeCurso? Troca, RecusaDaTrocaDeCurso? Recusa);

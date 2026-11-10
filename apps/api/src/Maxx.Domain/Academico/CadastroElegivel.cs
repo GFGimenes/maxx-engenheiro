@@ -1,3 +1,5 @@
+using Maxx.Domain.Identidade;
+
 namespace Maxx.Domain.Academico;
 
 // A base que a faculdade abastece. Estar nela não é ter conta: o Usuario do passo 3 se
@@ -94,16 +96,24 @@ public sealed class CadastroElegivel
 
 
     // Correção de e-mail pela instituição (produto.md 2.3, passo 12): só a linha de aluno,
-    // com ou sem conta. Confere só a forma; a unicidade é do banco. O mesmo e-mail, escrito
-    // igual, não muda nada e não gera registro; trocar só maiúsculas é correção.
-    public ResultadoDaCorrecaoDeEmail CorrigirEmail(string? novo, Guid corrigidoPorId, DateTimeOffset agora)
+    // com ou sem conta. Confere a forma e o domínio (produto.md 2.4, passo 13); a unicidade é
+    // do banco. O mesmo e-mail, escrito igual, não muda nada e não gera registro; trocar só
+    // maiúsculas é correção.
+    public ResultadoDaCorrecaoDeEmail CorrigirEmail(
+        string? novo, DominiosDeEmailAceitos dominios, Guid corrigidoPorId, DateTimeOffset agora)
     {
+        ArgumentNullException.ThrowIfNull(dominios);
         GarantirAluno("ter o e-mail corrigido");
 
         novo = novo?.Trim();
         if (novo is null || !EmailBemFormado(novo))
         {
             return new(null, RecusaDaCorrecaoDeEmail.EmailInvalido);
+        }
+
+        if (!dominios.Aceita(novo))
+        {
+            return new(null, RecusaDaCorrecaoDeEmail.DominioNaoAceito);
         }
 
         if (string.Equals(novo, Email, StringComparison.Ordinal))
@@ -159,7 +169,8 @@ public sealed class CadastroElegivel
         }
     }
 
-    // Só a forma. Os domínios aceitos são configuração do passo 3.
+    // Só a forma. Os domínios aceitos (DominiosDeEmailAceitos) valem no cadastro e na
+    // correção, não na carga da base.
     private static string ValidarEmail(string email)
     {
         email = Texto.Obrigatorio(email, "O e-mail");

@@ -55,6 +55,36 @@
         }
       }
     },
+    "/api/health/worker": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetSaudeDoWorker",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaudeDoWorkerResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaudeDoWorkerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/eu": {
       "get": {
         "tags": [
@@ -6886,6 +6916,50 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SaudeDoWorkerResponse": {
+        "required": [
+          "status",
+          "segundosDesdeOBatimento",
+          "segundosDeEsperaNaFila",
+          "disponiveis",
+          "falhosEm24h",
+          "problemas"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "segundosDesdeOBatimento": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "segundosDeEsperaNaFila": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "disponiveis": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "falhosEm24h": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "problemas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

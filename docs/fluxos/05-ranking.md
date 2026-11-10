@@ -52,7 +52,8 @@ zero e o histórico acumula. Pontos congelam na concessão (ADR 0007), então re
 catálogo não move nenhuma posição.
 
 Se o worker morre, o ranking congela sem erro em tela (ADR 0005). A verificação de saúde
-e o alerta ficam para o passo 13.
+e o alerta chegaram no passo 13: `GET /api/health/worker` responde 503 com o worker parado,
+e um monitor de fora avisa (`docs/operacao.md`).
 
 ## Como ficou no passo 11
 

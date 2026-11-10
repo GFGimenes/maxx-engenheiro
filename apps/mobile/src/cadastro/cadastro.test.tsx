@@ -206,6 +206,23 @@ describe("passo 1: dados", () => {
       "Não achamos esse RA com esse e-mail. Confira os dois.",
     );
   });
+
+  it("e-mail fora dos domínios da faculdade pede o e-mail da faculdade", async () => {
+    api.mockResolvedValue(json(400, { codigo: "email-fora-da-faculdade" }));
+    await renderComApi(
+      <ComDados dados={null}>
+        <DadosScreen />
+      </ComDados>,
+      api,
+    );
+
+    await preencher("2023001", "ana@gmail.com", "senha-boa-123");
+    await apertar("Continuar");
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Use o e-mail da faculdade.",
+    );
+  });
 });
 
 describe("passo 2: arroba", () => {

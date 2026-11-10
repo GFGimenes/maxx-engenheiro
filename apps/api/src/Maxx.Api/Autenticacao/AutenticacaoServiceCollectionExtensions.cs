@@ -4,6 +4,7 @@ using Maxx.Application.Autenticacao.Cadastro;
 using Maxx.Application.Autenticacao.Login;
 using Maxx.Application.Autenticacao.Recuperacao;
 using Maxx.Application.Autenticacao.Termos;
+using Maxx.Domain.Identidade;
 using Maxx.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -22,6 +23,7 @@ internal static class AutenticacaoServiceCollectionExtensions
         builder.Services.AddScoped<SessaoService>();
         builder.Services.AddScoped<SugestaoDeArroba>();
         builder.Services.AddScoped<TermoDeUsoHandler>();
+        builder.Services.AddSingleton(LerDominiosAceitos(builder));
         builder.Services.AddScoped<CadastroHandler>();
         builder.Services.AddScoped<LoginHandler>();
         builder.Services.AddScoped<RefreshHandler>();
@@ -63,6 +65,12 @@ internal static class AutenticacaoServiceCollectionExtensions
 
     // Sem ela o link do e-mail de recuperação não teria para onde apontar: fora de
     // desenvolvimento nem a API nem o worker sobem.
+    // Os domínios de e-mail aceitos no cadastro e na correção pela instituição (produto.md
+    // 2.4), em Cadastro:DominiosDeEmailAceitos do appsettings.json: não é segredo, e a lista
+    // é a mesma em todo ambiente. Vazia ou mal formada, nada sobe.
+    private static DominiosDeEmailAceitos LerDominiosAceitos(IHostApplicationBuilder builder) =>
+        new(builder.Configuration.GetSection("Cadastro:DominiosDeEmailAceitos").Get<string[]>() ?? []);
+
     private static Uri LerUrlPublica(IHostApplicationBuilder builder, bool exigir)
     {
         var texto = builder.Configuration[$"{LinkDoApp.Section}:UrlPublica"];

@@ -275,6 +275,31 @@ describe("ficha do aluno", () => {
     ).toBeOnTheScreen();
   });
 
+  it("corrigir para domínio fora da lista mostra a recusa dentro da folha", async () => {
+    atos.mockResolvedValueOnce(
+      json(400, { status: 400, codigo: "dominio-nao-aceito" }),
+    );
+    await renderComApi(<FichaDoAlunoScreen />, api);
+
+    await apertar("Corrigir e-mail");
+    const folha = await screen.findByTestId("folha-de-ato");
+    await act(async () => {
+      fireEvent.changeText(
+        within(folha).getByLabelText("E-mail"),
+        "lucas@gmail.com",
+      );
+    });
+    await act(async () => {
+      fireEvent.press(
+        within(folha).getByRole("button", { name: "Salvar e-mail" }),
+      );
+    });
+
+    expect(
+      await within(folha).findByText("Esse domínio de e-mail não é aceito."),
+    ).toBeOnTheScreen();
+  });
+
   it("trocar de curso pede o curso novo e o semestre nele", async () => {
     await renderComApi(<FichaDoAlunoScreen />, api);
 

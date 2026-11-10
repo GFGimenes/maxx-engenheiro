@@ -21,7 +21,7 @@ public interface IConsultaDoFeed
         Guid leitorId, PosicaoNoTempo? depoisDe, int limite, CancellationToken cancellationToken);
 
     // Posts dos outros alunos, em ordem aleatória fixa pela semente (decisão D8, opção A).
-    // A ordenação não usa índice: varre os candidatos, e o p95 se mede no passo 13.
+    // A ordenação não usa índice: varre os candidatos (p95 de 59 ms na carga do passo 13).
     Task<IReadOnlyList<PosicaoAleatoria>> RecomendadosAsync(
         Guid leitorId, string semente, PosicaoAleatoria? depoisDe, int limite, CancellationToken cancellationToken);
 }

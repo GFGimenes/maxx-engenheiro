@@ -35,34 +35,34 @@
     "item": "P03",
     "evento": "workshop-carreira-2026-2",
     "concedidoEm": "2026-11-02T10:00",
-    "contestadaPor": "renata.albuquerque@prof.unieduk.com.br",
+    "contestadaPor": "renata.albuquerque@maxx-unimax.com",
     "contestadaEm": "2026-11-04T16:30",
     "motivo": "O nome não está na lista de presença do workshop. Conferir antes de valer."
   },
   "avisos": [
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "faculdade",
       "titulo": "Bem-vindos ao primeiro semestre de 2026",
       "texto": "As aulas começam hoje. O calendário acadêmico, as salas e os horários estão no portal. Boas aulas a todos!",
       "publicadoEm": "2026-01-26T08:00"
     },
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "faculdade",
       "titulo": "Rematrícula para 2026/2",
       "texto": "A rematrícula vai de 6 a 17 de julho, pelo portal. Quem tiver pendência na secretaria deve resolver antes do prazo.",
       "publicadoEm": "2026-06-29T09:00"
     },
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "faculdade",
       "titulo": "Semana de provas do 4º bimestre",
       "texto": "As provas do 4º bimestre acontecem de 23 de novembro a 4 de dezembro. Confira com cada professor as datas da sua turma.",
       "publicadoEm": "2026-11-03T08:30"
     },
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "curso",
       "cursos": ["CC", "IA"],
       "titulo": "Laboratório 3 em manutenção",
@@ -70,7 +70,7 @@
       "publicadoEm": "2026-10-15T14:00"
     },
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "curso",
       "cursos": ["ADM"],
       "titulo": "Visita técnica: inscrições abertas",
@@ -78,7 +78,7 @@
       "publicadoEm": "2026-10-05T10:00"
     },
     {
-      "autor": "coordenacao@unieduk.com.br",
+      "autor": "coordenacao@maxx-unimax.com",
       "escopo": "curso",
       "cursos": ["MED"],
       "titulo": "Semana da Saúde: voluntários",
@@ -86,7 +86,7 @@
       "publicadoEm": "2026-09-21T11:00"
     },
     {
-      "autor": "renata.albuquerque@prof.unieduk.com.br",
+      "autor": "renata.albuquerque@maxx-unimax.com",
       "escopo": "turma",
       "turmas": [
         {
@@ -105,7 +105,7 @@
       "publicadoEm": "2026-10-30T19:00"
     },
     {
-      "autor": "helena.duarte@prof.unieduk.com.br",
+      "autor": "helena.duarte@maxx-unimax.com",
       "escopo": "turma",
       "turmas": [
         {
@@ -119,7 +119,7 @@
       "publicadoEm": "2026-10-20T07:30"
     },
     {
-      "autor": "marcos.teixeira@prof.unieduk.com.br",
+      "autor": "marcos.teixeira@maxx-unimax.com",
       "escopo": "turma",
       "turmas": [
         {

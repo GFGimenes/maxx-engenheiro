@@ -17,6 +17,7 @@ public sealed class CadastroHandler(
     SugestaoDeArroba sugestoes,
     TermoDeUsoHandler termos,
     IFilaDeTrabalhos fila,
+    DominiosDeEmailAceitos dominios,
     IUnitOfWork unitOfWork,
     TimeProvider relogio)
 {
@@ -77,12 +78,18 @@ public sealed class CadastroHandler(
         return sessao;
     }
 
-    // Par que não está na mesma linha, RA de outra pessoa, e-mail de professor: a mesma
-    // resposta, para não dizer qual dos dois errou. RA que já tem conta vai para a
-    // recuperação de senha.
+    // E-mail fora dos domínios aceitos (produto.md 2.4): recusado antes da base, com código
+    // próprio, porque a lista não é segredo. Par que não está na mesma linha, RA de outra
+    // pessoa, e-mail de professor: a mesma resposta, para não dizer qual dos dois errou. RA
+    // que já tem conta vai para a recuperação de senha.
     private async Task<(CadastroElegivel Cadastro, Curso Curso)> BuscarSemContaAsync(
         string ra, string email, CancellationToken cancellationToken)
     {
+        if (!dominios.Aceita(email.Trim()))
+        {
+            throw new RecusaException(TipoDeRecusa.Invalido, CodigosDeRecusa.EmailForaDaFaculdade);
+        }
+
         var encontrado = await cadastros.BuscarAlunoAsync(ra.Trim(), email.Trim(), cancellationToken)
             ?? throw new RecusaException(TipoDeRecusa.NaoEncontrado, CodigosDeRecusa.CadastroNaoEncontrado);
 

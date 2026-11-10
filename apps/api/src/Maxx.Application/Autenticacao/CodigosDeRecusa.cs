@@ -5,6 +5,9 @@ public static class CodigosDeRecusa
 {
     public const string CadastroNaoEncontrado = "cadastro-nao-encontrado";
 
+    // O e-mail não é de um domínio aceito (produto.md 2.4): conferido antes da base.
+    public const string EmailForaDaFaculdade = "email-fora-da-faculdade";
+
     // O RA já tem conta: o cliente leva à recuperação de senha (produto.md 2.5).
     public const string ContaExistente = "conta-existente";
 

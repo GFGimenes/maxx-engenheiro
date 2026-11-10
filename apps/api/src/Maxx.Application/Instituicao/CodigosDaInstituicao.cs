@@ -12,6 +12,9 @@ public static class CodigosDaInstituicao
 
     public const string EmailInvalido = "email-invalido";
 
+    // O e-mail novo não é de um domínio aceito (produto.md 2.4).
+    public const string DominioNaoAceito = "dominio-nao-aceito";
+
     // Outra linha da base, de qualquer papel, já tem esse e-mail.
     public const string EmailEmUso = "email-em-uso";
 

@@ -24,7 +24,7 @@ public sealed class EventosTests(PostgresFixture postgres, Fotos.ArmazenamentoFi
     private const string _senha = "senha-boa-123";
     private const string _anaDeCc = "ana.souza@al.unieduk.invalid";
     private const string _gabrielDeAdm = "gabriel.martins@al.unieduk.invalid";
-    private const string _renataProfessora = "renata.albuquerque@prof.unieduk.com.br";
+    private const string _renataProfessora = "renata.albuquerque@maxx-unimax.com";
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
