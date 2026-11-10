@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/health/worker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSaudeDoWorker"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/eu": {
         parameters: {
             query?: never;
@@ -1808,6 +1824,18 @@ export interface components {
         ReprovacaoRequest: {
             motivo: null | string;
         };
+        SaudeDoWorkerResponse: {
+            status: string;
+            /** Format: int32 */
+            segundosDesdeOBatimento: null | number;
+            /** Format: int32 */
+            segundosDeEsperaNaFila: null | number;
+            /** Format: int32 */
+            disponiveis: number;
+            /** Format: int32 */
+            falhosEm24h: number;
+            problemas: string[];
+        };
         SessaoResponse: {
             accessToken: string;
             /** Format: date-time */
@@ -1908,6 +1936,35 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetSaudeDoWorker: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaudeDoWorkerResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaudeDoWorkerResponse"];
                 };
             };
         };

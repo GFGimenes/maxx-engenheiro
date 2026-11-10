@@ -124,6 +124,29 @@ com o arquivo alterado mandado por cima, um por vez:
 `ssh root@<vps> "cat > /tmp/maxx-src/<caminho>" < <caminho>`. Mandar o repositório inteiro
 pela conexão de casa é lento demais.
 
+## Saúde do worker e alerta
+
+O worker morto congela o ranking sem erro em tela (ADR 0005). Por isso a API responde por
+ele em `https://app.maxx-unimax.com/api/health/worker`: 200 com `"status": "ok"`, ou 503 com
+a lista `problemas`. O monitor de fora (UptimeRobot, criado pelo autor) pergunta a cada 5
+minutos e manda e-mail no 503. Ele também avisa se a VPS inteira cair.
+
+| Problema | Quando | O que fazer |
+|---|---|---|
+| `worker-parado` | Sem batimento há mais de 2 minutos (o worker grava um a cada 15 s) | `dc ps worker` e `dc logs --tail=200 worker`; `dc up -d worker` |
+| `fila-parada` | Um trabalho disponível espera há mais de 5 minutos | O worker está vivo mas não avança: um handler travado ou o banco lento. Logs do worker |
+| `trabalho-falho` | Um trabalho ficou `falho` (5 tentativas) nas últimas 24 horas | Ler o erro no banco (abaixo), corrigir a causa e devolver o trabalho à fila |
+
+```sh
+dc exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+  "SELECT id, tipo, disponivel_em, ultimo_erro FROM trabalho WHERE estado = '"'"'falho'"'"' ORDER BY id DESC LIMIT 20"'
+# Devolver à fila, depois de corrigida a causa:
+#   UPDATE trabalho SET estado = 'pendente', tentativas = 0, disponivel_em = now() WHERE id = <id>;
+```
+
+O alerta de falho se apaga sozinho 24 horas depois da falha, ou quando o trabalho volta à
+fila.
+
 ## Voltar uma versão
 
 Trocar `MAXX_IMAGEM_TAG` pela tag anterior e `dc up -d`. Migration não volta sozinha: se a

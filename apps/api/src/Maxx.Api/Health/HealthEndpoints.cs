@@ -1,3 +1,4 @@
+using Maxx.Application.Fila;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -16,6 +17,13 @@ internal static class HealthEndpoints
             .WithName("GetReady")
             .WithTags("Health")
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        // Para o monitor de fora (docs/operacao.md): 503 com o mesmo corpo quando há problema.
+        // Só idades, contagens e códigos: nada de carga de trabalho, erro ou dado de alguém.
+        routes.MapGet("/health/worker", GetWorkerAsync)
+            .WithName("GetSaudeDoWorker")
+            .WithTags("Health")
+            .Produces<SaudeDoWorkerResponse>(StatusCodes.Status503ServiceUnavailable);
 
         return routes;
     }
@@ -38,9 +46,38 @@ internal static class HealthEndpoints
 
         return TypedResults.Ok(HealthResponse.Ok);
     }
+
+    private static async Task<Results<Ok<SaudeDoWorkerResponse>, JsonHttpResult<SaudeDoWorkerResponse>>> GetWorkerAsync(
+        IConsultaDaSaudeDoWorker consulta,
+        CancellationToken cancellationToken)
+    {
+        var saude = await consulta.ConsultarAsync(cancellationToken);
+        var resposta = new SaudeDoWorkerResponse(
+            saude.Saudavel ? "ok" : "problema",
+            Segundos(saude.DesdeOBatimento),
+            Segundos(saude.EsperaDoMaisAntigo),
+            saude.Disponiveis,
+            saude.FalhosNaJanela,
+            saude.Problemas);
+
+        return saude.Saudavel
+            ? TypedResults.Ok(resposta)
+            : TypedResults.Json(resposta, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    private static int? Segundos(TimeSpan? duracao) => duracao is { } valor ? (int)Math.Floor(valor.TotalSeconds) : null;
 }
 
 public sealed record HealthResponse(string Status)
 {
     public static HealthResponse Ok { get; } = new("ok");
 }
+
+// Segundos inteiros; nulos quando não há batimento ou trabalho disponível.
+public sealed record SaudeDoWorkerResponse(
+    string Status,
+    int? SegundosDesdeOBatimento,
+    int? SegundosDeEsperaNaFila,
+    int Disponiveis,
+    int FalhosEm24h,
+    IReadOnlyList<string> Problemas);
