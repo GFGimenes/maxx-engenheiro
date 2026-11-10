@@ -198,9 +198,12 @@ jobs:
           curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt" \
             | grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" | sha256sum -c -
           tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" trivy
+          # As duas sempre, e o job falha no fim: a primeira com achado não esconde a segunda.
+          falhou=0
           for imagem in maxx-api:local maxx-caddy:latest; do
-            ./trivy image --quiet --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$imagem"
+            ./trivy image --quiet --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$imagem" || falhou=1
           done
+          exit "$falhou"
 
   # Imagens da API e do Caddy no GHCR, só com os seis jobs verdes. No push da main, com as
   # tags latest e sha-<curto>; no disparo à mão por uma branch, só sha-<curto>, para o

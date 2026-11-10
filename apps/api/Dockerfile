@@ -19,6 +19,11 @@ COPY apps/api/src/ apps/api/src/
 RUN dotnet publish apps/api/src/Maxx.Api/Maxx.Api.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# As correções de segurança do Ubuntu publicadas depois da imagem base, que o Trivy da CI
+# cobra (alto ou crítico com correção). Ainda como root, antes do USER abaixo.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app .
 # Catálogo e calendário para o `seed` (Seed:DiretorioDeDados = "data", relativo a /app).
