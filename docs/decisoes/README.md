@@ -797,6 +797,22 @@ mundo do seed e a purga).
 | CVE-2026-78661 | `golang.org/x/net/html` (negação de serviço com HTML montado para isso) no binário oficial do Caddy: a v2.11.9, a mais nova, ainda declara `x/net v0.60.0`, e a correção é a 0.62.0. O nosso Caddy só serve os estáticos do build web e faz proxy de `/api`, sem `templates` nem `markdown`, os caminhos que interpretam HTML. **A exceção expira em 05/12/2026**; a saída é trocar pela imagem corrigida do Caddy quando ela sair |
 | Pacotes do Ubuntu | A imagem da API roda `apt-get upgrade` no estágio final: o Trivy achou o `apt` (CVE-2026-109518) com correção publicada depois da imagem base |
 
+### Carga e planos (versão reduzida)
+
+O cenário do ADR 0005 (2.000 usuários virtuais, 3.200 alunos) foi cortado por prazo e fica
+como pendência. No lugar, em 10/11/2026, na VPS (CX23, 2 vCPU, 4 GB), com o volume do seed
+demo (150 alunos, 52 posts, 1.178 medalhas, 412 linhas de ranking):
+
+| Decisão | Detalhe |
+|---|---|
+| Carga | `carga/leitura.js` (k6 1.8.2) pelo `carga/rodar.sh`, de dentro da própria VPS, pelo Caddy com TLS: 50 usuários virtuais por 2 minutos, depois de 20 s de aquecimento descartado (as réplicas tinham acabado de reiniciar; sem ele, o máximo foi 4,69 s). Cada usuário é um aluno ativo do seed e percorre feed (duas páginas), perfil, ranking geral e do curso, mural com `If-None-Match`, novidades e busca |
+| Tokens | Os alunos do seed não têm senha: o k6 assina o access token de cada um na VPS, com a chave do `.env` de lá, no formato do `JwtAccessTokenIssuer`. A chave não sai da VPS e nenhum token é impresso |
+| Resultado | 9.488 pedidos, 0 falha. p95 por rota: feed 71 ms, feed página 2 (recomendação) 59 ms, ranking geral 47 ms, ranking do curso 39 ms, novidades 35 ms, mural 33 ms, busca 27 ms, perfil 26 ms; geral 43 ms, p99 104 ms, máximo 385 ms. Todas abaixo do alvo de 300 ms do ADR 0005, com a ressalva de que não é aquele cenário |
+| Micro-cache do feed | Não entra: o número não pede |
+| Planos | `auto_explain` (`log_analyze`) ligado só numa rodada curta de 1 usuário, separada da medida, e desligado depois. A consulta mais lenta levou 3,7 ms no banco |
+| Feed e busca com o volume do seed | O planejador escolhe varredura sequencial no feed (seguidos e recomendação, 52 posts) e na busca (159 usuários): com tão pouco dado é o plano mais barato. Com `enable_seqscan = off`, a mesma consulta usa `ix_post_autor_id_criado_em_id` no feed e o `BitmapOr` de `ix_usuario_nome_sem_acento` e `ix_usuario_prefixo_trigrama` na busca: os índices servem à consulta real. Provar que o planejador os escolhe com volume real fica com o cenário completo, como pendência |
+| Ranking | `Index Scan` em `ix_posicao_no_ranking_aluno_visao` já com o volume do seed |
+
 ## Processo e qualidade
 
 | Decisão | Detalhe |
