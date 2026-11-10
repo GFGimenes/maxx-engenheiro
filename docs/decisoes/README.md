@@ -786,6 +786,17 @@ mundo do seed e a purga).
 | Na fila de comprovações da instituição, "em comum" são todas as matérias do aluno (regra do passo 8) | Aceito |
 | O seed sobe as fotos antes do commit: falha depois disso deixa objetos sem dono no bucket | Aceito |
 
+## Endurecimento e ensaio (passo 13)
+
+### Varredura das imagens
+
+| Decisão | Detalhe |
+|---|---|
+| Trivy na CI | No job `build`, nas imagens da API e do Caddy, com o corte do NuGet e do npm: alto ou crítico falha o job. Só o que já tem correção publicada (`--ignore-unfixed`); segredo esquecido na imagem também falha. As duas imagens são sempre varridas antes de o job falhar |
+| Exceção com prazo | `.trivyignore.yaml`, cada exceção com justificativa e `expired_at`: passada a data, o Trivy volta a cobrar sozinho |
+| CVE-2026-78661 | `golang.org/x/net/html` (negação de serviço com HTML montado para isso) no binário oficial do Caddy: a v2.11.9, a mais nova, ainda declara `x/net v0.60.0`, e a correção é a 0.62.0. O nosso Caddy só serve os estáticos do build web e faz proxy de `/api`, sem `templates` nem `markdown`, os caminhos que interpretam HTML. **A exceção expira em 05/12/2026**; a saída é trocar pela imagem corrigida do Caddy quando ela sair |
+| Pacotes do Ubuntu | A imagem da API roda `apt-get upgrade` no estágio final: o Trivy achou o `apt` (CVE-2026-109518) com correção publicada depois da imagem base |
+
 ## Processo e qualidade
 
 | Decisão | Detalhe |
