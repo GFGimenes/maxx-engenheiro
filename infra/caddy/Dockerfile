@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Contexto: raiz do repositório. O build web do Expo vai dentro da imagem do Caddy.
 
-FROM node:22-alpine AS web
+FROM node:24-alpine AS web
 WORKDIR /repo
 
 # Instalação em camada própria: só refaz quando um package.json ou o lock muda.

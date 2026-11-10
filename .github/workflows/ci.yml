@@ -186,6 +186,21 @@ jobs:
           # Chave descartável, uma por execução: o .env.example vem sem chave de propósito.
           sed -i "s|^MAXX_JWT_CHAVE=.*|MAXX_JWT_CHAVE=$(openssl rand -base64 48)|" .env
           docker compose build
+      # As duas imagens que vão para a VPS, com o mesmo corte do NuGet e do npm: alto ou
+      # crítico falha o job. Só o que já tem correção publicada (--ignore-unfixed): o que a
+      # imagem base ainda não corrigiu não tem ação possível aqui. Segredo esquecido dentro
+      # da imagem também falha.
+      - name: Imagens vulneráveis (Trivy, alto ou crítico)
+        env:
+          TRIVY_VERSION: 0.76.1
+        run: |
+          curl -sSfLO "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_checksums.txt" \
+            | grep " trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz$" | sha256sum -c -
+          tar -xzf "trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" trivy
+          for imagem in maxx-api:local maxx-caddy:latest; do
+            ./trivy image --quiet --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$imagem"
+          done
 
   # Imagens da API e do Caddy no GHCR, só com os seis jobs verdes. No push da main, com as
   # tags latest e sha-<curto>; no disparo à mão por uma branch, só sha-<curto>, para o
