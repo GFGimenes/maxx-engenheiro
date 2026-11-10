@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=24.3"
+    "node": ">=22.12"
   },
   "scripts": {
     "format": "prettier --write apps/mobile e2e packages data",
