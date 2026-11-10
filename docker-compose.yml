@@ -191,6 +191,11 @@ services:
     build:
       context: .
       dockerfile: infra/caddy/Dockerfile
+    # A CSP do build web libera a leitura das fotos e o PUT direto ao bucket (Caddyfile).
+    # Aqui, o emulador pela porta publicada, que é o que o navegador alcança.
+    environment:
+      MAXX_CSP_FOTOS: ${MAXX_ARMAZENAMENTO_URL_DE_LEITURA:?defina no .env}
+      MAXX_CSP_BUCKET: ${MAXX_ARMAZENAMENTO_ENDPOINT_PUBLICO:-${MAXX_ARMAZENAMENTO_ENDPOINT:?defina no .env}}
     ports:
       - "${MAXX_HTTP_PORT:-80}:80"
     depends_on:

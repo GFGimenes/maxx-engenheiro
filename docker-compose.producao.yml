@@ -118,6 +118,9 @@ services:
     <<: *log
     environment:
       MAXX_SITE_ADDRESS: ${MAXX_URL_PUBLICA:?defina no .env}
+      # A CSP do build web (Caddyfile): a leitura pela CDN e o PUT direto ao endpoint do R2.
+      MAXX_CSP_FOTOS: ${MAXX_ARMAZENAMENTO_URL_DE_LEITURA:?defina no .env}
+      MAXX_CSP_BUCKET: ${MAXX_ARMAZENAMENTO_ENDPOINT:?defina no .env}
     ports:
       - "80:80"
       - "443:443"

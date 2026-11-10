@@ -4,6 +4,29 @@
 {$MAXX_SITE_ADDRESS::80} {
 	encode zstd gzip
 
+	# Cabeçalhos de segurança, em toda resposta (web e API).
+	# CSP: só scripts do próprio build (o Expo não gera script inline); estilo inline
+	# liberado porque o react-native-web injeta <style> em tempo de execução e o build traz
+	# o expo-reset inline. As fotos vêm da CDN (img-src) e sobem direto do navegador ao
+	# bucket por PUT assinado (connect-src), ADR 0002; os dois endereços vêm do compose:
+	# MAXX_CSP_FOTOS é a URL de leitura e MAXX_CSP_BUCKET o endpoint que vai na assinatura.
+	# blob: e data: cobrem a prévia da foto escolhida e as derivadas geradas no cliente
+	# (ADR 0003).
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: {$MAXX_CSP_FOTOS}; connect-src 'self' data: blob: {$MAXX_CSP_BUCKET}; font-src 'self' data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	# HSTS só no que foi servido por HTTPS: em http://localhost ele ficaria preso no
+	# navegador de quem desenvolve. Um ano, sem subdomínios nem preload: vale só para o app.
+	@https protocol https
+	header @https Strict-Transport-Security "max-age=31536000"
+
 	# A API mapeia tudo sob /api: o prefixo segue como veio, sem corte.
 	handle /api/* {
 		reverse_proxy {
