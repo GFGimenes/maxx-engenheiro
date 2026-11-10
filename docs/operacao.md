@@ -36,15 +36,30 @@ gh workflow run ci.yml --ref <branch>
 O job só publica com os seis jobs verdes. A tag sai no fim do log do passo "Constrói e
 publica".
 
-## Trazer os arquivos do compose
+## Implantar uma versão
 
-Os dois arquivos do compose vêm do repositório, no mesmo commit da imagem:
+Pelo `infra/deploy.sh`, com o sha completo de um commit já publicado:
 
 ```sh
-sha=<commit completo>
-base=https://raw.githubusercontent.com/GFGimenes/maxx-engenheiro/$sha
-curl -fsSLO "$base/docker-compose.producao.yml"
-curl -fsSLO "$base/docker-compose.demo.yml"
+/opt/maxx/infra/deploy.sh <sha completo>         # produção
+/opt/maxx/infra/deploy.sh <sha completo> demo    # com a demonstração ligada
+```
+
+Em ordem, ele:
+
+1. traz do repositório, no mesmo commit, os arquivos do compose, o `.env.producao.example`
+   e os scripts de `infra/`, inclusive ele mesmo;
+2. confere que todo nome exigido está no `.env`, e para sem tocar em nada se faltar um;
+3. troca a `MAXX_IMAGEM_TAG` e puxa as imagens;
+4. faz o dump do banco (`antes-de-migration`) e sobe: o migrator roda antes das réplicas;
+5. espera o `/api/ready`.
+
+Na primeira vez, quando ainda não há `infra/` na VPS, ele mesmo é baixado à mão:
+
+```sh
+mkdir -p /opt/maxx/infra
+curl -fsSL https://raw.githubusercontent.com/GFGimenes/maxx-engenheiro/<sha>/infra/deploy.sh \
+  -o /opt/maxx/infra/deploy.sh && chmod +x /opt/maxx/infra/deploy.sh
 ```
 
 ## Conferir o `.env` sem ler os valores
@@ -60,19 +75,11 @@ done
 O `.env.producao.example` vem do repositório, como os arquivos do compose. O próprio
 compose confere de novo: faltando um valor, ele recusa subir e diz o nome.
 
-## Subir e atualizar
+## Ligar e desligar a demonstração
 
-```sh
-sed -i "s/^MAXX_IMAGEM_TAG=.*/MAXX_IMAGEM_TAG=sha-<curto>/" .env
-dc pull
-dc up -d                 # migrator, seed base, réplicas, worker e Caddy, nessa ordem
-dc ps
-curl -fsS https://app.maxx-unimax.com/api/ready
-```
-
-Com a demonstração ligada (só durante o ensaio e a avaliação), troque `dc` por `dcdemo`
-no `up`. Voltar a `dc up -d` desliga a flag, e as rotas de demonstração voltam a responder
-404.
+A demonstração fica ligada só durante o ensaio e a avaliação: `deploy.sh <sha> demo`, ou,
+sem trocar de versão, `dcdemo up -d`. Voltar a `dc up -d` desliga a flag, e as rotas de
+demonstração voltam a responder 404.
 
 Logs: `dc logs -f --tail=200 api worker caddy`. O log de cada contêiner tem teto de
 5 arquivos de 10 MB.
@@ -147,7 +154,46 @@ dc exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
 O alerta de falho se apaga sozinho 24 horas depois da falha, ou quando o trabalho volta à
 fila.
 
+## Backup
+
+`pg_dump` em formato custom em `/opt/maxx/backups` (pasta só do root), um arquivo por
+dump, `maxx-<instante UTC>-<rótulo>.dump`. Rotação de 14 dias pelo próprio script. O envio
+para um bucket sem domínio público é pendência fora da fase 1: hoje o backup não sobrevive
+à perda do disco da VPS.
+
+| Quando | Como |
+|---|---|
+| Toda noite, 03:00 de São Paulo | `maxx-backup.timer` do systemd, `noturno` |
+| Antes de toda migration | `deploy.sh`, `antes-de-migration` |
+| À mão | `/opt/maxx/infra/backup/backup.sh manual` |
+
+Instalar o timer, uma vez, depois do primeiro `deploy.sh`:
+
+```sh
+cp /opt/maxx/infra/backup/maxx-backup.{service,timer} /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now maxx-backup.timer
+systemctl list-timers maxx-backup.timer
+```
+
+O dump só ganha o nome final depois de o `pg_restore --list` conseguir lê-lo. Provar que
+um dump volta, num Postgres descartável fora do compose, comparando a contagem de linhas
+de cada tabela com a produção:
+
+```sh
+/opt/maxx/infra/backup/backup.sh manual && /opt/maxx/infra/backup/restaurar-teste.sh
+```
+
+Restaurar de verdade (perda de dados ou migration que deu errado), com a API parada:
+
+```sh
+dc stop api worker caddy
+dc exec -T postgres sh -c 'dropdb -U "$POSTGRES_USER" --force "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
+dc exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --exit-on-error' < /opt/maxx/backups/<arquivo>.dump
+dc up -d
+```
+
 ## Voltar uma versão
 
-Trocar `MAXX_IMAGEM_TAG` pela tag anterior e `dc up -d`. Migration não volta sozinha: se a
-versão nova trouxe migration, a volta é pela restauração do dump feito antes dela.
+`deploy.sh` com o sha da versão anterior. Migration não volta sozinha: se a versão nova
+trouxe migration, a volta é pela restauração do dump `antes-de-migration` que o
+`deploy.sh` fez antes dela (seção Backup), e só então o `deploy.sh` da versão anterior.

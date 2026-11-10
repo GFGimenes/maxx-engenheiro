@@ -1,0 +1,11 @@
+# Às 03:00 de São Paulo, todo dia. A VPS roda em UTC; o fuso vai no próprio OnCalendar.
+# Persistent: se a VPS estava desligada na hora, roda assim que voltar.
+[Unit]
+Description=Backup noturno do Postgres do Maxx, às 03:00 de São Paulo
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/Sao_Paulo
+Persistent=true
+
+[Install]
+WantedBy=timers.target

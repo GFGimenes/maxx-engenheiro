@@ -1,0 +1,10 @@
+# Backup noturno do Postgres do Maxx (infra/backup/backup.sh). Instalado em
+# /etc/systemd/system pelo roteiro de docs/operacao.md; disparado por maxx-backup.timer.
+[Unit]
+Description=Backup noturno do Postgres do Maxx
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/maxx/infra/backup/backup.sh noturno
