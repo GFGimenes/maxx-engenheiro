@@ -107,7 +107,8 @@ internal static class InstituicaoEndpoints
     private static async Task<Ok<IReadOnlyList<LoteDaDemonstracaoResponse>>> LotesAsync(
         ClaimsPrincipal principal, PurgaDaDemonstracaoHandler handler, CancellationToken cancellationToken) =>
         TypedResults.Ok<IReadOnlyList<LoteDaDemonstracaoResponse>>([.. (await handler.LotesAsync(PostEndpoints.UsuarioId(principal), cancellationToken))
-            .Select(lote => new LoteDaDemonstracaoResponse(lote.Lote, lote.Alunos, lote.PrimeiroEm, lote.UltimoEm, lote.Vigente))]);
+            .Select(lote => new LoteDaDemonstracaoResponse(
+                lote.Lote, lote.Alunos, lote.PrimeiroEm, lote.UltimoEm, lote.Vigente, lote.Professores, lote.Coordenacoes, lote.DeQuemPede))]);
 
     private static async Task<Ok<PurgaResponse>> PurgarAsync(
         [StringLength(64)] string lote,
@@ -117,7 +118,8 @@ internal static class InstituicaoEndpoints
         CancellationToken cancellationToken)
     {
         var resultado = await handler.PurgarAsync(PostEndpoints.UsuarioId(principal), lote, pedido.Confirmacao, cancellationToken);
-        return TypedResults.Ok(new PurgaResponse(resultado.Lote, resultado.Alunos, resultado.Fotos));
+        return TypedResults.Ok(new PurgaResponse(
+            resultado.Lote, resultado.Alunos, resultado.Fotos, resultado.Professores, resultado.Coordenacoes, resultado.ContaPropriaEncerrada));
     }
 
     private static async Task<Created<PremioConcedidoResponse>> ConcederAsync(
@@ -232,11 +234,24 @@ public sealed record TrocaDeCursoRequest(Guid CursoId, int Semestre);
 // O nome do lote digitado de novo, igual: a purga não volta atrás.
 public sealed record PurgaRequest([property: StringLength(64)] string? Confirmacao);
 
-// Vigente: o lote que a configuração grava agora em cada aluno de demonstração novo.
-public sealed record LoteDaDemonstracaoResponse(string Lote, int Alunos, DateTimeOffset PrimeiroEm, DateTimeOffset UltimoEm, bool Vigente);
+// Vigente: o lote que a configuração grava agora em cada conta de demonstração nova. Desde o
+// passo 14, só contas ativas, com professores e coordenações (acréscimo), e DeQuemPede, o lote
+// da conta que pergunta, que a purga encerraria junto.
+public sealed record LoteDaDemonstracaoResponse(
+    string Lote,
+    int Alunos,
+    DateTimeOffset PrimeiroEm,
+    DateTimeOffset UltimoEm,
+    bool Vigente,
+    int Professores,
+    int Coordenacoes,
+    bool DeQuemPede);
 
 // Fotos: os objetos do bucket (cada derivada conta uma) que foram para a fila de remoção.
-public sealed record PurgaResponse(string Lote, int Alunos, int Fotos);
+// Alunos apagados; professores e coordenações encerrados. ContaPropriaEncerrada: quem purgou
+// era do lote, e a sessão dele acabou junto (passo 14, P2).
+public sealed record PurgaResponse(
+    string Lote, int Alunos, int Fotos, int Professores, int Coordenacoes, bool ContaPropriaEncerrada);
 
 // O evento é o id de um semeado ou o digitado, nunca os dois; a matéria, só na apresentação
 // em sala. Sem foto: a concessão direta não tem comprovação.

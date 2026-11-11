@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Maxx.Api.Instituicao;
 using Maxx.Api.IntegrationTests.Fotos;
 using Maxx.Api.IntegrationTests.Social;
+using Maxx.Application.Autenticacao;
 using Maxx.Application.Fotos;
 using Maxx.Application.Medalhas;
 using Maxx.Application.Ranking;
@@ -67,7 +68,7 @@ public sealed class PurgaDaDemonstracaoTests(PostgresFixture postgres, Armazenam
         var resposta = await coordenacao.PostAsJsonAsync(Rota($"/{_purgado}/purga"), new { confirmacao = _purgado }, Ct);
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
-        Assert.Equal(new PurgaResponse(_purgado, 1, fotos.Count), await resposta.Content.ReadFromJsonAsync<PurgaResponse>(Ct));
+        Assert.Equal(new PurgaResponse(_purgado, 1, fotos.Count, 0, 0, false), await resposta.Content.ReadFromJsonAsync<PurgaResponse>(Ct));
 
         // Nada do lote fica, e o que é de outra pessoa sobre ele sai junto.
         Assert.DoesNotContain(await mundo.LinhasAsync<Usuario>(), usuario => usuario.Id == dani);
@@ -160,7 +161,175 @@ public sealed class PurgaDaDemonstracaoTests(PostgresFixture postgres, Armazenam
         }
     }
 
+    // Passo 14, P1 e P2: o professor e a coordenação de demonstração do lote agem em contas do
+    // seed, e a coordenação purga o próprio lote. Os alunos saem; a equipe é encerrada, e os
+    // atos dela ficam, com o autor.
+    [Fact]
+    public async Task Purga_encerra_a_equipe_do_lote_deixa_os_atos_dela_no_seed_e_derruba_os_tokens()
+    {
+        await using var mundo = await MundoAsync();
+        var dani = await DemoAsync(mundo, "Dani Demo", "daniDemo", _purgado);
+        var (professor, cadastroDoProfessor) = await EquipeAsync(mundo, Papeis.Professor, "Rita Lima", "ritaLima", _purgado);
+        var (coordenacao, _) = await EquipeAsync(mundo, Papeis.Instituicao, "Caio Reis", "caioReis", _purgado);
+        var fotoDoProfessor = await FotoDePerfilAsync(mundo, professor);
+        using var comoProfessor = ComToken(mundo, professor);
+        using var comoCoordenacao = ComToken(mundo, coordenacao);
+        var medalhaDaRenata = await mundo.MedalhaAsync(Bruno);
+        Guid cadastroDaAna;
+        Guid postDaAna;
+        await using (var scope = mundo.Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            cadastroDaAna = await db.Set<Usuario>().Where(usuario => usuario.Id == mundo.Id(Ana)).Select(usuario => usuario.CadastroElegivelId).SingleAsync(Ct);
+            var ana = await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == mundo.Id(Ana), Ct);
+            var rita = await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == professor, Ct);
+            var post = Post.Publicar(ana, "Primeiro dia!", null, null, mundo.Relogio.GetUtcNow()).Post!;
+            postDaAna = post.Id;
+            db.AddRange(
+                post,
+                Comentario.Escrever(rita, post, "Parabéns!", mundo.Relogio.GetUtcNow()).Comentario!,
+                Curtida.Curtir(rita, post, mundo.Relogio.GetUtcNow())!,
+                Seguimento.Seguir(rita, ana, professorDoSeguido: true, mundo.Relogio.GetUtcNow())!);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        // Os atos da equipe em contas do seed.
+        Assert.Equal(
+            HttpStatusCode.Created,
+            (await comoProfessor.PostAsJsonAsync(
+                new Uri($"/api/v1/professor/turmas/{mundo.Turma}/medalhas", UriKind.Relative), new { alunoId = mundo.Id(Ana), item = "M03" }, Ct)).StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Created,
+            (await comoProfessor.PostAsJsonAsync(
+                new Uri("/api/v1/avisos", UriKind.Relative),
+                new { escopo = "turma", titulo = "Prova de quinta", texto = "Revisem o capítulo 3.", turmaIds = new[] { mundo.Turma } },
+                Ct)).StatusCode);
+        Assert.True((await comoCoordenacao.PostAsync(
+            new Uri($"/api/v1/instituicao/medalhas/{medalhaDaRenata}/anulacao", UriKind.Relative), null, Ct)).IsSuccessStatusCode);
+        Assert.True((await comoCoordenacao.PutAsJsonAsync(
+            new Uri($"/api/v1/instituicao/alunos/{cadastroDaAna}/email", UriKind.Relative), new { email = "ana.s@al.unieduk.invalid" }, Ct)).IsSuccessStatusCode);
+
+        var lotes = (await comoCoordenacao.GetFromJsonAsync<List<LoteDaDemonstracaoResponse>>(Rota(string.Empty), Ct))!;
+        var doLote = Assert.Single(lotes);
+        Assert.Equal((1, 1, 1, true, false), (doLote.Alunos, doLote.Professores, doLote.Coordenacoes, doLote.DeQuemPede, doLote.Vigente));
+
+        var resposta = await comoCoordenacao.PostAsJsonAsync(Rota($"/{_purgado}/purga"), new { confirmacao = _purgado }, Ct);
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        var purga = (await resposta.Content.ReadFromJsonAsync<PurgaResponse>(Ct))!;
+        Assert.Equal((1, 1, 1, true), (purga.Alunos, purga.Professores, purga.Coordenacoes, purga.ContaPropriaEncerrada));
+
+        // O aluno sai; a equipe fica encerrada, sem chave, sem foto e sem presença social.
+        Assert.DoesNotContain(await mundo.LinhasAsync<Usuario>(), usuario => usuario.Id == dani);
+        foreach (var id in new[] { professor, coordenacao })
+        {
+            var conta = Assert.Single(await mundo.LinhasAsync<Usuario>(), usuario => usuario.Id == id);
+            Assert.True(conta.EhEncerrada);
+            Assert.Null(conta.HashDaChaveDoDispositivo);
+            Assert.False(conta.TemFoto);
+        }
+
+        Assert.DoesNotContain(await mundo.LinhasAsync<VinculoProfessor>(), vinculo => vinculo.ProfessorId == cadastroDoProfessor);
+        Assert.DoesNotContain(await mundo.LinhasAsync<Seguimento>(), seguimento => seguimento.SeguidorId == professor);
+        Assert.DoesNotContain(await mundo.LinhasAsync<Curtida>(), curtida => curtida.UsuarioId == professor);
+        Assert.DoesNotContain(await mundo.LinhasAsync<Comentario>(), comentario => comentario.AutorId == professor);
+        Assert.DoesNotContain(await mundo.LinhasAsync<UploadPendente>(), upload => upload.UsuarioId == professor);
+
+        // Os atos ficam, com o autor.
+        Assert.Single(await mundo.LinhasAsync<Medalha>(), medalha => medalha.AlunoId == mundo.Id(Ana) && medalha.ConcedidaPorId == professor);
+        Assert.Equal(coordenacao, Assert.Single(await mundo.LinhasAsync<Medalha>(), medalha => medalha.Id == medalhaDaRenata).AnuladaPorId);
+        Assert.Single(await mundo.LinhasAsync<Maxx.Domain.Mural.Aviso>(), aviso => aviso.AutorId == professor);
+        Assert.Single(await mundo.LinhasAsync<CorrecaoDeEmail>(), correcao => correcao.CorrigidoPorId == coordenacao);
+        Assert.Single(await mundo.LinhasAsync<Post>(), post => post.Id == postDaAna);
+        var registro = Assert.Single(await mundo.LinhasAsync<PurgaDaDemonstracao>());
+        Assert.Equal((1, 1, 1, coordenacao), (registro.Alunos, registro.Professores, registro.Coordenacoes, registro.PurgadoPorId));
+
+        // O token que sobrou não vale mais, nem para a coordenação que purgou; o perfil some; o
+        // lote não aparece mais nem se purga de novo.
+        Assert.Equal(HttpStatusCode.Unauthorized, (await comoCoordenacao.GetAsync(new Uri("/api/v1/eu", UriKind.Relative), Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await comoProfessor.GetAsync(new Uri("/api/v1/professor/turmas", UriKind.Relative), Ct)).StatusCode);
+        using var doSeed = await mundo.ComoAsync(Coordenacao);
+        Assert.Equal(HttpStatusCode.NotFound, (await doSeed.GetAsync(new Uri($"/api/v1/perfis/{professor}", UriKind.Relative), Ct)).StatusCode);
+        Assert.Empty((await doSeed.GetFromJsonAsync<List<LoteDaDemonstracaoResponse>>(Rota(string.Empty), Ct))!);
+        await AssertRecusaAsync(
+            await doSeed.PostAsJsonAsync(Rota($"/{_purgado}/purga"), new { confirmacao = _purgado }, Ct), HttpStatusCode.NotFound, "lote-nao-encontrado");
+
+        // A foto de perfil do professor sai do bucket; a do mundo fica.
+        mundo.Relogio.Avancar(TimeSpan.FromSeconds(11));
+        await mundo.EsvaziarFilaAsync();
+        foreach (var chave in fotoDoProfessor)
+        {
+            Assert.False(await mundo.Bucket.ExisteAsync(chave, Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Lote_so_com_professor_tambem_se_purga_e_a_coordenacao_de_outro_lote_segue()
+    {
+        await using var mundo = await MundoAsync();
+        var (professor, _) = await EquipeAsync(mundo, Papeis.Professor, "Rita Lima", "ritaLima", _purgado);
+        var (coordenacao, _) = await EquipeAsync(mundo, Papeis.Instituicao, "Caio Reis", "caioReis", _vigente);
+        using var comoCoordenacao = ComToken(mundo, coordenacao);
+
+        var lotes = (await comoCoordenacao.GetFromJsonAsync<List<LoteDaDemonstracaoResponse>>(Rota(string.Empty), Ct))!;
+        Assert.Equal(
+            [(_purgado, 0, 1, 0, false), (_vigente, 0, 0, 1, true)],
+            lotes.Select(lote => (lote.Lote, lote.Alunos, lote.Professores, lote.Coordenacoes, lote.DeQuemPede)).OrderBy(lote => lote.Lote));
+
+        var resposta = await comoCoordenacao.PostAsJsonAsync(Rota($"/{_purgado}/purga"), new { confirmacao = _purgado }, Ct);
+
+        Assert.Equal(
+            new PurgaResponse(_purgado, 0, 0, 1, 0, false),
+            await resposta.Content.ReadFromJsonAsync<PurgaResponse>(Ct));
+        Assert.True(Assert.Single(await mundo.LinhasAsync<Usuario>(), usuario => usuario.Id == professor).EhEncerrada);
+        Assert.Equal(HttpStatusCode.OK, (await comoCoordenacao.GetAsync(new Uri("/api/v1/eu", UriKind.Relative), Ct)).StatusCode);
+    }
+
     private static Uri Rota(string resto) => new($"/api/v1/instituicao/demonstracao/lotes{resto}", UriKind.Relative);
+
+    // Professor (vinculado à turma de Banco de Dados) ou coordenação de demonstração.
+    private static async Task<(Guid Usuario, Guid Cadastro)> EquipeAsync(MundoSocial mundo, Papeis papel, string nome, string prefixo, string lote)
+    {
+        await using var scope = mundo.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var identificador = $"DEMO{prefixo.ToUpperInvariant()[..4]}{lote[^1]}";
+        var cadastro = papel == Papeis.Professor
+            ? CadastroElegivel.ProfessorDeDemonstracao(identificador, nome)
+            : CadastroElegivel.CoordenacaoDeDemonstracao(identificador, nome);
+        var usuario = Usuario.EntrarNaDemonstracao(cadastro, null, prefixo, $"hash-{prefixo}", lote, mundo.Relogio.GetUtcNow());
+        db.AddRange(cadastro, usuario);
+        if (papel == Papeis.Professor)
+        {
+            db.Add(new VinculoProfessor(cadastro, await db.Set<Turma>().SingleAsync(turma => turma.Id == mundo.Turma, Ct)));
+        }
+
+        await db.SaveChangesAsync(Ct);
+        return (usuario.Id, cadastro.Id);
+    }
+
+    private static async Task<IReadOnlyList<string>> FotoDePerfilAsync(MundoSocial mundo, Guid usuarioId)
+    {
+        await using var scope = mundo.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+        var usuario = await db.Set<Usuario>().SingleAsync(conta => conta.Id == usuarioId, Ct);
+        var upload = await EnviadoAsync(
+            scope.ServiceProvider.GetRequiredService<IArmazenamentoDeFotos>(), usuario, FinalidadeDoUpload.FotoDePerfil, mundo.Relogio.GetUtcNow());
+        Assert.Null(usuario.TrocarFoto(upload, mundo.Relogio.GetUtcNow()).Recusa);
+        db.Add(upload);
+        await db.SaveChangesAsync(Ct);
+        return [upload.ChaveDoFeed, upload.ChaveDaGrade];
+    }
+
+    // A conta de demonstração não tem senha: o token sai do emissor, como o registro faria.
+    private static HttpClient ComToken(MundoSocial mundo, Guid usuarioId)
+    {
+        using var scope = mundo.Factory.Services.CreateScope();
+        var usuario = scope.ServiceProvider.GetRequiredService<MaxxDbContext>().Set<Usuario>().Single(conta => conta.Id == usuarioId);
+        var client = mundo.Factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer", scope.ServiceProvider.GetRequiredService<IAccessTokenIssuer>().Issue(usuario).Valor);
+        return client;
+    }
 
     // A flag da demonstração fica desligada: só o lote vigente é configurado.
     private Task<MundoSocial> MundoAsync() =>

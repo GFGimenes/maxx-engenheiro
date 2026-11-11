@@ -18,6 +18,7 @@ namespace Maxx.Infrastructure.Perfil;
 
 internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor professores) : IConsultaDePerfil
 {
+    // A conta encerrada pela purga (passo 14, P1) não tem perfil: fica só como autora.
     public async Task<PerfilLido?> PerfilAsync(Guid usuarioId, Guid leitorId, CancellationToken cancellationToken)
     {
         var linha = await (
@@ -25,7 +26,7 @@ internal sealed class ConsultaDePerfil(MaxxDbContext db, IConsultaDoProfessor pr
                 join cadastro in db.Set<CadastroElegivel>() on usuario.CadastroElegivelId equals cadastro.Id
                 join curso in db.Set<Curso>() on cadastro.CursoId equals curso.Id into cursos
                 from curso in cursos.DefaultIfEmpty()
-                where usuario.Id == usuarioId
+                where usuario.Id == usuarioId && usuario.EncerradaEm == null
                 select new
                 {
                     usuario.Id,

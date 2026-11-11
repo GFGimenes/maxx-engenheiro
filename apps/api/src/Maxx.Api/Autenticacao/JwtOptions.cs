@@ -28,4 +28,8 @@ public static class MaxxClaims
     public const string Sub = "sub";
 
     public const string Papel = "papel";
+
+    // Só na conta de demonstração (passo 14): o token dela é conferido no banco a cada
+    // pedido, porque a purga apaga ou encerra a conta antes de o token vencer.
+    public const string Demonstracao = "demo";
 }

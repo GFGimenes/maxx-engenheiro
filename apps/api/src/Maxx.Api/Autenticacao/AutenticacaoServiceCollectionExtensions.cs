@@ -47,6 +47,30 @@ internal static class AutenticacaoServiceCollectionExtensions
                     NameClaimType = MaxxClaims.Sub,
                     RoleClaimType = MaxxClaims.Papel,
                 };
+
+                // O access token vive 15 min sem consultar o banco. O da conta de demonstração é
+                // a exceção (passo 14, P1): a purga apaga o aluno e encerra o professor e a
+                // coordenação do lote, e o token que sobrou não pode seguir agindo. Uma consulta
+                // pela chave primária, só nesses pedidos.
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = async contexto =>
+                    {
+                        if (contexto.Principal?.FindFirst(MaxxClaims.Demonstracao) is null)
+                        {
+                            return;
+                        }
+
+                        var conta = Guid.TryParse(contexto.Principal.FindFirst(MaxxClaims.Sub)?.Value, out var id)
+                            ? await contexto.HttpContext.RequestServices.GetRequiredService<IUsuarioRepository>()
+                                .BuscarAsync(id, contexto.HttpContext.RequestAborted)
+                            : null;
+                        if (conta is null || conta.EhEncerrada)
+                        {
+                            contexto.Fail("Conta de demonstração apagada ou encerrada pela purga.");
+                        }
+                    },
+                };
             });
         builder.Services.AddAuthorization(Politicas.Configurar);
 

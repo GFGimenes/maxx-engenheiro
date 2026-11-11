@@ -1551,6 +1551,11 @@ export interface components {
             /** Format: date-time */
             ultimoEm: string;
             vigente: boolean;
+            /** Format: int32 */
+            professores: number;
+            /** Format: int32 */
+            coordenacoes: number;
+            deQuemPede: boolean;
         };
         MateriaResponse: {
             /** Format: uuid */
@@ -1793,6 +1798,11 @@ export interface components {
             alunos: number;
             /** Format: int32 */
             fotos: number;
+            /** Format: int32 */
+            professores: number;
+            /** Format: int32 */
+            coordenacoes: number;
+            contaPropriaEncerrada: boolean;
         };
         RankingResponse: {
             escopo: string;
