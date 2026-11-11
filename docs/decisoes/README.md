@@ -785,6 +785,7 @@ mundo do seed e a purga).
 | A foto de cada post do seed é sorteada entre as do curso e pode não combinar com o evento | Aceito: dado de demonstração |
 | Na fila de comprovações da instituição, "em comum" são todas as matérias do aluno (regra do passo 8) | Aceito |
 | O seed sobe as fotos antes do commit: falha depois disso deixa objetos sem dono no bucket | Aceito |
+| No navegador, a folha de confirmação dos atos (`FolhaDeAto`, um `Modal`) ocupa a largura inteira da janela, enquanto a tela é a coluna estreita da moldura de celular. Notado pelo autor nas capturas da purga do passo 14; vem do passo 12 | Limite conhecido de tela, sem correção na fase 1 |
 
 ## Endurecimento e ensaio (passo 13)
 

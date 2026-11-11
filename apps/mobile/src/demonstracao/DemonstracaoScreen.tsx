@@ -156,6 +156,24 @@ function Entrada({
     await contasDoDispositivo.gravarContas(novas);
   };
 
+  // Já com a sessão, o id da conta entra na lembrança, para a purga do próprio lote poder
+  // esquecê-la (passo 14, P2). Melhor esforço: sem ele, a conta só some da lista quando a
+  // chave deixar de abrir.
+  const lembrarId = async (chave: string) => {
+    try {
+      const { data } = await client.GET("/api/v1/eu");
+      if (!data) return;
+      const atuais = await contasDoDispositivo.lerContas();
+      await guardar(
+        atuais.map((c) =>
+          c.chave === chave ? { ...c, usuarioId: data.id } : c,
+        ),
+      );
+    } catch {
+      // Fica sem o id.
+    }
+  };
+
   const voltar = useMutation({
     mutationFn: async (conta: ContaDeDemonstracao) => {
       const { data, error } = await client.POST("/api/v1/demo/entrar", {
@@ -165,6 +183,9 @@ function Entrada({
         throw FalhaDaApi.doCorpo(error);
       }
       await iniciar(data);
+      if (!conta.usuarioId) {
+        await lembrarId(conta.chave);
+      }
     },
     onMutate: () => setAviso(null),
     onError: async (erro, conta) => {
@@ -209,6 +230,7 @@ function Entrada({
         ...contas,
       ]);
       await iniciar(data.sessao);
+      await lembrarId(data.chaveDoDispositivo);
       // Já com a sessão, a foto sobe como a de qualquer perfil. Melhor esforço: a conta já
       // existe, e a foto pode ser posta depois em Editar perfil.
       if (papel === "aluno" && foto) {

@@ -424,6 +424,41 @@ describe("três papéis", () => {
     ).toBeTruthy();
   });
 
+  test("depois de entrar, a lembrança guarda o id da conta, para a purga do próprio lote", async () => {
+    const anterior = api.getMockImplementation()!;
+    api.mockImplementation(async (pedido: Request) =>
+      new URL(pedido.url).pathname === "/api/v1/eu"
+        ? json(200, {
+            id: "id-caio",
+            papeis: ["instituicao"],
+            arroba: "@caioReis-UNIMAX",
+            nomeDeExibicao: "Caio Reis",
+            foto: null,
+          })
+        : anterior(pedido),
+    );
+    const dispositivo = aparelho();
+    await renderComApi(
+      <DemonstracaoScreen contasDoDispositivo={dispositivo} />,
+      api,
+    );
+
+    await abrir("coordenação");
+    await fireEvent.changeText(screen.getByLabelText("Nome"), "Caio Reis");
+    await apertar("Continuar");
+    await apertar("Aceitar e entrar");
+
+    expect(dispositivo.guardadas()).toEqual([
+      {
+        chave: "chave-c",
+        nome: "Caio Reis",
+        curso: "",
+        papel: "coordenacao",
+        usuarioId: "id-caio",
+      },
+    ]);
+  });
+
   test("a lista do aparelho diz o papel de cada conta", async () => {
     entrada.mockResolvedValue(json(200, SESSAO));
     await renderComApi(

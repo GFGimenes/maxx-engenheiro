@@ -11,6 +11,9 @@ export interface ContaDeDemonstracao {
   nome: string;
   curso: string;
   papel: PapelDeDemonstracao;
+  // O id da conta, lido logo depois de entrar: é por ele que a coordenação que purga o
+  // próprio lote esquece a conta neste aparelho (passo 14, P2).
+  usuarioId?: string;
 }
 
 // O que estiver guardado e não tiver a forma esperada é descartado: lista vazia, nunca
@@ -42,11 +45,22 @@ export function analisarContas(guardado: string | null): ContaDeDemonstracao[] {
             nome: conta.nome,
             curso: conta.curso,
             papel: (conta.papel ?? "aluno") as PapelDeDemonstracao,
+            ...(typeof conta.usuarioId === "string"
+              ? { usuarioId: conta.usuarioId }
+              : {}),
           }))
       : [];
   } catch {
     return [];
   }
+}
+
+// A lista sem a conta de um usuário: a que a purga encerrou.
+export function semAConta(
+  contas: ContaDeDemonstracao[],
+  usuarioId: string,
+): ContaDeDemonstracao[] {
+  return contas.filter((conta) => conta.usuarioId !== usuarioId);
 }
 
 // O botão da lista "Neste aparelho".
