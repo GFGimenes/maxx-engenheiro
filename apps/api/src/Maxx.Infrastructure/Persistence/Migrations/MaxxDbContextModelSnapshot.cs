@@ -682,6 +682,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("alunos");
 
+                    b.Property<int>("Coordenacoes")
+                        .HasColumnType("integer")
+                        .HasColumnName("coordenacoes");
+
                     b.Property<int>("Fotos")
                         .HasColumnType("integer")
                         .HasColumnName("fotos");
@@ -691,6 +695,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("lote");
+
+                    b.Property<int>("Professores")
+                        .HasColumnType("integer")
+                        .HasColumnName("professores");
 
                     b.Property<DateTimeOffset>("PurgadoEm")
                         .HasColumnType("timestamp with time zone")
@@ -708,7 +716,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("purga_da_demonstracao", null, t =>
                         {
-                            t.HasCheckConstraint("ck_purga_da_demonstracao_contagens", "alunos >= 1 AND fotos >= 0");
+                            t.HasCheckConstraint("ck_purga_da_demonstracao_contagens", "alunos >= 0 AND professores >= 0 AND coordenacoes >= 0 AND alunos + professores + coordenacoes >= 1 AND fotos >= 0");
                         });
                 });
 
@@ -864,6 +872,10 @@ namespace Maxx.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
 
+                    b.Property<DateTimeOffset?>("EncerradaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("encerrada_em");
+
                     b.Property<DateTimeOffset?>("ExAlunoDesde")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ex_aluno_desde");
@@ -930,7 +942,7 @@ namespace Maxx.Infrastructure.Persistence.Migrations
 
                     b.ToTable("usuario", null, t =>
                         {
-                            t.HasCheckConstraint("ck_usuario_demonstracao", "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
+                            t.HasCheckConstraint("ck_usuario_demonstracao", "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL AND encerrada_em IS NULL) OR (lote_da_demonstracao IS NOT NULL AND hash_da_senha IS NULL AND papeis IN (1, 2, 4) AND ((hash_da_chave_do_dispositivo IS NOT NULL AND encerrada_em IS NULL) OR (hash_da_chave_do_dispositivo IS NULL AND encerrada_em IS NOT NULL AND papeis <> 1)))");
 
                             t.HasCheckConstraint("ck_usuario_ex_aluno", "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
 

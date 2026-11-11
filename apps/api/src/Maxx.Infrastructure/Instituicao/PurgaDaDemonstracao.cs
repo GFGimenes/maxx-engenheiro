@@ -102,7 +102,7 @@ internal sealed class PurgaDaDemonstracaoRepository(MaxxDbContext db, IFilaDeTra
             await db.Database.ExecuteSqlRawAsync(comando, cancellationToken);
         }
 
-        db.Add(new PurgaDaDemonstracao(lote, alunos.Count, fotos.Count, purgadoPorId, agora));
+        db.Add(new PurgaDaDemonstracao(lote, alunos.Count, professores: 0, coordenacoes: 0, fotos.Count, purgadoPorId, agora));
         foreach (var parte in fotos.Chunk(FotosPorTrabalho))
         {
             fila.Enfileirar(new RemoverFotos(parte));

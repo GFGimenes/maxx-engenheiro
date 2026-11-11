@@ -79,6 +79,23 @@ public sealed class CadastroElegivel
 
     public const string DominioDaDemonstracao = "demonstracao.invalid";
 
+    // Professor e coordenação de demonstração (passo 14): papel simples, sem acúmulo, sem
+    // RA, com e-mail no mesmo domínio reservado. O identificador, gerado por quem chama,
+    // só faz o e-mail ser único.
+    public static CadastroElegivel ProfessorDeDemonstracao(string identificador, string nomeCompleto) =>
+        FuncionarioDeDemonstracao(Papeis.Professor, identificador, nomeCompleto);
+
+    public static CadastroElegivel CoordenacaoDeDemonstracao(string identificador, string nomeCompleto) =>
+        FuncionarioDeDemonstracao(Papeis.Instituicao, identificador, nomeCompleto);
+
+    private static CadastroElegivel FuncionarioDeDemonstracao(Papeis papeis, string identificador, string nomeCompleto)
+    {
+        identificador = Texto.Obrigatorio(identificador, "O identificador da demonstração");
+        var cadastro = Funcionario(papeis, $"{identificador.ToLowerInvariant()}@{DominioDaDemonstracao}", nomeCompleto, ra: null);
+        cadastro.Demonstracao = true;
+        return cadastro;
+    }
+
     public static CadastroElegivel Professor(string email, string nomeCompleto, bool tambemInstituicao = false, string? ra = null) =>
         Funcionario(tambemInstituicao ? Papeis.Professor | Papeis.Instituicao : Papeis.Professor, email, nomeCompleto, ra);
 

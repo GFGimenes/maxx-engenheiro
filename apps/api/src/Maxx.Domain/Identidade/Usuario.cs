@@ -66,8 +66,9 @@ public sealed class Usuario
 
     public DateTimeOffset CriadoEm { get; private set; }
 
-    // Só do aluno de demonstração (produto.md 11): o lote da apresentação, chave da purga,
-    // e o SHA-256 da chave do dispositivo, que é como ele volta sem senha.
+    // Só da conta de demonstração, de qualquer papel (produto.md 11): o lote da
+    // apresentação, chave da purga, e o SHA-256 da chave do dispositivo, que é como ela volta
+    // sem senha. A conta encerrada perde a chave.
     public string? LoteDaDemonstracao { get; private set; }
 
     public string? HashDaChaveDoDispositivo { get; private set; }
@@ -81,6 +82,12 @@ public sealed class Usuario
     public bool TemFoto => ChaveDaFotoDoFeed is not null;
 
     public bool EhDemonstracao => LoteDaDemonstracao is not null;
+
+    // Professor e coordenação de demonstração encerrados pela purga do lote (passo 14, P1):
+    // a conta não entra mais e fica só como autora dos atos na auditoria.
+    public DateTimeOffset? EncerradaEm { get; private set; }
+
+    public bool EhEncerrada => EncerradaEm is not null;
 
     // Quando o usuário abriu a aba Troféus pela última vez (passo 10, pergunta 5). Prêmio
     // obtido depois disso acende a bolinha da aba; é um marcador próprio, separado do
@@ -117,21 +124,27 @@ public sealed class Usuario
             agora);
     }
 
-    // Sem senha: entra só pela chave do dispositivo.
+    // Sem senha: entra só pela chave do dispositivo. O aluno traz o curso do cadastro; o
+    // professor e a coordenação de demonstração (passo 14) não têm curso.
     public static Usuario EntrarNaDemonstracao(
-        CadastroElegivel cadastro, Curso curso, string prefixo, string hashDaChaveDoDispositivo, string lote, DateTimeOffset agora)
+        CadastroElegivel cadastro, Curso? curso, string prefixo, string hashDaChaveDoDispositivo, string lote, DateTimeOffset agora)
     {
         ArgumentNullException.ThrowIfNull(cadastro);
-        ArgumentNullException.ThrowIfNull(curso);
 
-        if (!cadastro.Demonstracao || !cadastro.EhAluno)
+        if (!cadastro.Demonstracao
+            || cadastro.Papeis is not (Papeis.Aluno or Papeis.Professor or Papeis.Instituicao))
         {
-            throw new DomainException($"Só linha de aluno de demonstração entra pela demonstração: {cadastro.Email}.");
+            throw new DomainException($"Só linha de demonstração de papel simples entra pela demonstração: {cadastro.Email}.");
         }
 
-        if (cadastro.CursoId != curso.Id)
+        if (cadastro.EhAluno && (curso is null || cadastro.CursoId != curso.Id))
         {
-            throw new DomainException($"O curso {curso.Sigla} não é o do cadastro de {cadastro.Email}.");
+            throw new DomainException($"O curso {curso?.Sigla} não é o do cadastro de {cadastro.Email}.");
+        }
+
+        if (!cadastro.EhAluno && curso is not null)
+        {
+            throw new DomainException($"Só o aluno de demonstração tem curso; {cadastro.Email} é {cadastro.Papeis}.");
         }
 
         return new Usuario(
@@ -192,6 +205,20 @@ public sealed class Usuario
             Identidade.Sufixo.Para(cadastro.Papeis, curso, exAluno: false),
             hashDaSenha: null,
             criadoEm);
+    }
+
+    // A purga encerra, em vez de apagar, o professor e a coordenação de demonstração: o que
+    // fizeram em contas fora do lote fica, com o autor (passo 14, P1). Sem a chave, ninguém
+    // entra. Encerrar de novo não muda o instante.
+    public void Encerrar(DateTimeOffset agora)
+    {
+        if (!EhDemonstracao || Papeis == Papeis.Aluno)
+        {
+            throw new DomainException($"Só professor e coordenação de demonstração são encerrados; @{Prefixo} não é.");
+        }
+
+        EncerradaEm ??= agora;
+        HashDaChaveDoDispositivo = null;
     }
 
     // Primeiro acesso e recuperação de senha. A política já passou sobre a senha em claro.
