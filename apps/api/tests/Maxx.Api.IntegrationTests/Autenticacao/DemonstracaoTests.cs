@@ -69,6 +69,16 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.StartsWith("404", inexistenteGet, StringComparison.Ordinal);
         Assert.Equal(inexistenteGet, await DescreverAsync(await client.GetAsync(_demo, Ct)));
         Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
+
+        // Passo 14: as rotas do professor e da coordenação de demonstração também.
+        Assert.Equal(
+            inexistentePost,
+            await DescreverAsync(await client.PostAsJsonAsync(
+                new Uri("/api/v1/demo/professores", UriKind.Relative), new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
+        Assert.Equal(
+            inexistentePost,
+            await DescreverAsync(await client.PostAsJsonAsync(
+                new Uri("/api/v1/demo/coordenacoes", UriKind.Relative), new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
         Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_entrar, new { chaveDoDispositivo = "x" }, Ct)));
     }
 
@@ -263,6 +273,51 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         AssertCheck(
             await FalhaNoSqlAsync(factory, "UPDATE usuario SET hash_da_chave_do_dispositivo = NULL WHERE lote_da_demonstracao IS NOT NULL"),
             "ck_usuario_demonstracao");
+    }
+
+    // Passo 14: professor e coordenação de demonstração, e a conta encerrada pela purga.
+    [Fact]
+    public async Task O_banco_aceita_professor_e_coordenacao_de_demonstracao_e_so_eles_encerrados()
+    {
+        await using var factory = await MundoAsync();
+        using var client = factory.CreateClient();
+        await RegistrarAsync(client, "Ana Paula");
+        var agora = DateTimeOffset.UtcNow;
+        var cadastroDoProfessor = CadastroElegivel.ProfessorDeDemonstracao("DEMOPROF0001", "Rita Lima");
+        var cadastroDaCoordenacao = CadastroElegivel.CoordenacaoDeDemonstracao("DEMOCOOR0001", "Caio Reis");
+        var professor = Usuario.EntrarNaDemonstracao(cadastroDoProfessor, null, "ritaLima", "hash-p", _lote, agora);
+        var coordenacao = Usuario.EntrarNaDemonstracao(cadastroDaCoordenacao, null, "caioReis", "hash-c", _lote, agora);
+        await SalvarAsync(factory, cadastroDoProfessor, cadastroDaCoordenacao, professor, coordenacao);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
+            (await db.Set<Usuario>().SingleAsync(usuario => usuario.Id == professor.Id, Ct)).Encerrar(agora);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        const string Aluno = "papeis = 1 AND lote_da_demonstracao IS NOT NULL";
+        AssertCheck(
+            await FalhaNoSqlAsync(factory, $"UPDATE usuario SET hash_da_chave_do_dispositivo = NULL, encerrada_em = now() WHERE {Aluno}"),
+            "ck_usuario_demonstracao");
+        AssertCheck(
+            await FalhaNoSqlAsync(factory, "UPDATE usuario SET hash_da_senha = 'x' WHERE papeis = 4 AND lote_da_demonstracao IS NOT NULL"),
+            "ck_usuario_demonstracao");
+        AssertCheck(
+            await FalhaNoSqlAsync(factory, "UPDATE usuario SET papeis = 6 WHERE papeis = 4 AND lote_da_demonstracao IS NOT NULL"),
+            "ck_usuario_demonstracao");
+        AssertCheck(
+            await FalhaNoSqlAsync(factory, "UPDATE usuario SET hash_da_chave_do_dispositivo = 'y' WHERE encerrada_em IS NOT NULL"),
+            "ck_usuario_demonstracao");
+        AssertCheck(
+            await FalhaNoSqlAsync(factory, "UPDATE usuario SET lote_da_demonstracao = NULL WHERE encerrada_em IS NOT NULL"),
+            "ck_usuario_demonstracao");
+        AssertCheck(
+            await FalhaNoSqlAsync(
+                factory,
+                $"INSERT INTO purga_da_demonstracao (id, lote, alunos, professores, coordenacoes, fotos, purgado_por_id, purgado_em) " +
+                $"VALUES (gen_random_uuid(), 'x', 0, 0, 0, 0, '{coordenacao.Id}', now())"),
+            "ck_purga_da_demonstracao_contagens");
     }
 
     [Fact]

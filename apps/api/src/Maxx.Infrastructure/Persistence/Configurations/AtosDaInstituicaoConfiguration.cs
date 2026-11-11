@@ -61,7 +61,9 @@ internal sealed class PurgaDaDemonstracaoConfiguration : IEntityTypeConfiguratio
     public void Configure(EntityTypeBuilder<PurgaDaDemonstracao> builder)
     {
         builder.ToTable("purga_da_demonstracao", table =>
-            table.HasCheckConstraint("ck_purga_da_demonstracao_contagens", "alunos >= 1 AND fotos >= 0"));
+            table.HasCheckConstraint(
+                "ck_purga_da_demonstracao_contagens",
+                "alunos >= 0 AND professores >= 0 AND coordenacoes >= 0 AND alunos + professores + coordenacoes >= 1 AND fotos >= 0"));
         builder.HasKey(purga => purga.Id);
         builder.Property(purga => purga.Id).ValueGeneratedNever();
         builder.Property(purga => purga.Lote).HasMaxLength(64).IsRequired();

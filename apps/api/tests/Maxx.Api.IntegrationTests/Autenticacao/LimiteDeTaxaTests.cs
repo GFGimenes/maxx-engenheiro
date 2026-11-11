@@ -168,6 +168,37 @@ public sealed class LimiteDeTaxaTests(PostgresFixture postgres) : IClassFixture<
             await PostAsync(client, _demo, new { nome = "Banca 61", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.50"), TimeSpan.FromHours(1));
     }
 
+    // Passo 14, P6: o limite é um só, somado entre as três rotas de registro.
+    [Fact]
+    public async Task Os_registros_de_aluno_professor_e_coordenacao_somam_no_mesmo_limite_por_ip()
+    {
+        await using var factory = await MundoAsync(demonstracao: true);
+        using var client = factory.CreateClient();
+        var professores = new Uri("/api/v1/demo/professores", UriKind.Relative);
+        var coordenacoes = new Uri("/api/v1/demo/coordenacoes", UriKind.Relative);
+
+        for (var pessoa = 0; pessoa < 60; pessoa++)
+        {
+            var response = (pessoa % 3) switch
+            {
+                0 => await PostAsync(client, _demo, new { nome = $"Banca {pessoa}", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.60"),
+                1 => await PostAsync(client, professores, new { nome = $"Banca {pessoa}", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.60"),
+                _ => await PostAsync(client, coordenacoes, new { nome = $"Banca {pessoa}", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.60"),
+            };
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        await Assert429Async(
+            await PostAsync(client, coordenacoes, new { nome = "Banca 61", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.60"), TimeSpan.FromHours(1));
+        await Assert429Async(
+            await PostAsync(client, professores, new { nome = "Banca 62", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.60"), TimeSpan.FromHours(1));
+
+        // Outro IP segue registrando.
+        Assert.Equal(
+            HttpStatusCode.Created,
+            (await PostAsync(client, professores, new { nome = "Banca 63", curso = "CC", versaoDoTermo = VersaoDoTermo }, _caddy, "203.0.113.61")).StatusCode);
+    }
+
     [Fact]
     public async Task O_429_nao_leva_identificador_para_o_log()
     {

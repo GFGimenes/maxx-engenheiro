@@ -384,6 +384,25 @@ foto no Android, que continua só no Jest; a troca pelo Node 24, com o teste que
 a imagem corrigida do Caddy, antes de 05/12/2026; e a limpeza do cache da CDN feita pela
 própria purga.
 
+### Passo 14. Papéis na demonstração (posterior à avaliação)
+
+Fora dos treze passos: aberto depois do fechamento da fase 1, com a avaliação já em curso.
+A banca avalia o produto no ar ao longo do mês e, pela demonstração, só entrava como aluno;
+as contas de professor e de instituição do seed dependem de e-mail que só o autor recebe.
+
+- A entrada de demonstração oferece aluno, professor e coordenação, só com a flag ligada.
+- Professor de demonstração vinculado às turmas vigentes de um curso; coordenação de
+  demonstração com o papel de instituição, com uma exceção única na correção de e-mail.
+- A purga apaga os alunos do lote e encerra os professores e as coordenações dele, que
+  ficam só como autores na auditoria.
+- Testes de domínio e de integração dos registros, do escopo e da purga; Jest das telas;
+  e2e nos três papéis; implantação com a demonstração ligada e o lote `banca-2026`,
+  conferida no ar, só de leitura, com contas "Conferência Maxx".
+
+Regras em `produto.md` 11; decisões em `decisoes/README.md`, Papéis na demonstração
+(passo 14). Implantado em 10/11/2026 com a demonstração ligada no lote `banca-2026`, e
+conferido no ar nos três papéis; registro em `operacao.md`.
+
 ---
 
 ## 5. Fase 2

@@ -15,6 +15,9 @@ public static class CodigosDaInstituicao
     // O e-mail novo não é de um domínio aceito (produto.md 2.4).
     public const string DominioNaoAceito = "dominio-nao-aceito";
 
+    // A coordenação de demonstração corrige só para domínio reservado .invalid (passo 14, P5).
+    public const string DominioNaoReservado = "dominio-nao-reservado";
+
     // Outra linha da base, de qualquer papel, já tem esse e-mail.
     public const string EmailEmUso = "email-em-uso";
 

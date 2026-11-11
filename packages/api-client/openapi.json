@@ -4043,6 +4043,136 @@
         }
       }
     },
+    "/api/v1/demo/professores": {
+      "post": {
+        "tags": [
+          "Demonstracao"
+        ],
+        "operationId": "RegistrarProfessorDeDemonstracao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroDeDemonstracaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroDeDemonstracaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/coordenacoes": {
+      "post": {
+        "tags": [
+          "Demonstracao"
+        ],
+        "operationId": "RegistrarCoordenacaoDeDemonstracao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroDeCoordenacaoDeDemonstracaoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroDeDemonstracaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/demo/entrar": {
       "post": {
         "tags": [
@@ -5621,7 +5751,10 @@
           "alunos",
           "primeiroEm",
           "ultimoEm",
-          "vigente"
+          "vigente",
+          "professores",
+          "coordenacoes",
+          "deQuemPede"
         ],
         "type": "object",
         "properties": {
@@ -5641,6 +5774,17 @@
             "format": "date-time"
           },
           "vigente": {
+            "type": "boolean"
+          },
+          "professores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordenacoes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deQuemPede": {
             "type": "boolean"
           }
         }
@@ -6621,7 +6765,10 @@
         "required": [
           "lote",
           "alunos",
-          "fotos"
+          "fotos",
+          "professores",
+          "coordenacoes",
+          "contaPropriaEncerrada"
         ],
         "type": "object",
         "properties": {
@@ -6635,6 +6782,17 @@
           "fotos": {
             "type": "integer",
             "format": "int32"
+          },
+          "professores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordenacoes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "contaPropriaEncerrada": {
+            "type": "boolean"
           }
         }
       },
@@ -6741,6 +6899,26 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RegistroDeCoordenacaoDeDemonstracaoRequest": {
+        "required": [
+          "nome",
+          "versaoDoTermo"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string"
+          },
+          "versaoDoTermo": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

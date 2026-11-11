@@ -25,11 +25,15 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
                 "ck_usuario_ex_aluno",
                 "(ex_aluno_desde IS NULL AND sufixo <> 'EX') OR (ex_aluno_desde IS NOT NULL AND papeis = 1 AND sufixo = 'EX')");
 
-            // Aluno de demonstração: lote e chave juntos, sem senha (produto.md 11).
+            // Conta de demonstração (produto.md 11): papel simples, sem senha, com a chave do
+            // dispositivo; ou, só professor e coordenação, encerrada pela purga e sem a chave
+            // (passo 14, P1).
             table.HasCheckConstraint(
                 "ck_usuario_demonstracao",
-                "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL) " +
-                "OR (lote_da_demonstracao IS NOT NULL AND hash_da_chave_do_dispositivo IS NOT NULL AND papeis = 1 AND hash_da_senha IS NULL)");
+                "(lote_da_demonstracao IS NULL AND hash_da_chave_do_dispositivo IS NULL AND encerrada_em IS NULL) " +
+                "OR (lote_da_demonstracao IS NOT NULL AND hash_da_senha IS NULL AND papeis IN (1, 2, 4) AND (" +
+                "(hash_da_chave_do_dispositivo IS NOT NULL AND encerrada_em IS NULL) " +
+                "OR (hash_da_chave_do_dispositivo IS NULL AND encerrada_em IS NOT NULL AND papeis <> 1)))");
         });
         builder.HasKey(usuario => usuario.Id);
         builder.Property(usuario => usuario.Id).ValueGeneratedNever();
@@ -71,6 +75,7 @@ internal sealed class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Ignore(usuario => usuario.TemSenha);
         builder.Ignore(usuario => usuario.EhExAluno);
         builder.Ignore(usuario => usuario.EhDemonstracao);
+        builder.Ignore(usuario => usuario.EhEncerrada);
         builder.Ignore(usuario => usuario.TemFoto);
 
         // Quem marcou o ex-aluno (passo 12, P5): sempre junto com o instante.

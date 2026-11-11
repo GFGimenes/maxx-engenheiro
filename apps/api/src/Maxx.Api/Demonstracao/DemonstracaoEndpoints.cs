@@ -14,7 +14,8 @@ public sealed class DemoOptions
 
     public bool Habilitada { get; set; }
 
-    // Gravado em cada aluno de demonstração criado enquanto vale: a chave da purga.
+    // Gravado em cada conta de demonstração criada enquanto vale, de qualquer papel: a chave
+    // da purga.
     public string? Lote { get; set; }
 }
 
@@ -44,10 +45,25 @@ internal static class DemonstracaoEndpoints
 
         demo.MapGet("", CursosAsync).WithName("GetDemonstracao");
 
+        // As três rotas de registro dividem o mesmo limite, pelo IP (passo 14, P6): ele
+        // protege contra contas criadas em massa, qualquer que seja o papel.
         demo.MapPost("/alunos", RegistrarAsync)
             .WithName("RegistrarAlunoDeDemonstracao")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ComLimiteDeTaxa(Limite.RegistroDeDemonstracaoPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
+
+        demo.MapPost("/professores", RegistrarProfessorAsync)
+            .WithName("RegistrarProfessorDeDemonstracao")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ComLimiteDeTaxa(Limite.RegistroDeDemonstracaoPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
+
+        demo.MapPost("/coordenacoes", RegistrarCoordenacaoAsync)
+            .WithName("RegistrarCoordenacaoDeDemonstracao")
+            .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ComLimiteDeTaxa(Limite.RegistroDeDemonstracaoPorIp, contexto => LimiteDeTaxaExtensions.Ip(contexto.HttpContext));
 
@@ -66,13 +82,21 @@ internal static class DemonstracaoEndpoints
             [.. (await handler.CursosAsync(cancellationToken)).Select(curso => new CursoDeDemonstracao(curso.Sigla, curso.Nome))]));
 
     private static async Task<Created<RegistroDeDemonstracaoResponse>> RegistrarAsync(
-        RegistroDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken)
-    {
-        var registro = await handler.RegistrarAsync(pedido.Nome, pedido.Curso, pedido.VersaoDoTermo, cancellationToken);
-        return TypedResults.Created(
+        RegistroDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
+        Criado(httpContext, await handler.RegistrarAsync(pedido.Nome, pedido.Curso, pedido.VersaoDoTermo, cancellationToken));
+
+    private static async Task<Created<RegistroDeDemonstracaoResponse>> RegistrarProfessorAsync(
+        RegistroDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
+        Criado(httpContext, await handler.RegistrarProfessorAsync(pedido.Nome, pedido.Curso, pedido.VersaoDoTermo, cancellationToken));
+
+    private static async Task<Created<RegistroDeDemonstracaoResponse>> RegistrarCoordenacaoAsync(
+        RegistroDeCoordenacaoDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken) =>
+        Criado(httpContext, await handler.RegistrarCoordenacaoAsync(pedido.Nome, pedido.VersaoDoTermo, cancellationToken));
+
+    private static Created<RegistroDeDemonstracaoResponse> Criado(HttpContext httpContext, RegistroDeDemonstracao registro) =>
+        TypedResults.Created(
             (string?)null,
             new RegistroDeDemonstracaoResponse(registro.ChaveDoDispositivo, SessaoHttp.Escrever(httpContext, registro.Sessao)));
-    }
 
     private static async Task<Ok<SessaoResponse>> EntrarAsync(
         EntradaDeDemonstracaoRequest pedido, DemonstracaoHandler handler, HttpContext httpContext, CancellationToken cancellationToken)
@@ -90,6 +114,11 @@ public sealed record CursoDeDemonstracao(string Sigla, string Nome);
 public sealed record RegistroDeDemonstracaoRequest(
     [property: Required(AllowEmptyStrings = true), StringLength(240)] string Nome,
     [property: Required, StringLength(16)] string Curso,
+    [property: Range(1, int.MaxValue)] int VersaoDoTermo);
+
+// A coordenação de demonstração (passo 14) não escolhe curso.
+public sealed record RegistroDeCoordenacaoDeDemonstracaoRequest(
+    [property: Required(AllowEmptyStrings = true), StringLength(240)] string Nome,
     [property: Range(1, int.MaxValue)] int VersaoDoTermo);
 
 public sealed record EntradaDeDemonstracaoRequest([property: Required, StringLength(128)] string ChaveDoDispositivo)

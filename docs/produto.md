@@ -144,6 +144,9 @@ senha, e o primeiro acesso é pela recuperação de senha: o link que chega ao e
 institucional é o que prova a posse da conta. Sem isso, e sem verificação de e-mail na
 fase 1, quem soubesse o e-mail de um professor tomaria a conta dele.
 
+A única exceção é a demonstração ligada (seção 11, passo 14): a entrada de demonstração cria
+professor e coordenação de teste, sem senha, que não tomam conta de ninguém.
+
 **Senha:** de 8 a 128 caracteres, sem regra de composição. Qualquer caractere vale.
 
 Na fase 1 tudo isso entra por seed. No uso real, por CSV. Não há integração com o
@@ -648,7 +651,8 @@ Só no navegador, pequena e funcional: fila de comprovações e fila de contesta
 (aprovar, reprovar, confirmar, revogar), conceder prêmio de participação, publicar
 aviso, corrigir e-mail de aluno, marcar ex-aluno, trocar de curso, anular medalha, purgar
 dados de demonstração. Fica no mesmo app, em `/instituicao`, dentro da moldura de celular;
-no aparelho, a tela diz que a área abre no navegador. A entrada é o menu do perfil e, na
+no aparelho, a tela diz que a área abre no navegador, também para quem entra como
+coordenação de demonstração (seção 11). A entrada é o menu do perfil e, na
 conta só de instituição, a aba Perfil, que mostra a conta no lugar do perfil social. A
 instituição também contesta pelo menu do post, onde remove o post impróprio.
 
@@ -664,13 +668,33 @@ desligada por padrão e não existe na configuração de produção; desligada, 
 demonstração respondem 404 e o botão não aparece no login.
 
 - O botão de demonstração aparece na tela de login quando a flag está ligada.
-- O registro é simples: foto opcional, nome e escolha de um dos quatro cursos de
-  demonstração, já populados.
-- Quem entra vira um aluno de demonstração, numa turma de demonstração daquele curso,
-  com tudo que um aluno tem: posta, reivindica, curte, comenta, segue, pontua, aparece
-  nos rankings.
-- Voltando pelo mesmo dispositivo, a pessoa pode entrar no usuário que criou ou criar
-  outro. A lembrança é local, sem senha, e se perde ao trocar de aparelho.
+- A tela de demonstração oferece três entradas (passo 14): aluno, professor e
+  coordenação. Com a flag desligada nada disso existe: rotas em 404 e botão ausente.
+- **Aluno:** o registro é simples: foto opcional, nome e escolha de um dos quatro cursos
+  de demonstração, já populados. Quem entra vira um aluno de demonstração, numa turma de
+  demonstração daquele curso, com tudo que um aluno tem: posta, reivindica, curte,
+  comenta, segue, pontua, aparece nos rankings.
+- **Professor:** informa nome e escolhe um dos quatro cursos de demonstração. Vira uma
+  conta de professor de demonstração, vinculada às turmas daquele curso no semestre
+  vigente, com tudo que um professor tem: concede medalha aos alunos dessas turmas, do
+  seed e de demonstração, vê e decide a fila de comprovações, contesta e publica aviso
+  para as turmas dele. A regra de escopo continua valendo: ele não enxerga aluno de outro
+  curso.
+- **Coordenação:** informa nome. Vira uma conta com o papel de instituição, de
+  demonstração, com todos os poderes da instituição: ficha do aluno, correção de e-mail,
+  ex-aluno, troca de curso, concessão direta, anulação, contestações, aviso para a
+  faculdade e para cursos, e a purga por lote, inclusive do lote vigente e do próprio. A
+  base inteira é fictícia e existe só para a avaliação, então não há ato a proteger do
+  avaliador. Exceção única: a correção de e-mail feita por conta de demonstração só aceita
+  endereço em domínio reservado `.invalid`, porque um endereço real faria o Maxx mandar
+  e-mail a terceiros e daria a quem corrigiu a conta do aluno pela recuperação de senha.
+  A área da instituição continua só no navegador; pelo celular, a coordenação vê a
+  mensagem de sempre.
+- As três entradas seguem as mesmas regras: aceite do termo, lembrança local sem senha,
+  sessão comum com refresh rotativo e um limite único de registros por IP, somado entre
+  as três.
+- Voltando pelo mesmo dispositivo, a pessoa pode entrar em qualquer conta que criou ou
+  criar outra. A lembrança é local, sem senha, e se perde ao trocar de aparelho.
 - O aluno de demonstração entra nos mesmos rankings dos alunos semeados, e os avaliadores
   veem os posts uns dos outros.
 - Dados de demonstração têm marcação por flag e por lote, para purga manual depois da
@@ -683,7 +707,17 @@ demonstração respondem 404 e o botão não aparece no login.
   duas comprovações pendentes e uma contestação aberta; as conquistas desse mundo nascem do
   sistema, a partir dos fatos.
 - A purga é pela área web da instituição, por lote, também do lote vigente, sempre com o
-  nome do lote digitado de novo: sai do banco tudo do lote, e as fotos dele saem do bucket.
+  nome do lote digitado de novo: a purga apaga os alunos do lote, com tudo deles, e as
+  fotos deles saem do bucket; e encerra os professores e as coordenações do lote.
+- **Conta encerrada:** o professor e a coordenação de demonstração não são apagados,
+  porque o que fizeram em contas fora do lote (medalha a aluno do seed, aprovação, aviso,
+  anulação, correção de e-mail, ex-aluno) fica, com o autor na auditoria. A conta
+  encerrada não entra mais, não aparece em lista nenhuma e perde vínculos de turma,
+  seguimentos, curtidas, comentários e notificações; fica só o nome, como autor dos atos.
+- **Purgar o próprio lote:** a lista marca o lote de quem purga, a confirmação avisa que a
+  conta dele será encerrada junto, e o resultado leva de volta ao login.
+- Nenhuma mudança nas contas do seed, no cadastro normal, no login nem nas regras de
+  pontos.
 
 Como isso se traduz no sistema:
 
@@ -693,8 +727,13 @@ Como isso se traduz no sistema:
 - **Cadastro do aluno de demonstração:** o registro cria uma linha no cadastro elegível
   marcada como demonstração, com RA gerado (a matrícula aponta para o cadastro
   elegível), e matricula o aluno nas turmas do curso escolhido no semestre vigente.
+- **Cadastro do professor e da coordenação de demonstração:** o registro cria uma linha
+  no cadastro elegível marcada como demonstração, sem RA, com e-mail em domínio reservado
+  que nunca recebe nada. O professor é vinculado às turmas do curso escolhido no semestre
+  vigente, a mesma fonte do escopo de qualquer professor. Arroba com `-PROF` e `-UNIMAX`,
+  como na seção 2.3.
 - **Lote:** valor de configuração, gravado em cada usuário de demonstração criado
-  enquanto ele vale. É a chave da purga.
+  enquanto ele vale, de qualquer papel. É a chave da purga.
 - **Foto opcional:** chega com o upload, no passo 7. Até lá, o registro é nome e curso.
 - O registro de demonstração pede o aceite do termo de uso, como o cadastro.
 
