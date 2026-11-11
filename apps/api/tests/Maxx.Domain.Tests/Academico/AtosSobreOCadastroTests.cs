@@ -67,6 +67,27 @@ public class AtosSobreOCadastroTests
         Assert.Equal("ana.souza@al.unieduk.com.br", ana.Email);
     }
 
+    // Passo 14, P5: quem corrige por uma conta de demonstração só escreve domínio .invalid.
+    [Fact]
+    public void Correcao_so_para_dominio_reservado_recusa_dominio_real_e_aceita_o_invalid()
+    {
+        var dominios = new DominiosDeEmailAceitos(["al.unieduk.com.br", "al.unieduk.invalid"]);
+        var ana = Ana();
+
+        var real = ana.CorrigirEmail("ana.b@al.unieduk.com.br", dominios, _coordenacao, _agora, soDominioReservado: true);
+        Assert.Equal((RecusaDaCorrecaoDeEmail.DominioNaoReservado, (CorrecaoDeEmail?)null), (real.Recusa, real.Correcao));
+        Assert.Equal("ana.souza@al.unieduk.com.br", ana.Email);
+
+        // A lista de aceitos continua valendo antes: .invalid fora dela é domínio não aceito.
+        Assert.Equal(
+            RecusaDaCorrecaoDeEmail.DominioNaoAceito,
+            ana.CorrigirEmail("ana.b@outro.invalid", dominios, _coordenacao, _agora, soDominioReservado: true).Recusa);
+
+        var reservado = ana.CorrigirEmail("ana.b@AL.unieduk.INVALID", dominios, _coordenacao, _agora, soDominioReservado: true);
+        Assert.Null(reservado.Recusa);
+        Assert.Equal("ana.b@AL.unieduk.INVALID", ana.Email);
+    }
+
     [Fact]
     public void O_mesmo_email_nao_muda_nada_mas_so_maiusculas_e_correcao()
     {

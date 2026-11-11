@@ -53,7 +53,7 @@ public sealed class AtosSobreOAlunoHandler(
         var cadastro = await alunos.CadastroDeAlunoAsync(cadastroId, cancellationToken) ?? throw AlunoNaoEncontrado(cadastroId);
         var agora = relogio.GetUtcNow();
 
-        var resultado = cadastro.CorrigirEmail(email, dominios, quem.Id, agora);
+        var resultado = cadastro.CorrigirEmail(email, dominios, quem.Id, agora, soDominioReservado: quem.EhDemonstracao);
         if (resultado.Recusa is RecusaDaCorrecaoDeEmail.EmailInvalido)
         {
             throw new RecusaException(TipoDeRecusa.Invalido, CodigosDaInstituicao.EmailInvalido, "E-mail fora da forma.");
@@ -62,6 +62,12 @@ public sealed class AtosSobreOAlunoHandler(
         if (resultado.Recusa is RecusaDaCorrecaoDeEmail.DominioNaoAceito)
         {
             throw new RecusaException(TipoDeRecusa.Invalido, CodigosDaInstituicao.DominioNaoAceito, "E-mail fora dos domínios aceitos.");
+        }
+
+        if (resultado.Recusa is RecusaDaCorrecaoDeEmail.DominioNaoReservado)
+        {
+            throw new RecusaException(
+                TipoDeRecusa.Invalido, CodigosDaInstituicao.DominioNaoReservado, "Conta de demonstração corrige só para domínio .invalid.");
         }
 
         if (resultado.Correcao is not { } correcao)

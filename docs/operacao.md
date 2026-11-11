@@ -90,13 +90,35 @@ Depois da avaliação (e do ensaio), pela área da instituição, nunca por SQL 
 
 1. Desligar a demonstração (`dc up -d`), para ninguém entrar no lote durante a purga.
 2. Em `/instituicao/purga`, escolher o lote e digitar o nome dele de novo. Banco e fila
-   saem numa transação; as fotos do lote vão para o trabalho `remover-fotos`.
+   saem numa transação; as fotos do lote vão para o trabalho `remover-fotos`. Desde o
+   passo 14, os alunos do lote são apagados e os professores e as coordenações do lote,
+   encerrados: o que fizeram em contas do seed fica, com o autor.
 3. Esperar a fila esvaziar (`/api/health/worker` com `disponiveis` em 0).
 4. **Limpar o cache da CDN**: painel da Cloudflare, Caching, Purge Cache, Purge Everything
    na zona de `fotos.maxx-unimax.com`. Sem isso, a borda continua servindo a foto que já
    tinha em cache até ela expirar, mesmo fora do bucket.
-5. Conferir: nenhum usuário com o lote, o registro em `purga_da_demonstracao`, e a URL de
-   uma foto do lote em 404 pela CDN.
+5. Conferir: nenhum aluno com o lote, os professores e as coordenações do lote com
+   `encerrada_em`, o registro em `purga_da_demonstracao` (alunos, professores, coordenações e
+   fotos), e a URL de uma foto do lote em 404 pela CDN.
+
+## Papéis na demonstração (passo 14)
+
+Implantado em 10/11/2026 (horário de Brasília), `sha-81bf896`, publicado pelo disparo da CI
+na branch `feat/passo-14-demo-papeis` e implantado com `deploy.sh <sha> demo`, lote
+`banca-2026`. A migration `PapeisNaDemonstracao` rodou no migrator, depois do dump; os 2
+alunos que a banca já tinha no lote seguiram lá. `/api/ready` em 200 e
+`/api/health/worker` sem problema depois da subida.
+
+Conferência no ar, só de leitura (P7), por um navegador automatizado de fora da VPS, sem
+credencial: pela demonstração, as três contas "Conferência Maxx".
+
+| Papel | Conferido |
+|---|---|
+| Aluno | Registro em CC, arroba `@conferenciaMaxx-CC`, feed e perfil |
+| Professor | Registro em CC, arroba `@conferenciaMaxx2-PROF` (o prefixo colidiu com o do aluno e recebeu o número, como manda a regra); Minhas turmas, Banco de Dados com 32 alunos, inclusive o aluno da conferência, sem conceder nada |
+| Coordenação | Registro só com o nome; aba Perfil, Área da instituição; na purga, `banca-2026` com "Vigente" e "Seu lote" e "3 alunos, 1 professor e 1 coordenação", sem purgar |
+
+As três contas ficam no lote `banca-2026` e saem com ele na purga depois da avaliação.
 
 ## Seed de demonstração
 

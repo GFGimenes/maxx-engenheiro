@@ -1108,6 +1108,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/demo/professores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RegistrarProfessorDeDemonstracao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/demo/coordenacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RegistrarCoordenacaoDeDemonstracao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/demo/entrar": {
         parameters: {
             query?: never;
@@ -1519,6 +1551,11 @@ export interface components {
             /** Format: date-time */
             ultimoEm: string;
             vigente: boolean;
+            /** Format: int32 */
+            professores: number;
+            /** Format: int32 */
+            coordenacoes: number;
+            deQuemPede: boolean;
         };
         MateriaResponse: {
             /** Format: uuid */
@@ -1761,6 +1798,11 @@ export interface components {
             alunos: number;
             /** Format: int32 */
             fotos: number;
+            /** Format: int32 */
+            professores: number;
+            /** Format: int32 */
+            coordenacoes: number;
+            contaPropriaEncerrada: boolean;
         };
         RankingResponse: {
             escopo: string;
@@ -1782,6 +1824,11 @@ export interface components {
         };
         RefreshRequest: {
             refreshToken: null | string;
+        };
+        RegistroDeCoordenacaoDeDemonstracaoRequest: {
+            nome: string;
+            /** Format: int32 */
+            versaoDoTermo: number;
         };
         RegistroDeDemonstracaoRequest: {
             nome: string;
@@ -4924,6 +4971,117 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RegistrarProfessorDeDemonstracao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroDeDemonstracaoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistroDeDemonstracaoResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RegistrarCoordenacaoDeDemonstracao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroDeCoordenacaoDeDemonstracaoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistroDeDemonstracaoResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
                 };
             };
             /** @description Conflict */

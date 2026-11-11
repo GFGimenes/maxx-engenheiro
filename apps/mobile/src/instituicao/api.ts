@@ -131,11 +131,17 @@ export function usePurgar() {
       }
       return data;
     },
-    onSuccess: () =>
-      Promise.all(
+    // Quem purgou o próprio lote (passo 14, P2) já não tem sessão: recarregar daria 401 e
+    // levaria ao login antes de a pessoa ler o resultado. A tela leva, pelo botão.
+    onSuccess: async (resultado) => {
+      if (resultado.contaPropriaEncerrada) {
+        return;
+      }
+      await Promise.all(
         [["instituicao", "lotes"], ["feed"], ["perfil"]].map((queryKey) =>
           queryClient.invalidateQueries({ queryKey }),
         ),
-      ),
+      );
+    },
   });
 }

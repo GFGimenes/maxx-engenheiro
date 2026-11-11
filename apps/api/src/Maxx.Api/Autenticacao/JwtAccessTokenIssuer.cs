@@ -24,6 +24,10 @@ internal sealed class JwtAccessTokenIssuer(ChaveDeAssinatura chave, TimeProvider
             [MaxxClaims.Sub] = usuario.Id.ToString(),
             [MaxxClaims.Papel] = NomesDosPapeis(usuario.Papeis),
         };
+        if (usuario.EhDemonstracao)
+        {
+            claims[MaxxClaims.Demonstracao] = true;
+        }
 
         var valor = _handler.CreateToken(new SecurityTokenDescriptor
         {

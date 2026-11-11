@@ -19,6 +19,17 @@ public class VinculosTests
     private static readonly CadastroElegivel _instituicao =
         CadastroElegivel.Instituicao("secretaria@unieduk.com.br", "Secretaria UniMax");
 
+    // Passo 14: o escopo do professor de demonstração sai do mesmo vínculo.
+    [Fact]
+    public void Professor_de_demonstracao_se_vincula_a_turma_e_a_coordenacao_nao()
+    {
+        var professor = CadastroElegivel.ProfessorDeDemonstracao("DEMOPROF0001", "Rita Lima");
+        var coordenacao = CadastroElegivel.CoordenacaoDeDemonstracao("DEMOCOOR0001", "Caio Reis");
+
+        Assert.Equal(professor.Id, new VinculoProfessor(professor, _bancoDeDados2026).ProfessorId);
+        Assert.Throws<DomainException>(() => new VinculoProfessor(coordenacao, _bancoDeDados2026));
+    }
+
     [Fact]
     public void Aluno_se_matricula_na_turma()
     {

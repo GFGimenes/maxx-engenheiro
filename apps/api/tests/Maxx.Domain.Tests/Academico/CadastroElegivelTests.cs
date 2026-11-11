@@ -17,6 +17,25 @@ public class CadastroElegivelTests
         Assert.Equal(12, aluno.Semestre);
     }
 
+    [Fact]
+    public void Professor_e_coordenacao_de_demonstracao_tem_papel_simples_sem_ra_e_email_reservado()
+    {
+        var professor = CadastroElegivel.ProfessorDeDemonstracao(" DEMOPROF0001 ", "Rita Lima");
+        var coordenacao = CadastroElegivel.CoordenacaoDeDemonstracao("DEMOCOOR0001", "Caio Reis");
+
+        Assert.Equal((Papeis.Professor, "demoprof0001@demonstracao.invalid"), (professor.Papeis, professor.Email));
+        Assert.Equal((Papeis.Instituicao, "democoor0001@demonstracao.invalid"), (coordenacao.Papeis, coordenacao.Email));
+        Assert.All([professor, coordenacao], cadastro =>
+        {
+            Assert.True(cadastro.Demonstracao);
+            Assert.Null(cadastro.Ra);
+            Assert.Null(cadastro.CursoId);
+            Assert.Null(cadastro.Semestre);
+        });
+        Assert.Throws<DomainException>(() => CadastroElegivel.ProfessorDeDemonstracao(" ", "Rita Lima"));
+        Assert.Throws<DomainException>(() => CadastroElegivel.CoordenacaoDeDemonstracao("DEMOCOOR0002", " "));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(13)]

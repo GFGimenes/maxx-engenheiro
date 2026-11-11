@@ -313,6 +313,73 @@ public class UsuarioTests
     }
 
     [Fact]
+    public void Professor_e_coordenacao_de_demonstracao_entram_sem_curso_com_o_sufixo_do_papel()
+    {
+        var professor = Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.ProfessorDeDemonstracao("DEMOPROF0001", "Rita Lima"), null, "ritaLima", "hash-1", "banca-1", _agora);
+        var coordenacao = Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.CoordenacaoDeDemonstracao("DEMOCOOR0001", "Caio Reis"), null, "caioReis", "hash-2", "banca-1", _agora);
+
+        Assert.Equal((Papeis.Professor, "@ritaLima-PROF", "Rita Lima"), (professor.Papeis, professor.Arroba.ToString(), professor.NomeDeExibicao));
+        Assert.Equal((Papeis.Instituicao, "@caioReis-UNIMAX"), (coordenacao.Papeis, coordenacao.Arroba.ToString()));
+        Assert.All([professor, coordenacao], conta =>
+        {
+            Assert.True(conta.EhDemonstracao);
+            Assert.False(conta.TemSenha);
+            Assert.False(conta.EhEncerrada);
+        });
+    }
+
+    [Fact]
+    public void Curso_so_acompanha_o_aluno_de_demonstracao()
+    {
+        var aluno = CadastroElegivel.AlunoDeDemonstracao("DEMOABCD2345", "Ana Paula", _cc);
+        var professor = CadastroElegivel.ProfessorDeDemonstracao("DEMOPROF0001", "Rita Lima");
+
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(aluno, null, "anaPaula", "hash", "banca-1", _agora));
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(aluno, _si, "anaPaula", "hash", "banca-1", _agora));
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(professor, _cc, "ritaLima", "hash", "banca-1", _agora));
+    }
+
+    [Fact]
+    public void Professor_e_instituicao_do_seed_nao_entram_pela_demonstracao()
+    {
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque"), null, "renataA", "hash", "banca-1", _agora));
+        Assert.Throws<DomainException>(() => Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.Instituicao("coord@unieduk.com.br", "Coordenação"), null, "coordenacao", "hash", "banca-1", _agora));
+    }
+
+    [Fact]
+    public void Encerrar_tira_a_chave_e_guarda_o_primeiro_instante()
+    {
+        var professor = Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.ProfessorDeDemonstracao("DEMOPROF0001", "Rita Lima"), null, "ritaLima", "hash-1", "banca-1", _agora);
+
+        professor.Encerrar(_agora.AddDays(1));
+        professor.Encerrar(_agora.AddDays(2));
+
+        Assert.True(professor.EhEncerrada);
+        Assert.Equal(_agora.AddDays(1), professor.EncerradaEm);
+        Assert.Null(professor.HashDaChaveDoDispositivo);
+        Assert.Equal("banca-1", professor.LoteDaDemonstracao);
+        Assert.Equal("Rita Lima", professor.NomeDeExibicao);
+    }
+
+    [Fact]
+    public void So_professor_e_coordenacao_de_demonstracao_sao_encerrados()
+    {
+        var aluno = Usuario.EntrarNaDemonstracao(
+            CadastroElegivel.AlunoDeDemonstracao("DEMOABCD2345", "Ana Paula", _cc), _cc, "anaPaula", "hash", "banca-1", _agora);
+        var professorDoSeed = Usuario.CriarPeloSeed(
+            CadastroElegivel.Professor("renata@prof.unieduk.com.br", "Renata Albuquerque"), "renataA", _agora);
+
+        Assert.Throws<DomainException>(() => aluno.Encerrar(_agora));
+        Assert.Throws<DomainException>(() => professorDoSeed.Encerrar(_agora));
+        Assert.Throws<DomainException>(() => Ana().Encerrar(_agora));
+    }
+
+    [Fact]
     public void Aluno_cadastrado_pelo_app_nao_e_demonstracao()
     {
         var ana = Ana();
