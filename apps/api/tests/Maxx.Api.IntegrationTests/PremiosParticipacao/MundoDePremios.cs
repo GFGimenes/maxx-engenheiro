@@ -25,9 +25,14 @@ internal sealed record MundoDePremios(MundoSocial Social, DateOnly Hoje, Guid Se
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    public static async Task<MundoDePremios> CriarAsync(PostgresFixture postgres, ArmazenamentoFixture armazenamento)
+    public static Task<MundoDePremios> CriarAsync(PostgresFixture postgres, ArmazenamentoFixture armazenamento) =>
+        CriarComConfiguracaoAsync(postgres, armazenamento, null);
+
+    // configuracao: a flag da demonstração, por exemplo (passo 14).
+    public static async Task<MundoDePremios> CriarComConfiguracaoAsync(
+        PostgresFixture postgres, ArmazenamentoFixture armazenamento, IReadOnlyDictionary<string, string>? configuracao)
     {
-        var social = await MundoSocial.CriarAsync(postgres, armazenamento);
+        var social = await MundoSocial.CriarAsync(postgres, armazenamento, configuracao: configuracao);
         await using var scope = social.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MaxxDbContext>();
         var cc = await db.Set<Curso>().SingleAsync(curso => curso.Sigla == "CC", Ct);

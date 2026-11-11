@@ -85,6 +85,9 @@ public enum RecusaDaCorrecaoDeEmail
 {
     EmailInvalido,
     DominioNaoAceito,
+
+    // Correção feita por conta de demonstração fora de domínio reservado (passo 14, P5).
+    DominioNaoReservado,
 }
 
 public sealed record ResultadoDaTrocaDeCurso(TrocaDeCurso? Troca, RecusaDaTrocaDeCurso? Recusa);

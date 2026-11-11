@@ -35,11 +35,65 @@ public sealed class DemonstracaoHandler(
     public Task<IReadOnlyList<Curso>> CursosAsync(CancellationToken cancellationToken) =>
         demonstracao.CursosComTurmaVigenteAsync(Hoje, cancellationToken);
 
-    public async Task<RegistroDeDemonstracao> RegistrarAsync(
+    public Task<RegistroDeDemonstracao> RegistrarAsync(
         string nome, string siglaDoCurso, int versaoDoTermo, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(nome);
         ArgumentNullException.ThrowIfNull(siglaDoCurso);
+
+        return GravarAsync(nome, versaoDoTermo, async (identificador, nomeValido, primeira) =>
+        {
+            var (curso, turmas) = await TurmasAsync(siglaDoCurso, primeira, cancellationToken);
+            var cadastro = CadastroElegivel.AlunoDeDemonstracao(identificador, nomeValido, curso);
+            foreach (var turma in turmas)
+            {
+                demonstracao.Adicionar(new Matricula(cadastro, turma));
+            }
+
+            // Aluno novo muda o divisor da raridade (ADR 0005). Na nova tentativa, o
+            // Descartar leva o pedido junto, e ele é feito de novo aqui.
+            fila.Enfileirar(new RecalcularRaridade());
+            return (cadastro, curso);
+        }, cancellationToken);
+    }
+
+    // Professor de demonstração (passo 14): vinculado às turmas do curso no semestre vigente,
+    // a mesma fonte do escopo de qualquer professor. Não pontua, então não mexe na raridade.
+    public Task<RegistroDeDemonstracao> RegistrarProfessorAsync(
+        string nome, string siglaDoCurso, int versaoDoTermo, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(siglaDoCurso);
+
+        return GravarAsync(nome, versaoDoTermo, async (identificador, nomeValido, primeira) =>
+        {
+            var (_, turmas) = await TurmasAsync(siglaDoCurso, primeira, cancellationToken);
+            var cadastro = CadastroElegivel.ProfessorDeDemonstracao(identificador, nomeValido);
+            foreach (var turma in turmas)
+            {
+                demonstracao.Adicionar(new VinculoProfessor(cadastro, turma));
+            }
+
+            return (cadastro, (Curso?)null);
+        }, cancellationToken);
+    }
+
+    // Coordenação de demonstração (passo 14): o papel de instituição, sem curso nem turma.
+    public Task<RegistroDeDemonstracao> RegistrarCoordenacaoAsync(string nome, int versaoDoTermo, CancellationToken cancellationToken) =>
+        GravarAsync(
+            nome,
+            versaoDoTermo,
+            (identificador, nomeValido, _) => Task.FromResult((CadastroElegivel.CoordenacaoDeDemonstracao(identificador, nomeValido), (Curso?)null)),
+            cancellationToken);
+
+    // O que os três registros têm em comum: nome, termo, arroba livre, chave do dispositivo,
+    // lote, sessão e a linha da base. Montar cria a linha e grava o que pende dela (matrícula
+    // ou vínculo), e é chamado de novo a cada tentativa, porque o Descartar leva tudo junto.
+    private async Task<RegistroDeDemonstracao> GravarAsync(
+        string nome,
+        int versaoDoTermo,
+        Func<string, string, bool, Task<(CadastroElegivel Cadastro, Curso? Curso)>> montar,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(nome);
 
         try
         {
@@ -51,16 +105,14 @@ public sealed class DemonstracaoHandler(
         }
 
         var termo = await termos.ConferirAceiteAsync(versaoDoTermo, cancellationToken);
-        var (curso, turmas) = await demonstracao.TurmasVigentesAsync(siglaDoCurso.Trim(), Hoje, cancellationToken)
-            ?? throw new RecusaException(
-                TipoDeRecusa.NaoEncontrado, CodigosDeRecusa.CursoDeDemonstracaoIndisponivel, $"Sem turma vigente em {siglaDoCurso}.");
 
         var recusados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         for (var tentativa = 1; ; tentativa++)
         {
+            var (cadastro, curso) = await montar(GerarIdentificador(), nome, tentativa == 1);
+            demonstracao.Adicionar(cadastro);
             var prefixo = await sugestoes.PrimeiroLivreAsync(nome, recusados, cancellationToken);
             var chave = tokens.Generate();
-            var cadastro = CadastroElegivel.AlunoDeDemonstracao(GerarRa(), nome, curso);
             var usuario = Usuario.EntrarNaDemonstracao(
                 cadastro,
                 curso,
@@ -69,18 +121,7 @@ public sealed class DemonstracaoHandler(
                 configuracao.Lote,
                 relogio.GetUtcNow());
             usuario.AceitarTermo(termo, relogio.GetUtcNow());
-
-            demonstracao.Adicionar(cadastro);
-            foreach (var turma in turmas)
-            {
-                demonstracao.Adicionar(new Matricula(cadastro, turma));
-            }
-
             usuarios.Adicionar(usuario);
-
-            // Aluno novo muda o divisor da raridade (ADR 0005). Na nova tentativa, o
-            // Descartar leva o pedido junto, e ele é feito de novo aqui.
-            fila.Enfileirar(new RecalcularRaridade());
             var sessao = sessoes.Abrir(usuario);
 
             try
@@ -100,11 +141,19 @@ public sealed class DemonstracaoHandler(
                 {
                     recusados.Add(prefixo);
                 }
-
-                (curso, turmas) = (await demonstracao.TurmasVigentesAsync(curso.Sigla, Hoje, cancellationToken))!.Value;
             }
         }
     }
+
+    // O curso e as turmas dele no semestre vigente. Na primeira tentativa, a falta delas é
+    // recusa; nas seguintes, é a mesma consulta de novo, depois do Descartar.
+    private async Task<(Curso Curso, IReadOnlyList<Turma> Turmas)> TurmasAsync(
+        string siglaDoCurso, bool primeira, CancellationToken cancellationToken) =>
+        await demonstracao.TurmasVigentesAsync(siglaDoCurso.Trim(), Hoje, cancellationToken)
+            ?? throw new RecusaException(
+                TipoDeRecusa.NaoEncontrado,
+                CodigosDeRecusa.CursoDeDemonstracaoIndisponivel,
+                primeira ? $"Sem turma vigente em {siglaDoCurso}." : $"As turmas vigentes de {siglaDoCurso} sumiram no meio do registro.");
 
     // Voltar pelo mesmo dispositivo abre uma sessão comum, com o refresh rotativo de todo
     // mundo.
@@ -123,8 +172,9 @@ public sealed class DemonstracaoHandler(
 
     private DateOnly Hoje => FusoHorario.DataLocal(relogio.GetUtcNow());
 
-    // Fora do formato numérico dos RAs da faculdade, para nunca colidir com um real.
-    private static string GerarRa() => $"DEMO{RandomNumberGenerator.GetString(_alfabetoDoRa, 8)}";
+    // O RA do aluno e o começo do e-mail de todos: fora do formato numérico dos RAs da
+    // faculdade, para nunca colidir com um real.
+    private static string GerarIdentificador() => $"DEMO{RandomNumberGenerator.GetString(_alfabetoDoRa, 8)}";
 }
 
 // O lote vale para todo aluno de demonstração criado enquanto ele estiver configurado: é a
@@ -151,4 +201,6 @@ public interface IDemonstracaoRepository
     void Adicionar(CadastroElegivel cadastro);
 
     void Adicionar(Matricula matricula);
+
+    void Adicionar(VinculoProfessor vinculo);
 }

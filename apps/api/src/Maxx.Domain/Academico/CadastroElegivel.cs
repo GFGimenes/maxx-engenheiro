@@ -115,9 +115,12 @@ public sealed class CadastroElegivel
     // Correção de e-mail pela instituição (produto.md 2.3, passo 12): só a linha de aluno,
     // com ou sem conta. Confere a forma e o domínio (produto.md 2.4, passo 13); a unicidade é
     // do banco. O mesmo e-mail, escrito igual, não muda nada e não gera registro; trocar só
-    // maiúsculas é correção.
+    // maiúsculas é correção. Quem corrige por uma conta de demonstração (passo 14, P5) só
+    // escreve endereço em domínio reservado .invalid (RFC 2606): um endereço real faria o
+    // Maxx mandar e-mail a terceiros e daria a conta do aluno a quem corrigiu, pela
+    // recuperação de senha.
     public ResultadoDaCorrecaoDeEmail CorrigirEmail(
-        string? novo, DominiosDeEmailAceitos dominios, Guid corrigidoPorId, DateTimeOffset agora)
+        string? novo, DominiosDeEmailAceitos dominios, Guid corrigidoPorId, DateTimeOffset agora, bool soDominioReservado = false)
     {
         ArgumentNullException.ThrowIfNull(dominios);
         GarantirAluno("ter o e-mail corrigido");
@@ -131,6 +134,11 @@ public sealed class CadastroElegivel
         if (!dominios.Aceita(novo))
         {
             return new(null, RecusaDaCorrecaoDeEmail.DominioNaoAceito);
+        }
+
+        if (soDominioReservado && !novo.EndsWith(".invalid", StringComparison.OrdinalIgnoreCase))
+        {
+            return new(null, RecusaDaCorrecaoDeEmail.DominioNaoReservado);
         }
 
         if (string.Equals(novo, Email, StringComparison.Ordinal))

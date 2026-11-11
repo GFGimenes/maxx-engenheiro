@@ -41,4 +41,6 @@ internal sealed class DemonstracaoRepository(MaxxDbContext db) : IDemonstracaoRe
     public void Adicionar(CadastroElegivel cadastro) => db.Add(cadastro);
 
     public void Adicionar(Matricula matricula) => db.Add(matricula);
+
+    public void Adicionar(VinculoProfessor vinculo) => db.Add(vinculo);
 }

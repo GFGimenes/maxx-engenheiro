@@ -69,6 +69,16 @@ public sealed class DemonstracaoTests(PostgresFixture postgres) : IClassFixture<
         Assert.StartsWith("404", inexistenteGet, StringComparison.Ordinal);
         Assert.Equal(inexistenteGet, await DescreverAsync(await client.GetAsync(_demo, Ct)));
         Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_alunos, new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
+
+        // Passo 14: as rotas do professor e da coordenação de demonstração também.
+        Assert.Equal(
+            inexistentePost,
+            await DescreverAsync(await client.PostAsJsonAsync(
+                new Uri("/api/v1/demo/professores", UriKind.Relative), new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
+        Assert.Equal(
+            inexistentePost,
+            await DescreverAsync(await client.PostAsJsonAsync(
+                new Uri("/api/v1/demo/coordenacoes", UriKind.Relative), new { nome = "Ana", curso = "CC", versaoDoTermo = VersaoDoTermo }, Ct)));
         Assert.Equal(inexistentePost, await DescreverAsync(await client.PostAsJsonAsync(_entrar, new { chaveDoDispositivo = "x" }, Ct)));
     }
 
