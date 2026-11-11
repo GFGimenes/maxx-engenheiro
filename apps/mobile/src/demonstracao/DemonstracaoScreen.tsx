@@ -1,7 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { useApiClient } from "../api/ApiClientProvider";
 import { FalhaDaApi, falhaParaTela } from "../api/FalhaDaApi";
@@ -25,7 +31,11 @@ import { TextoDoTermo } from "../termo/TextoDoTermo";
 import { useTermoDeUso } from "../termo/useTermoDeUso";
 import { fontFamily, textStyles } from "../theme/fonts";
 import { useTheme } from "../theme/ThemeProvider";
-import type { ContaDeDemonstracao } from "./contas";
+import {
+  rotuloDaConta,
+  type ContaDeDemonstracao,
+  type PapelDeDemonstracao,
+} from "./contas";
 import * as dispositivo from "./contasDoDispositivo";
 import { useDemonstracao } from "./useDemonstracao";
 
@@ -36,9 +46,31 @@ interface ContasDoDispositivo {
   gravarContas: (contas: ContaDeDemonstracao[]) => Promise<void>;
 }
 
-// A entrada da apresentação (produto.md 11): registro simples, com nome, curso e o aceite
-// do termo, e a volta sem senha pela chave guardada neste aparelho. Sem a flag, a API
-// responde 404, e esta tela devolve ao login.
+// As três entradas (passo 14): o botão, a linha de apoio e o título da tela de registro.
+const ENTRADAS: Record<
+  PapelDeDemonstracao,
+  { botao: string; apoio: string; titulo: string }
+> = {
+  aluno: {
+    botao: "Entrar como aluno",
+    apoio: "Posta, reivindica prêmios e aparece no ranking.",
+    titulo: "Aluno de teste",
+  },
+  professor: {
+    botao: "Entrar como professor",
+    apoio: "Concede medalhas e decide comprovações das turmas de um curso.",
+    titulo: "Professor de teste",
+  },
+  coordenacao: {
+    botao: "Entrar como coordenação",
+    apoio: "Cuida da faculdade inteira, pela área web.",
+    titulo: "Coordenação de teste",
+  },
+};
+
+// A entrada da apresentação (produto.md 11): três papéis, cada um com um registro simples e
+// o aceite do termo, e a volta sem senha pela chave guardada neste aparelho. Sem a flag, a
+// API responde 404, e esta tela devolve ao login.
 export function DemonstracaoScreen({
   contasDoDispositivo = dispositivo,
 }: {
@@ -82,16 +114,20 @@ function Entrada({
   const { iniciar } = useSessao();
   const termo = useTermoDeUso();
   const [contas, setContas] = useState<ContaDeDemonstracao[]>([]);
-  const [etapa, setEtapa] = useState<"escolha" | "termo">("escolha");
+  const [etapa, setEtapa] = useState<"escolha" | "registro" | "termo">(
+    "escolha",
+  );
+  const [papel, setPapel] = useState<PapelDeDemonstracao>("aluno");
   const [nome, setNome] = useState("");
   const [curso, setCurso] = useState<string | null>(null);
   const [erros, setErros] = useState<{ nome?: string; curso?: string }>({});
   const [aviso, setAviso] = useState<string | null>(null);
-  // A foto opcional do registro (produto.md 11): as derivadas saem na hora da escolha e sobem
-  // como foto de perfil logo depois de a conta nascer.
+  // A foto opcional do registro do aluno (produto.md 11): as derivadas saem na hora da
+  // escolha e sobem como foto de perfil logo depois de a conta nascer.
   const [foto, setFoto] = useState<Derivadas | null>(null);
   const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [erroDaFoto, setErroDaFoto] = useState<string | null>(null);
+  const comCurso = papel !== "coordenacao";
 
   const trocarFoto = async () => {
     setErroDaFoto(null);
@@ -132,7 +168,8 @@ function Entrada({
     },
     onMutate: () => setAviso(null),
     onError: async (erro, conta) => {
-      // A conta foi apagada (purga da apresentação): some da lista deste aparelho.
+      // A conta foi apagada ou encerrada (purga da apresentação): some da lista deste
+      // aparelho.
       if (erro instanceof FalhaDaApi && erro.codigo === "chave-invalida") {
         await guardar(contas.filter((c) => c.chave !== conta.chave));
       }
@@ -140,11 +177,24 @@ function Entrada({
     },
   });
 
+  // Cada papel tem a sua rota; a coordenação não escolhe curso.
+  const pedirRegistro = async (versaoDoTermo: number) => {
+    const corpo = { nome: nome.trim(), curso: curso ?? "", versaoDoTermo };
+    switch (papel) {
+      case "professor":
+        return client.POST("/api/v1/demo/professores", { body: corpo });
+      case "coordenacao":
+        return client.POST("/api/v1/demo/coordenacoes", {
+          body: { nome: corpo.nome, versaoDoTermo },
+        });
+      default:
+        return client.POST("/api/v1/demo/alunos", { body: corpo });
+    }
+  };
+
   const registrar = useMutation({
     mutationFn: async (versaoDoTermo: number) => {
-      const { data, error } = await client.POST("/api/v1/demo/alunos", {
-        body: { nome: nome.trim(), curso: curso ?? "", versaoDoTermo },
-      });
+      const { data, error } = await pedirRegistro(versaoDoTermo);
       if (!data) {
         throw FalhaDaApi.doCorpo(error);
       }
@@ -153,14 +203,15 @@ function Entrada({
         {
           chave: data.chaveDoDispositivo,
           nome: nome.trim(),
-          curso: curso ?? "",
+          curso: comCurso ? (curso ?? "") : "",
+          papel,
         },
         ...contas,
       ]);
       await iniciar(data.sessao);
       // Já com a sessão, a foto sobe como a de qualquer perfil. Melhor esforço: a conta já
       // existe, e a foto pode ser posta depois em Editar perfil.
-      if (foto) {
+      if (papel === "aluno" && foto) {
         try {
           const fotoUploadId = await enviarFoto(client, "fotoDePerfil", foto);
           await client.PATCH("/api/v1/eu/perfil", {
@@ -186,7 +237,7 @@ function Entrada({
       // Curso que saiu do semestre vigente: volta para escolher outro.
       if (erro.codigo === "curso-indisponivel") {
         setCurso(null);
-        setEtapa("escolha");
+        setEtapa("registro");
         setErros({ curso: erro.message });
       }
     },
@@ -195,10 +246,17 @@ function Entrada({
     ? falhaParaTela(registrar.error)
     : null;
 
+  const abrir = (escolhido: PapelDeDemonstracao) => {
+    setPapel(escolhido);
+    setErros({});
+    setAviso(null);
+    setEtapa("registro");
+  };
+
   const continuar = () => {
     const novos = {
       nome: erroDoNome(nome),
-      curso: curso ? undefined : "Escolha um curso.",
+      curso: !comCurso || curso ? undefined : "Escolha um curso.",
     };
     setErros(novos);
     if (!novos.nome && !novos.curso) {
@@ -212,7 +270,7 @@ function Entrada({
       <TelaDeAutenticacao>
         <View style={styles.coluna}>
           <View style={styles.cabecalho}>
-            <TextLink label="Voltar" onPress={() => setEtapa("escolha")} />
+            <TextLink label="Voltar" onPress={() => setEtapa("registro")} />
             <Text
               role="heading"
               style={[textStyles.titulo, { color: colors.ink }]}
@@ -254,6 +312,96 @@ function Entrada({
     );
   }
 
+  if (etapa === "registro") {
+    return (
+      <TelaDeAutenticacao>
+        <View style={styles.coluna}>
+          <View style={styles.cabecalho}>
+            <TextLink label="Voltar" onPress={() => setEtapa("escolha")} />
+            <Text
+              role="heading"
+              style={[textStyles.titulo, { color: colors.ink }]}
+            >
+              {ENTRADAS[papel].titulo}
+            </Text>
+            {papel === "coordenacao" && (
+              <Text style={[textStyles.corpo, { color: colors.ink2 }]}>
+                A coordenação tem todos os poderes da instituição sobre a base
+                de teste, inclusive apagar as contas de teste.
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.secao}>
+            <TextField
+              label="Nome"
+              placeholder="Como você quer aparecer"
+              value={nome}
+              onChangeText={setNome}
+              autoComplete="name"
+              error={erros.nome}
+            />
+            {comCurso && (
+              <View style={styles.cursos}>
+                <Text style={[styles.rotulo, { color: colors.ink }]}>
+                  Curso
+                </Text>
+                {papel === "professor" && (
+                  <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
+                    As turmas deste curso no semestre ficam com você.
+                  </Text>
+                )}
+                <View role="radiogroup" aria-label="Curso" style={styles.chips}>
+                  {cursos.map((opcao) => (
+                    <FilterChip
+                      key={opcao.sigla}
+                      role="radio"
+                      label={opcao.nome}
+                      selected={curso === opcao.sigla}
+                      onPress={() => setCurso(opcao.sigla)}
+                    />
+                  ))}
+                </View>
+                {erros.curso && <AvisoDeErro mensagem={erros.curso} />}
+              </View>
+            )}
+            {papel === "aluno" && (
+              <View style={styles.cursos}>
+                <Text style={[styles.rotulo, { color: colors.ink }]}>
+                  Foto (opcional)
+                </Text>
+                <View style={styles.foto}>
+                  <Avatar
+                    nome={nome.trim() || "Aluno"}
+                    foto={foto?.grade.uri}
+                    size={56}
+                  />
+                  <View style={styles.acoesDaFoto}>
+                    <Button
+                      label={foto ? "Trocar foto" : "Escolher foto"}
+                      variant="secondary"
+                      disabled={preparandoFoto}
+                      onPress={() => void trocarFoto()}
+                    />
+                    {foto && (
+                      <Button
+                        label="Remover foto"
+                        variant="secondary"
+                        onPress={() => setFoto(null)}
+                      />
+                    )}
+                  </View>
+                </View>
+                {erroDaFoto && <AvisoDeErro mensagem={erroDaFoto} />}
+              </View>
+            )}
+            <Button label="Continuar" size="large" onPress={continuar} />
+          </View>
+        </View>
+      </TelaDeAutenticacao>
+    );
+  }
+
   return (
     <TelaDeAutenticacao>
       <View style={styles.coluna}>
@@ -265,8 +413,8 @@ function Entrada({
             Demonstração
           </Text>
           <Text style={[textStyles.corpo, { color: colors.ink2 }]}>
-            Entre como aluno de teste, sem senha. As contas de teste são
-            apagadas ao fim da avaliação do projeto.
+            Escolha como entrar, sem senha. As contas de teste são apagadas ao
+            fim da avaliação do projeto.
           </Text>
         </View>
 
@@ -278,7 +426,7 @@ function Entrada({
             {contas.map((conta) => (
               <Button
                 key={conta.chave}
-                label={`Entrar como ${conta.nome} · ${conta.curso}`}
+                label={rotuloDaConta(conta)}
                 variant="secondary"
                 disabled={voltar.isPending}
                 onPress={() => voltar.mutate(conta)}
@@ -289,63 +437,19 @@ function Entrada({
         {aviso && <AvisoDeErro mensagem={aviso} />}
 
         <View style={styles.secao}>
-          {contas.length > 0 && (
-            <Text style={[textStyles.secao, { color: colors.ink }]}>
-              Criar outra conta de teste
-            </Text>
-          )}
-          <TextField
-            label="Nome"
-            placeholder="Como você quer aparecer"
-            value={nome}
-            onChangeText={setNome}
-            autoComplete="name"
-            error={erros.nome}
-          />
-          <View style={styles.cursos}>
-            <Text style={[styles.rotulo, { color: colors.ink }]}>Curso</Text>
-            <View role="radiogroup" aria-label="Curso" style={styles.chips}>
-              {cursos.map((opcao) => (
-                <FilterChip
-                  key={opcao.sigla}
-                  role="radio"
-                  label={opcao.nome}
-                  selected={curso === opcao.sigla}
-                  onPress={() => setCurso(opcao.sigla)}
-                />
-              ))}
-            </View>
-            {erros.curso && <AvisoDeErro mensagem={erros.curso} />}
-          </View>
-          <View style={styles.cursos}>
-            <Text style={[styles.rotulo, { color: colors.ink }]}>
-              Foto (opcional)
-            </Text>
-            <View style={styles.foto}>
-              <Avatar
-                nome={nome.trim() || "Aluno"}
-                foto={foto?.grade.uri}
-                size={56}
+          {(Object.keys(ENTRADAS) as PapelDeDemonstracao[]).map((opcao) => (
+            <View key={opcao} style={styles.entrada}>
+              <Button
+                label={ENTRADAS[opcao].botao}
+                variant="secondary"
+                size="large"
+                onPress={() => abrir(opcao)}
               />
-              <View style={styles.acoesDaFoto}>
-                <Button
-                  label={foto ? "Trocar foto" : "Escolher foto"}
-                  variant="secondary"
-                  disabled={preparandoFoto}
-                  onPress={() => void trocarFoto()}
-                />
-                {foto && (
-                  <Button
-                    label="Remover foto"
-                    variant="secondary"
-                    onPress={() => setFoto(null)}
-                  />
-                )}
-              </View>
+              <Text style={[textStyles.legenda, { color: colors.ink2 }]}>
+                {ENTRADAS[opcao].apoio + navegador(opcao)}
+              </Text>
             </View>
-            {erroDaFoto && <AvisoDeErro mensagem={erroDaFoto} />}
-          </View>
-          <Button label="Continuar" size="large" onPress={continuar} />
+          ))}
         </View>
 
         <View style={styles.voltar}>
@@ -359,10 +463,19 @@ function Entrada({
   );
 }
 
+// A área da instituição só abre no navegador (produto.md 10.2): no aparelho, a coordenação
+// já sabe disso antes de entrar.
+function navegador(papel: PapelDeDemonstracao): string {
+  return papel === "coordenacao" && Platform.OS !== "web"
+    ? " Abre no navegador."
+    : "";
+}
+
 const styles = StyleSheet.create({
   coluna: { gap: 24 },
   cabecalho: { gap: 8 },
   secao: { gap: 12 },
+  entrada: { gap: 4 },
   cursos: { gap: 8 },
   // O rótulo dos campos (TextField).
   rotulo: {

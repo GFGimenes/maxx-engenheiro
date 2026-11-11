@@ -35,6 +35,8 @@ test(
     await page.getByRole("button", { name: "Entrar na demonstração" }).click();
     await expect(page).toHaveURL(/\/demonstracao$/);
 
+    // Passo 14: a escolha do papel vem antes do registro.
+    await page.getByRole("button", { name: "Entrar como aluno" }).click();
     await page.getByLabel("Nome", { exact: true }).fill(nome);
     await page.getByRole("radio", { name: "Ciência da Computação" }).click();
     await page.getByRole("button", { name: "Continuar" }).click();
