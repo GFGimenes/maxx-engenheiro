@@ -400,7 +400,8 @@ as contas de professor e de instituição do seed dependem de e-mail que só o a
   conferida no ar, só de leitura, com contas "Conferência Maxx".
 
 Regras em `produto.md` 11; decisões em `decisoes/README.md`, Papéis na demonstração
-(passo 14).
+(passo 14). Implantado em 10/11/2026 com a demonstração ligada no lote `banca-2026`, e
+conferido no ar nos três papéis; registro em `operacao.md`.
 
 ---
 
