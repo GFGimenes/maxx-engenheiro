@@ -83,7 +83,7 @@ ele deixou abertas. Fechadas no plano do passo 3.
 | Login exigido | Toda rota de `/v1` exige login, e a pública declara `AllowAnonymous`. A exigência fica no grupo `/v1`, e não numa `FallbackPolicy`, porque a fallback vale também para pedido sem endpoint, e rota inexistente tem de continuar 404 |
 | `GET /v1/eu` | Lê papéis e arroba do banco, não do token: o arroba pode mudar depois da emissão |
 | Escopo de turma | Verificado no banco a cada mutação, contra `vinculo_professor`, só nas turmas do semestre letivo vigente, com a data interpretada em `America/Sao_Paulo`. Fora de semestre vigente, o professor não tem escopo |
-| Demonstração | Chave aleatória do dispositivo guardada só como hash; lote por configuração; cadastro elegível marcado como demonstração. Ver `produto.md` 11 |
+| Demonstração | Chave aleatória do dispositivo guardada só como hash; lote por configuração; cadastro elegível marcado como demonstração. Desde o passo 14, nos três papéis (seção Papéis na demonstração). Ver `produto.md` 11 |
 | Flag da demonstração | `Demo__Habilitada` só pelo `docker-compose.demo.yml`, por cima do `docker-compose.yml`, que nunca a menciona. Desligada, as rotas nem são mapeadas, e o 404 é o de uma rota inexistente; a geração do OpenAPI as mapeia mesmo assim, para o cliente ter os tipos. Ligada, `Demo__Lote` é obrigatório, ou a API não sobe |
 | Aluno de demonstração | Escolhe o curso pela sigla, entre os que têm turma no semestre vigente, e é matriculado nas turmas vigentes dele. RA gerado no formato `DEMO` mais 8 caracteres, fora do formato numérico dos RAs da faculdade; e-mail `<ra>@demonstracao.invalid`, domínio reservado que nunca recebe nada; semestre 1. Sem senha e sem recuperação: entra só pela chave do dispositivo, que vai sempre no corpo da resposta, na web também |
 | Registro simultâneo | Mesmo nome registrado ao mesmo tempo: em conflito de prefixo, o registro não repete a sugestão recusada e avança para a próxima livre, consultando os prefixos já reservados. Até 10 tentativas. Cada recusa vem de outro pedido que gravou, então o limite cobre até 10 pedidos simultâneos com o mesmo nome; acima disso, alguns podem receber a recusa. Esgotadas, responde 409 com `registro-simultaneo`, nunca 500 |
@@ -893,6 +893,43 @@ demo (150 alunos, 52 posts, 1.178 medalhas, 412 linhas de ranking):
 | Planos | `auto_explain` (`log_analyze`) ligado só numa rodada curta de 1 usuário, separada da medida, e desligado depois. A consulta mais lenta levou 3,7 ms no banco |
 | Feed e busca com o volume do seed | O planejador escolhe varredura sequencial no feed (seguidos e recomendação, 52 posts) e na busca (159 usuários): com tão pouco dado é o plano mais barato. Com `enable_seqscan = off`, a mesma consulta usa `ix_post_autor_id_criado_em_id` no feed e o `BitmapOr` de `ix_usuario_nome_sem_acento` e `ix_usuario_prefixo_trigrama` na busca: os índices servem à consulta real. Provar que o planejador os escolhe com volume real fica com o cenário completo, como pendência |
 | Ranking | `Index Scan` em `ix_posicao_no_ranking_aluno_visao` já com o volume do seed |
+
+## Papéis na demonstração (passo 14)
+
+Posterior aos treze passos do plano e ao início da avaliação: a banca avalia o produto no
+ar ao longo do mês e, pela demonstração, só entrava como aluno. As contas de professor e de
+instituição do seed dependem de e-mail que só o autor recebe. As sete perguntas do plano
+(P1 a P7) foram fechadas nele. As regras de produto estão em `produto.md` 2.5, 10.2 e 11.
+
+### Registro
+
+| Decisão | Detalhe |
+|---|---|
+| Rotas | `POST /v1/demo/professores` (nome, curso, versão do termo) e `POST /v1/demo/coordenacoes` (nome, versão do termo), ao lado de `POST /v1/demo/alunos`, só com a flag ligada. `POST /v1/demo/entrar` abre conta de qualquer papel pela chave do dispositivo |
+| Cadastro elegível | O professor e a coordenação de demonstração ganham uma linha marcada como demonstração, sem RA, com e-mail `<identificador>@demonstracao.invalid`: `Usuario.CadastroElegivelId` é obrigatório, e o papel vem sempre da base. O check `ck_cadastro_elegivel_aluno` já aceita linha de funcionário sem curso e sem semestre |
+| Papéis | Professor de demonstração é só professor (sufixo `-PROF`); coordenação de demonstração é só instituição (sufixo `-UNIMAX`). Nenhum acúmulo |
+| Escopo do professor | Vínculos em `vinculo_professor` com as turmas do curso no semestre vigente, criados no registro: o escopo continua lido do banco, como o de qualquer professor. A turma não tem professor único, então o do seed e os de demonstração convivem |
+| Check da conta | `ck_usuario_demonstracao` exigia `papeis = 1`. Passa a aceitar papel simples (aluno, professor ou instituição), sempre sem senha, com a chave do dispositivo ou com a conta encerrada |
+| Limite de taxa (P6) | Um limite único, 60 por hora por IP, somado entre as três rotas de registro: ele protege contra contas criadas em massa, qualquer que seja o papel |
+| Lembrança local | Ganha o papel. Entrada antiga sem papel é lida como aluno |
+
+### Purga e conta encerrada (P1, P2)
+
+| Decisão | Detalhe |
+|---|---|
+| Conta encerrada (P1) | A purga apaga os alunos do lote, como antes, e **encerra** os professores e as coordenações do lote: `encerrada_em` gravado, chave do dispositivo, sessões, vínculos de turma, seguimentos, curtidas, comentários, notificações e leituras fora. A linha da conta e a da base ficam, só como autoras da auditoria |
+| Por quê | Treze colunas de auditoria apontam para `usuario` com `Restrict` (concessão, anulação, aprovação, reprovação, revogação, contestação, decisão, aviso, correção de e-mail, troca de curso, ex-aluno, remoção de post e de comentário), e `purga_da_demonstracao.purgado_por_id` também. Apagar a conta quebraria a purga, ou a regra de que todo ato grava quem fez. Desfazer os atos não é possível (o ex-aluno não volta) e desfazer só parte deixaria uma história incoerente. Alternativa descartada: apagar a conta e guardar o nome do autor em texto nas treze colunas, com o mesmo resultado e muito mais migração |
+| Atos fora do lote | Ficam como estão: medalha a aluno do seed, aprovação, aviso, anulação, correção de e-mail, ex-aluno. O autor aparece pelo nome da conta encerrada |
+| Token ainda válido | O access token vive 15 min sem consultar o banco. A busca de quem age ignora conta encerrada, e o vínculo apagado barra o escopo do professor: o token que sobrou recebe 401 ou 403 na hora |
+| Contagens | O registro da purga e a lista de lotes contam alunos, professores e coordenações. O check passa a exigir ao menos uma conta, não mais um aluno. Conta encerrada não entra na lista nem no alvo de outra purga |
+| Próprio lote (P2) | A lista marca o lote de quem pede. O modal avisa que a conta será encerrada junto. A resposta diz se a conta de quem purgou foi encerrada, e a tela mostra o resultado com "Voltar ao login", que encerra a sessão local e tira a conta da lembrança do aparelho |
+
+### Exceção aos poderes da coordenação de demonstração (P5)
+
+| Decisão | Detalhe |
+|---|---|
+| Regra | A coordenação de demonstração tem todos os poderes da instituição, com uma exceção única: a correção de e-mail feita por conta de demonstração só aceita endereço em domínio reservado `.invalid` (e da lista de aceitos) |
+| Motivo | Os alunos do seed não têm senha e não são contas de demonstração, então a recuperação de senha vale para eles. Um endereço real em `unieduk.com.br`, domínio aceito, faria o Maxx mandar e-mail a uma pessoa real da UniEduk e entregaria a conta do aluno a quem corrigiu. Com `.invalid`, o ato continua demonstrável e nunca gera e-mail a terceiros |
 
 ## Processo e qualidade
 
