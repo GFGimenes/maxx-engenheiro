@@ -101,6 +101,9 @@ const MENSAGENS = {
   "aluno-sem-conta": "Esse aluno ainda não criou a conta.",
   "email-invalido": "Confira o e-mail digitado.",
   "dominio-nao-aceito": "Esse domínio de e-mail não é aceito.",
+  // Passo 14, P5: a coordenação de demonstração corrige só para domínio reservado.
+  "dominio-nao-reservado":
+    "Na demonstração, use um e-mail terminado em .invalid.",
   "email-em-uso": "Esse e-mail já é de outra pessoa da base.",
   "mesmo-curso": "O aluno já é desse curso.",
   "semestre-invalido": "Esse curso não tem esse semestre.",
